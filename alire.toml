@@ -1,0 +1,10 @@
+name = "optimaiden"
+description = "An OPTIMADE protocol implementation in Ada."
+version = "0.1.0-dev"
+
+authors = ["Saulius Gražulis"]
+maintainers = ["Saulius Gražulis <grazulis@ibt.lt>"]
+maintainers-logins = ["github-username"]
+licenses = "LGPL-3.0-or-later"
+website = ""
+tags = []
