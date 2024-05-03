@@ -1,0 +1,22 @@
+#--*- Makefile -*--
+
+# Build Ada/SPARK programs using 'gprbuild'.
+
+GPRBUILD_ARGUMENTS ?=
+
+GPR_PROJECT ?= $(shell find -maxdepth 1 -name '*.gpr' | sort | head -n 1)
+
+BIN_DIR ?= $(shell awk -F'"' '/for  *Exec_Dir / {print $$2}' ${GPR_PROJECT})
+
+ALL_ADA_SOURCES ?= $(shell find -name '*.adb' -o -name '*.ads')
+
+.PHONY: build gprbuild gprclean
+
+build gprbuild:
+	gprbuild ${GPRBUILD_ARGUMENTS} -P ${GPR_PROJECT}
+
+${BIN_DIR}/%: ${ALL_ADA_SOURCES}
+	gprbuild ${GPRBUILD_ARGUMENTS} -P ${GPR_PROJECT} -o $(notdir $@)
+
+gprclean:
+	gprclean ${GPRBUILD_ARGUMENTS} -P ${GPR_PROJECT}

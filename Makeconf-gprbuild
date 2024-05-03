@@ -1,0 +1,11 @@
+#--*- Makefile -*--
+
+# Build Ada/SPARK programs using 'gprbuild'.
+
+ADA_EXEC = bin/optimaiden
+
+GPRBUILD_ARGUMENTS =
+
+GPR_PROJECT = $(shell find -maxdepth 1 -name '*.gpr' | sort | head -n 1)
+
+ALL_ADA_SOURCES = $(shell find -name '*.adb' -o -name '*.ads')

@@ -1,0 +1,5 @@
+#--*- Makefile -*--
+
+# Configure the default target:
+
+all: ${ADA_EXEC}
