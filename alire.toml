@@ -8,3 +8,9 @@ maintainers-logins = ["github-username"]
 licenses = "LGPL-3.0-or-later"
 website = ""
 tags = []
+
+[[depends-on]]
+json = "^5.0.3"
+
+[[depends-on]]
+aws = "^24.0.0"
