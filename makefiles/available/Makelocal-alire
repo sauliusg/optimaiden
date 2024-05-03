@@ -10,7 +10,7 @@ BIN_DIR ?= $(shell awk -F'"' '/for  *Exec_Dir / {print $$2}' ${GPR_PROJECT})
 
 ALL_ADA_SOURCES ?= $(shell find -name '*.adb' -o -name '*.ads')
 
-.PHONY: build alrbuild alrclean clean
+.PHONY: build alrbuild alrclean distclean
 
 build alrbuild:
 	alr build ${ALIRE_ARGUMENTS}
@@ -21,4 +21,4 @@ ${BIN_DIR}/%: ${ALL_ADA_SOURCES}
 alrclean:
 	alr clean ${ALIRE_ARGUMENTS}
 
-clean: alrclean
+distclean: alrclean
