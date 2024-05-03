@@ -2,4 +2,11 @@
 
 # Configure the default target:
 
+.PHONY: all clean clean-exec
+
 all: ${ADA_EXEC}
+
+clean: clean-exec
+
+clean-exec:
+	rm -f ${ADA_EXEC}
