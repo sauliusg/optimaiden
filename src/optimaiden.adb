@@ -6,11 +6,13 @@ with AWS.Config; use AWS.Config;
 with AWS.Config.Set;
 with AWS.Net;
 
-with Optimaiden_Callbacks; use Optimaiden_Callbacks;
+-- with AWS.Dispatchers;
+with AWS.Services.Dispatchers.URI;
+
+-- with Optimaiden_Callbacks; use Optimaiden_Callbacks;
+with Optimaiden_Uri_Handler; use Optimaiden_Uri_Handler;
 
 procedure Optimaiden is
-
-   Web_Server : AWS.Server.HTTP;
 
    task Waiter is
       entry Proceed;
@@ -27,8 +29,14 @@ procedure Optimaiden is
       end select;
    end Waiter;
 
+   Web_Server : AWS.Server.HTTP;
+
    Web_Config : AWS.Config.Object := Get_Current;
 
+   Root : AWS.Services.Dispatchers.URI.Handler;
+   
+   Info_Handler : Optimaiden_Uri_Handler_Type;
+   
 begin
 
    declare
@@ -40,14 +48,16 @@ begin
    end;
 
    AWS.Config.Set.Server_Name (Web_Config, "Optimaiden: Hello World");
-
+   
+   AWS.Services.Dispatchers.URI.Register (Root, "/info", Info_Handler);
+   
    --  Put_Line (AWS.Config.Free_Slots_Keep_Alive_Limit (Web_Config)'Image);
    --  Put_Line (AWS.Config.Max_Connection (Web_Config)'Image);
 
    AWS.Server.Start
      (
       Web_Server,
-      Callback => HW_CB'Access,
+      Dispatcher => Root,
       Config => Web_Config
      );
 
