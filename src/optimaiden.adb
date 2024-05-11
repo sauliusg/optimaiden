@@ -13,14 +13,14 @@ procedure Optimaiden is
    Web_Server : AWS.Server.HTTP;
 
    task Waiter is
-      entry Start;
+      entry Proceed;
       entry Wait;
    end Waiter;
 
    task body Waiter is
    begin
       select
-         accept Start;
+         accept Proceed;
       end select;
       select
          accept Wait;
@@ -59,11 +59,11 @@ exception
    when AWS.Net.Socket_Error =>
       Put_Line (Standard_Error, "Socket already in use");
       Ada.Command_Line.Set_Exit_Status (1);
-      Waiter.Start;
+      Waiter.Proceed;
       Waiter.Wait;
 
    when others =>
-      Waiter.Start;
+      Waiter.Proceed;
       Waiter.Wait;
       raise;
 
