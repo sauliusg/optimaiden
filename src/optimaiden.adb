@@ -45,6 +45,7 @@ begin
    end;
 
    AWS.Config.Set.Server_Name (Web_Config, "Optimaiden: Hello World");
+   --  AWS.Config.Set.Protocol_Family (Web_Config, "Family_Inet");
 
    AWS.Services.Dispatchers.URI.Register (Root, "/info", Info_Handler);
 
