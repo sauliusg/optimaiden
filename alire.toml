@@ -2,8 +2,8 @@ name = "optimaiden"
 description = "An OPTIMADE protocol implementation in Ada."
 version = "0.1.0-dev"
 
-authors = ["Saulius Gražulis"]
-maintainers = ["Saulius Gražulis <grazulis@ibt.lt>"]
+authors = ["Saulius GraÅ¾ulis"]
+maintainers = ["Saulius GraÅ¾ulis <grazulis@ibt.lt>"]
 maintainers-logins = ["github-username"]
 licenses = "LGPL-3.0-or-later"
 website = ""
@@ -17,3 +17,6 @@ aws = "^24.0.0"
 
 [[depends-on]]
 gnatcoll = "^24.0.0"
+
+[[depends-on]]
+utilada = "^2.6.0"

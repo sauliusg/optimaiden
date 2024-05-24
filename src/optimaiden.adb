@@ -50,7 +50,8 @@ begin
    --  AWS.Config.Set.Protocol_Family (Web_Config, "Family_Inet");
 
    AWS.Services.Dispatchers.URI.Register (Root, "/info", Info_Handler);
-   AWS.Services.Dispatchers.URI.Register (Root, "/structures", Structure_Handler);
+   AWS.Services.Dispatchers.URI.Register (Root, "/structures",
+                                          Structure_Handler);
 
    pragma Debug
      (
