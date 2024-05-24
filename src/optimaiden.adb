@@ -7,7 +7,8 @@ with AWS.Config.Set;
 with AWS.Net;
 with AWS.Services.Dispatchers.URI;
 
-with Optimaiden_Uri_Handler; use Optimaiden_Uri_Handler;
+with Optimaiden_Info_Handler; use Optimaiden_Info_Handler;
+with Optimaiden_Structure_Handler; use Optimaiden_Structure_Handler;
 
 procedure Optimaiden is
 
