@@ -32,7 +32,8 @@ procedure Optimaiden is
 
    Root : AWS.Services.Dispatchers.URI.Handler;
 
-   Info_Handler : Optimaiden_Uri_Handler_Type;
+   Info_Handler : Optimaiden_Info_Handler_Type;
+   Structure_Handler : Optimaiden_Structure_Handler_Type;
 
 begin
 
@@ -48,6 +49,7 @@ begin
    --  AWS.Config.Set.Protocol_Family (Web_Config, "Family_Inet");
 
    AWS.Services.Dispatchers.URI.Register (Root, "/info", Info_Handler);
+   AWS.Services.Dispatchers.URI.Register (Root, "/structures", Structure_Handler);
 
    pragma Debug
      (
