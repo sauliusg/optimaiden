@@ -2,8 +2,9 @@ with AWS.Dispatchers;
 with AWS.Status;
 with AWS.Response;
 
-with Util.Serialize;
-with Util.Beans.Objects;
+--  The above code is following the example in:
+--  https://blog.vacs.fr/vacs/blogs/post.html?post=2022/03/05/IO-stream-composition-and-serialization-with-Ada-Utility-Library
+--  [accessed 2024-05-24T10:24+03:00].
 
 package Optimaiden_Info_Handler is
 
@@ -17,23 +18,6 @@ package Optimaiden_Info_Handler is
       Endpoint_Type : String (1 .. 4) := "info";
    end record;
 
-   type Info_Fields is (API_VERSION, ID, ENDPOINT_TYPE);
-
-   procedure Set_Member
-     (
-      Info  : in out Info_Type;
-      Field : Info_Fields;
-      Value : Util.Beans.Objects.Object
-     );
-
-   function Get_Member
-     (
-      Info  : Info_Type;
-      Field : Info_Fields
-     ) return Util.Beans.Objects.Object;
-
-   --  The handler for the Info endpoint:
-
    type Optimaiden_Info_Handler_Type is new AWS.Dispatchers.Handler
      with null record;
 
@@ -44,7 +28,17 @@ package Optimaiden_Info_Handler is
       Request : AWS.Status.Data
      ) return AWS.Response.Data;
 
+   --  Serialise the "info" endpoint as JSON:
+
+   function As_JSON (Info : Info_Type) return String;
+
+--  The above code is following, mutatis mutandis, the example in:
+--  https://blog.vacs.fr/vacs/blogs/post.html?post=2022/03/05/IO-stream-composition-and-serialization-with-Ada-Utility-Library
+--  [accessed 2024-05-24T10:24+03:00].
+
 private
+
+   Info_Endpoint_Data : Info_Type;
 
    overriding function Clone (Element : Optimaiden_Info_Handler_Type)
                              return Optimaiden_Info_Handler_Type;

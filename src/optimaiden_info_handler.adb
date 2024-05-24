@@ -1,7 +1,6 @@
 with AWS.MIME; use AWS.MIME;
-with Util.Beans.Objects; use Util.Beans.Objects;
-
-with Util.Serialize.Mappers.Record_Mapper;
+with Util.Streams.Texts;
+with Util.Serialize.IO.JSON;
 
 package body Optimaiden_Info_Handler is
 
@@ -12,7 +11,11 @@ package body Optimaiden_Info_Handler is
       Request : AWS.Status.Data
      ) return AWS.Response.Data is
    begin
-      return AWS.Response.Build (AWS.MIME.Text_Plain, "info will go here");
+      return AWS.Response.Build
+        (
+         AWS.MIME.Application_JSON,
+         As_JSON (Info_Endpoint_Data)
+        );
    end Dispatch;
 
    overriding function Clone (Element : Optimaiden_Info_Handler_Type)
@@ -21,65 +24,39 @@ package body Optimaiden_Info_Handler is
       return Element;
    end Clone;
 
-   --  Serialisation bindings. Modelled after:
-   --  https://ada-util.readthedocs.io/en/latest/Serialization/
-   --  [accessed 2024-05-24T09:52+03:00].
+   --  Serialise Info endpoint as JSON:
 
-   procedure Set_Member
+   procedure Write
      (
-      Info  : in out Info_Type;
-      Field : Info_Fields;
-      Value : Util.Beans.Objects.Object
+      Stream : out Util.Serialize.IO.JSON.Output_Stream;
+      Info : Info_Type
      ) is
    begin
-      case Field is
+      Stream.Start_Document;
+      Stream.Start_Entity ("data");
+      Stream.Write_Entity ("api_version", Info.API_Version);
+      Stream.Write_Entity ("id", Info.Id);
+      Stream.Write_Entity ("type", Info.Endpoint_Type);
+      Stream.End_Entity ("data");
+      Stream.End_Document;
+   end Write;
 
-         when API_VERSION =>
-            Info.API_Version := To_String (Value);
+   --  The abov code is based upon the example in:
+   --  https://github.com/stcarrez/ada-util/blob/master/samples/serialize.adb
+   --  [accessed 2024-05-24T11:19+03:00].
 
-         when ID =>
-            Info.Id := To_String (Value);
-
-         when ENDPOINT_TYPE =>
-            Info.Endpoint_Type := To_String (Value);
-
-      end case;
-   end Set_Member;
-
-   function Get_Member
-     (
-      Info  : Info_Type;
-      Field : Info_Fields
-     ) return Util.Beans.Objects.Object is
+   function As_JSON (Info : Info_Type) return String is
+      Output : aliased Util.Streams.Texts.Print_Stream;
+      Stream : Util.Serialize.IO.JSON.Output_Stream;
    begin
-      case Field is
+      Output.Initialize (Size => 10000);
+      Stream.Initialize (Output => Output'Unchecked_Access);
+      Write (Stream, Info);
+      return (Util.Streams.Texts.To_String (Output));
+   end As_JSON;
 
-         when API_VERSION =>
-            return Util.Beans.Objects.To_Object (Info.API_Version);
+   --  The above code is following, mutatis mutandis, the example in:
+   --  https://blog.vacs.fr/vacs/blogs/post.html?post=2022/03/05/IO-stream-composition-and-serialization-with-Ada-Utility-Library
+   --  [accessed 2024-05-24T10:24+03:00].
 
-         when ID =>
-            return Util.Beans.Objects.To_Object (Info.Id);
-
-         when ENDPOINT_TYPE =>
-            return Util.Beans.Objects.To_Object (Info.Endpoint_Type);
-
-      end case;
-   end Get_Member;
-
-   type Info_Access is access all Info_Type;
-
-   package Info_Mapper is new Util.Serialize.Mappers.Record_Mapper
-     (
-      Element_Type        => Info_Type,
-      Element_Type_Access => Info_Access,
-      Fields              => Info_Fields,
-      Set_Member          => Set_Member
-     );
-
-   Info_Mapping : Info_Mapper.Mapper;
-
-begin --  Optimaiden_Info_Handler
-   Info_Mapping.Add_Mapping ("api_version", API_VERSION);
-   Info_Mapping.Add_Mapping ("id", ID);
-   Info_Mapping.Add_Mapping ("type", ENDPOINT_TYPE);
 end Optimaiden_Info_Handler;
