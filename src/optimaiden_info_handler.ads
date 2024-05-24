@@ -32,9 +32,9 @@ package Optimaiden_Info_Handler is
 
    function As_JSON (Info : Info_Type) return String;
 
---  The above code is following, mutatis mutandis, the example in:
---  https://blog.vacs.fr/vacs/blogs/post.html?post=2022/03/05/IO-stream-composition-and-serialization-with-Ada-Utility-Library
---  [accessed 2024-05-24T10:24+03:00].
+   --  The above code is following, mutatis mutandis, the example in:
+   --  https://blog.vacs.fr/vacs/blogs/post.html?post=2022/03/05/IO-stream-composition-and-serialization-with-Ada-Utility-Library
+   --  [accessed 2024-05-24T10:24+03:00].
 
 private
 
