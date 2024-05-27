@@ -36,6 +36,11 @@ package body Optimaiden_Info_Handler is
       Stream.Start_Entity ("data");
       Stream.Start_Entity ("attributes");
       Stream.Write_Entity ("api_version", Info.API_Version);
+
+      Stream.Start_Entity ("available_api_versions");
+      Util.Serialize.IO.JSON.Write (Stream, (10, 11, 12));
+      Stream.End_Entity ("available_api_versions");
+
       Stream.Write_Entity ("id", Info.Id);
       Stream.Write_Entity ("type", Info.Endpoint_Type);
       Stream.End_Entity ("attributes");
