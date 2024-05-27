@@ -14,9 +14,12 @@ begin
    Stream.Start_Entity ("attributes");
    Stream.Write_Entity ("api_version", "1.0.0");
 
-   Stream.Start_Entity ("available_api_versions");
-   Util.Serialize.IO.JSON.Write (Stream, (65, 66, 68));
-   Stream.End_Entity ("available_api_versions");
+   Stream.Start_Array ("available_api_versions");
+   Stream.Start_Entity ("");
+   Stream.Write_Attribute ("url", "localhost:8080");
+   Stream.Write_Attribute ("version", "1.0.0");
+   Stream.End_Entity ("");
+   Stream.End_Array ("available_api_versions");
 
    Stream.Write_Entity ("id", "/");
    Stream.Write_Entity ("type", "info");
