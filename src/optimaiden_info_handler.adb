@@ -25,7 +25,7 @@ package body Optimaiden_Info_Handler is
    end Clone;
 
    --  Serialise Info endpoint as JSON:
-   
+
    procedure Write_OPTIMADE_Data
      (
       Stream : out Util.Serialize.IO.JSON.Output_Stream;
@@ -43,11 +43,28 @@ package body Optimaiden_Info_Handler is
       Stream.End_Entity ("");
       Stream.End_Array ("available_api_versions");
 
+      Stream.Start_Array ("available_endpoints");
+      Stream.Write_Attribute ("", "references");
+      Stream.Write_Attribute ("", "structures");
+      Stream.End_Array ("available_api_versions");
+
+      Stream.Start_Entity ("entry_types_by_format");
+      Stream.Start_Array ("json");
+      Stream.Write_Attribute ("", "references");
+      Stream.Write_Attribute ("", "structures");
+      Stream.End_Array ("json");
+      Stream.End_Entity ("entry_types_by_format");
+
+      Stream.Start_Array ("formats");
+      Stream.Write_Attribute ("", "json");
+      Stream.Write_Attribute ("", "xml");
+      Stream.End_Array ("formats");
+
       Stream.Write_Entity ("id", Info.Id);
       Stream.Write_Entity ("type", Info.Endpoint_Type);
       Stream.End_Entity ("attributes");
       Stream.End_Entity ("data");
-   end;
+   end Write_OPTIMADE_Data;
 
    procedure Write
      (
