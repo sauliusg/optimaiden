@@ -4,3 +4,9 @@
 /config/
 .svn
 *~
+externals/cif-streaming-parser/r137/trunk/obj/*
+externals/cif-streaming-parser/r137/trunk/*.cgpr
+externals/cif-streaming-parser/r137/trunk/.test*depend
+externals/cif-streaming-parser/r137/trunk/bin/
+externals/cif-streaming-parser/r137/trunk/tests/outputs/*.diff
+externals/cif-streaming-parser/r137/trunk/programs/.*.d
