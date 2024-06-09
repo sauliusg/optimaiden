@@ -1,0 +1,5 @@
+outputs/topt_001.diff: tests/bin/topt
+outputs/topt_002.diff: tests/bin/topt
+outputs/topt_003.diff: tests/bin/topt
+outputs/topt_004.diff: tests/bin/topt
+outputs/topt_005.diff: tests/bin/topt

@@ -1,0 +1,1185 @@
+Grammar
+
+    0 $accept: cif_file $end
+
+    1 cif_file: %empty
+    2         | data_block_list
+    3         | headerless_data_block
+    4         | headerless_data_block data_block_list
+    5         | stray_data_value_list
+    6         | stray_data_value_list data_block_list
+
+    7 stray_data_value_list: data_value
+    8                      | data_value data_value_list
+
+    9 data_block_list: data_block_list data_block
+   10                | data_block
+
+   11 headerless_data_block: block_content
+
+   12 $@1: %empty
+
+   13 headerless_data_block: block_content $@1 block_content_list
+
+   14 data_block: data_heading block_content_list
+   15           | data_heading
+
+   16 block_content_list: block_content_list block_content
+   17                   | block_content
+
+   18 data_heading: _DATA_
+   19             | _DATA_ data_value_list
+
+   20 block_content: data
+   21              | save_frame
+
+   22 data_list: data_list data
+   23          | data
+
+   24 data: cif_entry
+   25     | loop
+
+   26 cif_entry: _TAG data_value
+   27          | _TAG data_value data_value_list
+
+   28 data_value_list: data_value
+   29                | data_value_list data_value
+
+   30 $@2: %empty
+
+   31 loop: _LOOP_ $@2 loop_tags loop_values
+
+   32 loop_tags: loop_tags _TAG
+   33          | _TAG
+
+   34 loop_values: loop_values data_value
+   35            | data_value
+
+   36 $@3: %empty
+
+   37 save_frame: _SAVE_HEAD $@3 data_list _SAVE_FOOT
+
+   38 $@4: %empty
+
+   39 save_frame: _SAVE_HEAD $@4 _SAVE_FOOT
+
+   40 data_value: string
+   41           | number
+   42           | textfield
+   43           | list
+   44           | table
+
+   45 string: any_quoted_string
+   46       | _UQSTRING
+
+   47 any_quoted_string: quoted_string
+   48                  | triple_quoted_string
+
+   49 quoted_string: _SQSTRING
+   50              | _DQSTRING
+
+   51 triple_quoted_string: _SQ3STRING
+   52                     | _DQ3STRING
+
+   53 textfield: _TEXT_FIELD
+
+   54 number: _REAL_CONST
+   55       | _INTEGER_CONST
+
+   56 list: '[' data_value_list ']'
+   57     | '[' ']'
+
+   58 table: '{' table_entry_list '}'
+   59      | '{' '}'
+
+   60 table_entry_list: table_entry_list any_quoted_string _TABLE_ENTRY_SEP data_value
+   61                 | any_quoted_string _TABLE_ENTRY_SEP data_value
+
+
+Terminals, with rules where they appear
+
+    $end (0) 0
+    '[' (91) 56 57
+    ']' (93) 56 57
+    '{' (123) 58 59
+    '}' (125) 58 59
+    error (256)
+    _DATA_ <s> (258) 18 19
+    _SAVE_HEAD <s> (259) 37 39
+    _SAVE_FOOT (260) 37 39
+    _TAG <s> (261) 26 27 32 33
+    _LOOP_ <s> (262) 31
+    _DQSTRING <s> (263) 50
+    _SQSTRING <s> (264) 49
+    _UQSTRING <s> (265) 46
+    _DQ3STRING <s> (266) 52
+    _SQ3STRING <s> (267) 51
+    _TEXT_FIELD <s> (268) 53
+    _INTEGER_CONST <s> (269) 55
+    _REAL_CONST <s> (270) 54
+    _TABLE_ENTRY_SEP (271) 60 61
+
+
+Nonterminals, with rules where they appear
+
+    $accept (21)
+        on left: 0
+    cif_file (22)
+        on left: 1 2 3 4 5 6
+        on right: 0
+    stray_data_value_list (23)
+        on left: 7 8
+        on right: 5 6
+    data_block_list (24)
+        on left: 9 10
+        on right: 2 4 6 9
+    headerless_data_block (25)
+        on left: 11 13
+        on right: 3 4
+    $@1 (26)
+        on left: 12
+        on right: 13
+    data_block (27)
+        on left: 14 15
+        on right: 9 10
+    block_content_list (28)
+        on left: 16 17
+        on right: 13 14 16
+    data_heading <s> (29)
+        on left: 18 19
+        on right: 14 15
+    block_content (30)
+        on left: 20 21
+        on right: 11 13 16 17
+    data_list (31)
+        on left: 22 23
+        on right: 22 37
+    data (32)
+        on left: 24 25
+        on right: 20 22 23
+    cif_entry (33)
+        on left: 26 27
+        on right: 24
+    data_value_list <typed_value> (34)
+        on left: 28 29
+        on right: 8 19 27 29 56
+    loop (35)
+        on left: 31
+        on right: 25
+    $@2 (36)
+        on left: 30
+        on right: 31
+    loop_tags (37)
+        on left: 32 33
+        on right: 31 32
+    loop_values (38)
+        on left: 34 35
+        on right: 31 34
+    save_frame (39)
+        on left: 37 39
+        on right: 21
+    $@3 (40)
+        on left: 36
+        on right: 37
+    $@4 (41)
+        on left: 38
+        on right: 39
+    data_value <typed_value> (42)
+        on left: 40 41 42 43 44
+        on right: 7 8 26 27 28 29 34 35 60 61
+    string <typed_value> (43)
+        on left: 45 46
+        on right: 40
+    any_quoted_string <typed_value> (44)
+        on left: 47 48
+        on right: 45 60 61
+    quoted_string <typed_value> (45)
+        on left: 49 50
+        on right: 47
+    triple_quoted_string <typed_value> (46)
+        on left: 51 52
+        on right: 48
+    textfield <typed_value> (47)
+        on left: 53
+        on right: 42
+    number <typed_value> (48)
+        on left: 54 55
+        on right: 41
+    list <typed_value> (49)
+        on left: 56 57
+        on right: 43
+    table <typed_value> (50)
+        on left: 58 59
+        on right: 44
+    table_entry_list <typed_value> (51)
+        on left: 60 61
+        on right: 58 60
+
+
+State 0
+
+    0 $accept: . cif_file $end
+
+    _DATA_          shift, and go to state 1
+    _SAVE_HEAD      shift, and go to state 2
+    _TAG            shift, and go to state 3
+    _LOOP_          shift, and go to state 4
+    _DQSTRING       shift, and go to state 5
+    _SQSTRING       shift, and go to state 6
+    _UQSTRING       shift, and go to state 7
+    _DQ3STRING      shift, and go to state 8
+    _SQ3STRING      shift, and go to state 9
+    _TEXT_FIELD     shift, and go to state 10
+    _INTEGER_CONST  shift, and go to state 11
+    _REAL_CONST     shift, and go to state 12
+    '['             shift, and go to state 13
+    '{'             shift, and go to state 14
+
+    $default  reduce using rule 1 (cif_file)
+
+    cif_file               go to state 15
+    stray_data_value_list  go to state 16
+    data_block_list        go to state 17
+    headerless_data_block  go to state 18
+    data_block             go to state 19
+    data_heading           go to state 20
+    block_content          go to state 21
+    data                   go to state 22
+    cif_entry              go to state 23
+    loop                   go to state 24
+    save_frame             go to state 25
+    data_value             go to state 26
+    string                 go to state 27
+    any_quoted_string      go to state 28
+    quoted_string          go to state 29
+    triple_quoted_string   go to state 30
+    textfield              go to state 31
+    number                 go to state 32
+    list                   go to state 33
+    table                  go to state 34
+
+
+State 1
+
+   18 data_heading: _DATA_ .
+   19             | _DATA_ . data_value_list
+
+    _DQSTRING       shift, and go to state 5
+    _SQSTRING       shift, and go to state 6
+    _UQSTRING       shift, and go to state 7
+    _DQ3STRING      shift, and go to state 8
+    _SQ3STRING      shift, and go to state 9
+    _TEXT_FIELD     shift, and go to state 10
+    _INTEGER_CONST  shift, and go to state 11
+    _REAL_CONST     shift, and go to state 12
+    '['             shift, and go to state 13
+    '{'             shift, and go to state 14
+
+    $default  reduce using rule 18 (data_heading)
+
+    data_value_list       go to state 35
+    data_value            go to state 36
+    string                go to state 27
+    any_quoted_string     go to state 28
+    quoted_string         go to state 29
+    triple_quoted_string  go to state 30
+    textfield             go to state 31
+    number                go to state 32
+    list                  go to state 33
+    table                 go to state 34
+
+
+State 2
+
+   37 save_frame: _SAVE_HEAD . $@3 data_list _SAVE_FOOT
+   39           | _SAVE_HEAD . $@4 _SAVE_FOOT
+
+    _SAVE_FOOT  reduce using rule 38 ($@4)
+    $default    reduce using rule 36 ($@3)
+
+    $@3  go to state 37
+    $@4  go to state 38
+
+
+State 3
+
+   26 cif_entry: _TAG . data_value
+   27          | _TAG . data_value data_value_list
+
+    _DQSTRING       shift, and go to state 5
+    _SQSTRING       shift, and go to state 6
+    _UQSTRING       shift, and go to state 7
+    _DQ3STRING      shift, and go to state 8
+    _SQ3STRING      shift, and go to state 9
+    _TEXT_FIELD     shift, and go to state 10
+    _INTEGER_CONST  shift, and go to state 11
+    _REAL_CONST     shift, and go to state 12
+    '['             shift, and go to state 13
+    '{'             shift, and go to state 14
+
+    data_value            go to state 39
+    string                go to state 27
+    any_quoted_string     go to state 28
+    quoted_string         go to state 29
+    triple_quoted_string  go to state 30
+    textfield             go to state 31
+    number                go to state 32
+    list                  go to state 33
+    table                 go to state 34
+
+
+State 4
+
+   31 loop: _LOOP_ . $@2 loop_tags loop_values
+
+    $default  reduce using rule 30 ($@2)
+
+    $@2  go to state 40
+
+
+State 5
+
+   50 quoted_string: _DQSTRING .
+
+    $default  reduce using rule 50 (quoted_string)
+
+
+State 6
+
+   49 quoted_string: _SQSTRING .
+
+    $default  reduce using rule 49 (quoted_string)
+
+
+State 7
+
+   46 string: _UQSTRING .
+
+    $default  reduce using rule 46 (string)
+
+
+State 8
+
+   52 triple_quoted_string: _DQ3STRING .
+
+    $default  reduce using rule 52 (triple_quoted_string)
+
+
+State 9
+
+   51 triple_quoted_string: _SQ3STRING .
+
+    $default  reduce using rule 51 (triple_quoted_string)
+
+
+State 10
+
+   53 textfield: _TEXT_FIELD .
+
+    $default  reduce using rule 53 (textfield)
+
+
+State 11
+
+   55 number: _INTEGER_CONST .
+
+    $default  reduce using rule 55 (number)
+
+
+State 12
+
+   54 number: _REAL_CONST .
+
+    $default  reduce using rule 54 (number)
+
+
+State 13
+
+   56 list: '[' . data_value_list ']'
+   57     | '[' . ']'
+
+    _DQSTRING       shift, and go to state 5
+    _SQSTRING       shift, and go to state 6
+    _UQSTRING       shift, and go to state 7
+    _DQ3STRING      shift, and go to state 8
+    _SQ3STRING      shift, and go to state 9
+    _TEXT_FIELD     shift, and go to state 10
+    _INTEGER_CONST  shift, and go to state 11
+    _REAL_CONST     shift, and go to state 12
+    '['             shift, and go to state 13
+    ']'             shift, and go to state 41
+    '{'             shift, and go to state 14
+
+    data_value_list       go to state 42
+    data_value            go to state 36
+    string                go to state 27
+    any_quoted_string     go to state 28
+    quoted_string         go to state 29
+    triple_quoted_string  go to state 30
+    textfield             go to state 31
+    number                go to state 32
+    list                  go to state 33
+    table                 go to state 34
+
+
+State 14
+
+   58 table: '{' . table_entry_list '}'
+   59      | '{' . '}'
+
+    _DQSTRING   shift, and go to state 5
+    _SQSTRING   shift, and go to state 6
+    _DQ3STRING  shift, and go to state 8
+    _SQ3STRING  shift, and go to state 9
+    '}'         shift, and go to state 43
+
+    any_quoted_string     go to state 44
+    quoted_string         go to state 29
+    triple_quoted_string  go to state 30
+    table_entry_list      go to state 45
+
+
+State 15
+
+    0 $accept: cif_file . $end
+
+    $end  shift, and go to state 46
+
+
+State 16
+
+    5 cif_file: stray_data_value_list .
+    6         | stray_data_value_list . data_block_list
+
+    _DATA_  shift, and go to state 1
+
+    $default  reduce using rule 5 (cif_file)
+
+    data_block_list  go to state 47
+    data_block       go to state 19
+    data_heading     go to state 20
+
+
+State 17
+
+    2 cif_file: data_block_list .
+    9 data_block_list: data_block_list . data_block
+
+    _DATA_  shift, and go to state 1
+
+    $default  reduce using rule 2 (cif_file)
+
+    data_block    go to state 48
+    data_heading  go to state 20
+
+
+State 18
+
+    3 cif_file: headerless_data_block .
+    4         | headerless_data_block . data_block_list
+
+    _DATA_  shift, and go to state 1
+
+    $default  reduce using rule 3 (cif_file)
+
+    data_block_list  go to state 49
+    data_block       go to state 19
+    data_heading     go to state 20
+
+
+State 19
+
+   10 data_block_list: data_block .
+
+    $default  reduce using rule 10 (data_block_list)
+
+
+State 20
+
+   14 data_block: data_heading . block_content_list
+   15           | data_heading .
+
+    _SAVE_HEAD  shift, and go to state 2
+    _TAG        shift, and go to state 3
+    _LOOP_      shift, and go to state 4
+
+    $default  reduce using rule 15 (data_block)
+
+    block_content_list  go to state 50
+    block_content       go to state 51
+    data                go to state 22
+    cif_entry           go to state 23
+    loop                go to state 24
+    save_frame          go to state 25
+
+
+State 21
+
+   11 headerless_data_block: block_content .
+   13                      | block_content . $@1 block_content_list
+
+    $end      reduce using rule 11 (headerless_data_block)
+    _DATA_    reduce using rule 11 (headerless_data_block)
+    $default  reduce using rule 12 ($@1)
+
+    $@1  go to state 52
+
+
+State 22
+
+   20 block_content: data .
+
+    $default  reduce using rule 20 (block_content)
+
+
+State 23
+
+   24 data: cif_entry .
+
+    $default  reduce using rule 24 (data)
+
+
+State 24
+
+   25 data: loop .
+
+    $default  reduce using rule 25 (data)
+
+
+State 25
+
+   21 block_content: save_frame .
+
+    $default  reduce using rule 21 (block_content)
+
+
+State 26
+
+    7 stray_data_value_list: data_value .
+    8                      | data_value . data_value_list
+
+    _DQSTRING       shift, and go to state 5
+    _SQSTRING       shift, and go to state 6
+    _UQSTRING       shift, and go to state 7
+    _DQ3STRING      shift, and go to state 8
+    _SQ3STRING      shift, and go to state 9
+    _TEXT_FIELD     shift, and go to state 10
+    _INTEGER_CONST  shift, and go to state 11
+    _REAL_CONST     shift, and go to state 12
+    '['             shift, and go to state 13
+    '{'             shift, and go to state 14
+
+    $default  reduce using rule 7 (stray_data_value_list)
+
+    data_value_list       go to state 53
+    data_value            go to state 36
+    string                go to state 27
+    any_quoted_string     go to state 28
+    quoted_string         go to state 29
+    triple_quoted_string  go to state 30
+    textfield             go to state 31
+    number                go to state 32
+    list                  go to state 33
+    table                 go to state 34
+
+
+State 27
+
+   40 data_value: string .
+
+    $default  reduce using rule 40 (data_value)
+
+
+State 28
+
+   45 string: any_quoted_string .
+
+    $default  reduce using rule 45 (string)
+
+
+State 29
+
+   47 any_quoted_string: quoted_string .
+
+    $default  reduce using rule 47 (any_quoted_string)
+
+
+State 30
+
+   48 any_quoted_string: triple_quoted_string .
+
+    $default  reduce using rule 48 (any_quoted_string)
+
+
+State 31
+
+   42 data_value: textfield .
+
+    $default  reduce using rule 42 (data_value)
+
+
+State 32
+
+   41 data_value: number .
+
+    $default  reduce using rule 41 (data_value)
+
+
+State 33
+
+   43 data_value: list .
+
+    $default  reduce using rule 43 (data_value)
+
+
+State 34
+
+   44 data_value: table .
+
+    $default  reduce using rule 44 (data_value)
+
+
+State 35
+
+   19 data_heading: _DATA_ data_value_list .
+   29 data_value_list: data_value_list . data_value
+
+    _DQSTRING       shift, and go to state 5
+    _SQSTRING       shift, and go to state 6
+    _UQSTRING       shift, and go to state 7
+    _DQ3STRING      shift, and go to state 8
+    _SQ3STRING      shift, and go to state 9
+    _TEXT_FIELD     shift, and go to state 10
+    _INTEGER_CONST  shift, and go to state 11
+    _REAL_CONST     shift, and go to state 12
+    '['             shift, and go to state 13
+    '{'             shift, and go to state 14
+
+    $default  reduce using rule 19 (data_heading)
+
+    data_value            go to state 54
+    string                go to state 27
+    any_quoted_string     go to state 28
+    quoted_string         go to state 29
+    triple_quoted_string  go to state 30
+    textfield             go to state 31
+    number                go to state 32
+    list                  go to state 33
+    table                 go to state 34
+
+
+State 36
+
+   28 data_value_list: data_value .
+
+    $default  reduce using rule 28 (data_value_list)
+
+
+State 37
+
+   37 save_frame: _SAVE_HEAD $@3 . data_list _SAVE_FOOT
+
+    _TAG    shift, and go to state 3
+    _LOOP_  shift, and go to state 4
+
+    data_list  go to state 55
+    data       go to state 56
+    cif_entry  go to state 23
+    loop       go to state 24
+
+
+State 38
+
+   39 save_frame: _SAVE_HEAD $@4 . _SAVE_FOOT
+
+    _SAVE_FOOT  shift, and go to state 57
+
+
+State 39
+
+   26 cif_entry: _TAG data_value .
+   27          | _TAG data_value . data_value_list
+
+    _DQSTRING       shift, and go to state 5
+    _SQSTRING       shift, and go to state 6
+    _UQSTRING       shift, and go to state 7
+    _DQ3STRING      shift, and go to state 8
+    _SQ3STRING      shift, and go to state 9
+    _TEXT_FIELD     shift, and go to state 10
+    _INTEGER_CONST  shift, and go to state 11
+    _REAL_CONST     shift, and go to state 12
+    '['             shift, and go to state 13
+    '{'             shift, and go to state 14
+
+    $default  reduce using rule 26 (cif_entry)
+
+    data_value_list       go to state 58
+    data_value            go to state 36
+    string                go to state 27
+    any_quoted_string     go to state 28
+    quoted_string         go to state 29
+    triple_quoted_string  go to state 30
+    textfield             go to state 31
+    number                go to state 32
+    list                  go to state 33
+    table                 go to state 34
+
+
+State 40
+
+   31 loop: _LOOP_ $@2 . loop_tags loop_values
+
+    _TAG  shift, and go to state 59
+
+    loop_tags  go to state 60
+
+
+State 41
+
+   57 list: '[' ']' .
+
+    $default  reduce using rule 57 (list)
+
+
+State 42
+
+   29 data_value_list: data_value_list . data_value
+   56 list: '[' data_value_list . ']'
+
+    _DQSTRING       shift, and go to state 5
+    _SQSTRING       shift, and go to state 6
+    _UQSTRING       shift, and go to state 7
+    _DQ3STRING      shift, and go to state 8
+    _SQ3STRING      shift, and go to state 9
+    _TEXT_FIELD     shift, and go to state 10
+    _INTEGER_CONST  shift, and go to state 11
+    _REAL_CONST     shift, and go to state 12
+    '['             shift, and go to state 13
+    ']'             shift, and go to state 61
+    '{'             shift, and go to state 14
+
+    data_value            go to state 54
+    string                go to state 27
+    any_quoted_string     go to state 28
+    quoted_string         go to state 29
+    triple_quoted_string  go to state 30
+    textfield             go to state 31
+    number                go to state 32
+    list                  go to state 33
+    table                 go to state 34
+
+
+State 43
+
+   59 table: '{' '}' .
+
+    $default  reduce using rule 59 (table)
+
+
+State 44
+
+   61 table_entry_list: any_quoted_string . _TABLE_ENTRY_SEP data_value
+
+    _TABLE_ENTRY_SEP  shift, and go to state 62
+
+
+State 45
+
+   58 table: '{' table_entry_list . '}'
+   60 table_entry_list: table_entry_list . any_quoted_string _TABLE_ENTRY_SEP data_value
+
+    _DQSTRING   shift, and go to state 5
+    _SQSTRING   shift, and go to state 6
+    _DQ3STRING  shift, and go to state 8
+    _SQ3STRING  shift, and go to state 9
+    '}'         shift, and go to state 63
+
+    any_quoted_string     go to state 64
+    quoted_string         go to state 29
+    triple_quoted_string  go to state 30
+
+
+State 46
+
+    0 $accept: cif_file $end .
+
+    $default  accept
+
+
+State 47
+
+    6 cif_file: stray_data_value_list data_block_list .
+    9 data_block_list: data_block_list . data_block
+
+    _DATA_  shift, and go to state 1
+
+    $default  reduce using rule 6 (cif_file)
+
+    data_block    go to state 48
+    data_heading  go to state 20
+
+
+State 48
+
+    9 data_block_list: data_block_list data_block .
+
+    $default  reduce using rule 9 (data_block_list)
+
+
+State 49
+
+    4 cif_file: headerless_data_block data_block_list .
+    9 data_block_list: data_block_list . data_block
+
+    _DATA_  shift, and go to state 1
+
+    $default  reduce using rule 4 (cif_file)
+
+    data_block    go to state 48
+    data_heading  go to state 20
+
+
+State 50
+
+   14 data_block: data_heading block_content_list .
+   16 block_content_list: block_content_list . block_content
+
+    _SAVE_HEAD  shift, and go to state 2
+    _TAG        shift, and go to state 3
+    _LOOP_      shift, and go to state 4
+
+    $default  reduce using rule 14 (data_block)
+
+    block_content  go to state 65
+    data           go to state 22
+    cif_entry      go to state 23
+    loop           go to state 24
+    save_frame     go to state 25
+
+
+State 51
+
+   17 block_content_list: block_content .
+
+    $default  reduce using rule 17 (block_content_list)
+
+
+State 52
+
+   13 headerless_data_block: block_content $@1 . block_content_list
+
+    _SAVE_HEAD  shift, and go to state 2
+    _TAG        shift, and go to state 3
+    _LOOP_      shift, and go to state 4
+
+    block_content_list  go to state 66
+    block_content       go to state 51
+    data                go to state 22
+    cif_entry           go to state 23
+    loop                go to state 24
+    save_frame          go to state 25
+
+
+State 53
+
+    8 stray_data_value_list: data_value data_value_list .
+   29 data_value_list: data_value_list . data_value
+
+    _DQSTRING       shift, and go to state 5
+    _SQSTRING       shift, and go to state 6
+    _UQSTRING       shift, and go to state 7
+    _DQ3STRING      shift, and go to state 8
+    _SQ3STRING      shift, and go to state 9
+    _TEXT_FIELD     shift, and go to state 10
+    _INTEGER_CONST  shift, and go to state 11
+    _REAL_CONST     shift, and go to state 12
+    '['             shift, and go to state 13
+    '{'             shift, and go to state 14
+
+    $default  reduce using rule 8 (stray_data_value_list)
+
+    data_value            go to state 54
+    string                go to state 27
+    any_quoted_string     go to state 28
+    quoted_string         go to state 29
+    triple_quoted_string  go to state 30
+    textfield             go to state 31
+    number                go to state 32
+    list                  go to state 33
+    table                 go to state 34
+
+
+State 54
+
+   29 data_value_list: data_value_list data_value .
+
+    $default  reduce using rule 29 (data_value_list)
+
+
+State 55
+
+   22 data_list: data_list . data
+   37 save_frame: _SAVE_HEAD $@3 data_list . _SAVE_FOOT
+
+    _SAVE_FOOT  shift, and go to state 67
+    _TAG        shift, and go to state 3
+    _LOOP_      shift, and go to state 4
+
+    data       go to state 68
+    cif_entry  go to state 23
+    loop       go to state 24
+
+
+State 56
+
+   23 data_list: data .
+
+    $default  reduce using rule 23 (data_list)
+
+
+State 57
+
+   39 save_frame: _SAVE_HEAD $@4 _SAVE_FOOT .
+
+    $default  reduce using rule 39 (save_frame)
+
+
+State 58
+
+   27 cif_entry: _TAG data_value data_value_list .
+   29 data_value_list: data_value_list . data_value
+
+    _DQSTRING       shift, and go to state 5
+    _SQSTRING       shift, and go to state 6
+    _UQSTRING       shift, and go to state 7
+    _DQ3STRING      shift, and go to state 8
+    _SQ3STRING      shift, and go to state 9
+    _TEXT_FIELD     shift, and go to state 10
+    _INTEGER_CONST  shift, and go to state 11
+    _REAL_CONST     shift, and go to state 12
+    '['             shift, and go to state 13
+    '{'             shift, and go to state 14
+
+    $default  reduce using rule 27 (cif_entry)
+
+    data_value            go to state 54
+    string                go to state 27
+    any_quoted_string     go to state 28
+    quoted_string         go to state 29
+    triple_quoted_string  go to state 30
+    textfield             go to state 31
+    number                go to state 32
+    list                  go to state 33
+    table                 go to state 34
+
+
+State 59
+
+   33 loop_tags: _TAG .
+
+    $default  reduce using rule 33 (loop_tags)
+
+
+State 60
+
+   31 loop: _LOOP_ $@2 loop_tags . loop_values
+   32 loop_tags: loop_tags . _TAG
+
+    _TAG            shift, and go to state 69
+    _DQSTRING       shift, and go to state 5
+    _SQSTRING       shift, and go to state 6
+    _UQSTRING       shift, and go to state 7
+    _DQ3STRING      shift, and go to state 8
+    _SQ3STRING      shift, and go to state 9
+    _TEXT_FIELD     shift, and go to state 10
+    _INTEGER_CONST  shift, and go to state 11
+    _REAL_CONST     shift, and go to state 12
+    '['             shift, and go to state 13
+    '{'             shift, and go to state 14
+
+    loop_values           go to state 70
+    data_value            go to state 71
+    string                go to state 27
+    any_quoted_string     go to state 28
+    quoted_string         go to state 29
+    triple_quoted_string  go to state 30
+    textfield             go to state 31
+    number                go to state 32
+    list                  go to state 33
+    table                 go to state 34
+
+
+State 61
+
+   56 list: '[' data_value_list ']' .
+
+    $default  reduce using rule 56 (list)
+
+
+State 62
+
+   61 table_entry_list: any_quoted_string _TABLE_ENTRY_SEP . data_value
+
+    _DQSTRING       shift, and go to state 5
+    _SQSTRING       shift, and go to state 6
+    _UQSTRING       shift, and go to state 7
+    _DQ3STRING      shift, and go to state 8
+    _SQ3STRING      shift, and go to state 9
+    _TEXT_FIELD     shift, and go to state 10
+    _INTEGER_CONST  shift, and go to state 11
+    _REAL_CONST     shift, and go to state 12
+    '['             shift, and go to state 13
+    '{'             shift, and go to state 14
+
+    data_value            go to state 72
+    string                go to state 27
+    any_quoted_string     go to state 28
+    quoted_string         go to state 29
+    triple_quoted_string  go to state 30
+    textfield             go to state 31
+    number                go to state 32
+    list                  go to state 33
+    table                 go to state 34
+
+
+State 63
+
+   58 table: '{' table_entry_list '}' .
+
+    $default  reduce using rule 58 (table)
+
+
+State 64
+
+   60 table_entry_list: table_entry_list any_quoted_string . _TABLE_ENTRY_SEP data_value
+
+    _TABLE_ENTRY_SEP  shift, and go to state 73
+
+
+State 65
+
+   16 block_content_list: block_content_list block_content .
+
+    $default  reduce using rule 16 (block_content_list)
+
+
+State 66
+
+   13 headerless_data_block: block_content $@1 block_content_list .
+   16 block_content_list: block_content_list . block_content
+
+    _SAVE_HEAD  shift, and go to state 2
+    _TAG        shift, and go to state 3
+    _LOOP_      shift, and go to state 4
+
+    $default  reduce using rule 13 (headerless_data_block)
+
+    block_content  go to state 65
+    data           go to state 22
+    cif_entry      go to state 23
+    loop           go to state 24
+    save_frame     go to state 25
+
+
+State 67
+
+   37 save_frame: _SAVE_HEAD $@3 data_list _SAVE_FOOT .
+
+    $default  reduce using rule 37 (save_frame)
+
+
+State 68
+
+   22 data_list: data_list data .
+
+    $default  reduce using rule 22 (data_list)
+
+
+State 69
+
+   32 loop_tags: loop_tags _TAG .
+
+    $default  reduce using rule 32 (loop_tags)
+
+
+State 70
+
+   31 loop: _LOOP_ $@2 loop_tags loop_values .
+   34 loop_values: loop_values . data_value
+
+    _DQSTRING       shift, and go to state 5
+    _SQSTRING       shift, and go to state 6
+    _UQSTRING       shift, and go to state 7
+    _DQ3STRING      shift, and go to state 8
+    _SQ3STRING      shift, and go to state 9
+    _TEXT_FIELD     shift, and go to state 10
+    _INTEGER_CONST  shift, and go to state 11
+    _REAL_CONST     shift, and go to state 12
+    '['             shift, and go to state 13
+    '{'             shift, and go to state 14
+
+    $default  reduce using rule 31 (loop)
+
+    data_value            go to state 74
+    string                go to state 27
+    any_quoted_string     go to state 28
+    quoted_string         go to state 29
+    triple_quoted_string  go to state 30
+    textfield             go to state 31
+    number                go to state 32
+    list                  go to state 33
+    table                 go to state 34
+
+
+State 71
+
+   35 loop_values: data_value .
+
+    $default  reduce using rule 35 (loop_values)
+
+
+State 72
+
+   61 table_entry_list: any_quoted_string _TABLE_ENTRY_SEP data_value .
+
+    $default  reduce using rule 61 (table_entry_list)
+
+
+State 73
+
+   60 table_entry_list: table_entry_list any_quoted_string _TABLE_ENTRY_SEP . data_value
+
+    _DQSTRING       shift, and go to state 5
+    _SQSTRING       shift, and go to state 6
+    _UQSTRING       shift, and go to state 7
+    _DQ3STRING      shift, and go to state 8
+    _SQ3STRING      shift, and go to state 9
+    _TEXT_FIELD     shift, and go to state 10
+    _INTEGER_CONST  shift, and go to state 11
+    _REAL_CONST     shift, and go to state 12
+    '['             shift, and go to state 13
+    '{'             shift, and go to state 14
+
+    data_value            go to state 75
+    string                go to state 27
+    any_quoted_string     go to state 28
+    quoted_string         go to state 29
+    triple_quoted_string  go to state 30
+    textfield             go to state 31
+    number                go to state 32
+    list                  go to state 33
+    table                 go to state 34
+
+
+State 74
+
+   34 loop_values: loop_values data_value .
+
+    $default  reduce using rule 34 (loop_values)
+
+
+State 75
+
+   60 table_entry_list: table_entry_list any_quoted_string _TABLE_ENTRY_SEP data_value .
+
+    $default  reduce using rule 60 (table_entry_list)
