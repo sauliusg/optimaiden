@@ -24,7 +24,7 @@ abstract project Optimaiden_Config is
             -- The following configuration section prevents the CIF Streaming Parser
             -- from correctly enqueing/dequeing the data blocks, the parser seems
             -- to "hang":
-   --       ,"-fdata-sections" -- Separate ELF section for each variable
+            -- ,"-fdata-sections" -- Separate ELF section for each variable
             ,"-g" -- Generate debug info
             ,"-gnatwa" -- Enable all warnings
             ,"-gnatw.X" -- Disable warnings for No_Exception_Propagation
