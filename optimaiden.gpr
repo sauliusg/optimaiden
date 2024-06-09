@@ -1,10 +1,13 @@
 with "config/optimaiden_config.gpr";
 project Optimaiden is
 
+   for Languages use ("Ada", "C");
    for Source_Dirs use
        (
         "src/", "config/","programs/",
-        "externals/cif-streaming-parser/r137/trunk/src/"
+        "externals/cif-streaming-parser/r137/trunk/src/",
+        "externals/cif-streaming-parser/r137/trunk/src/externals/cexceptions",
+        "externals/cif-streaming-parser/r137/trunk/src/externals/codcif"
        );
    for Object_Dir use "obj/" & Optimaiden_Config.Build_Profile;
    for Create_Missing_Dirs use "True";
@@ -13,11 +16,17 @@ project Optimaiden is
 
    package Compiler is
       for Default_Switches ("Ada") use Optimaiden_Config.Ada_Compiler_Switches;
+      for Default_Switches ("C")
+          use ("-fPIE", "-DHAS_VSNPRINTF");
    end Compiler;
 
    package Binder is
       for Switches ("Ada") use ("-Es"); --  Symbolic traceback
    end Binder;
+
+    package Linker is
+      for Default_Switches ("Ada") use ("-lm");
+    end Linker;
 
    package Install is
       for Artifacts (".") use ("share");
