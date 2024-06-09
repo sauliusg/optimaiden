@@ -20,13 +20,13 @@ project Optimaiden is
           use ("-fPIE", "-DHAS_VSNPRINTF");
    end Compiler;
 
-   package Binder is
-      for Switches ("Ada") use ("-Es"); --  Symbolic traceback
-   end Binder;
+   -- package Binder is
+   --    for Switches ("Ada") use ("-Es"); --  Symbolic traceback
+   -- end Binder;
 
-    package Linker is
+   package Linker is
       for Default_Switches ("Ada") use ("-lm");
-    end Linker;
+   end Linker;
 
    package Install is
       for Artifacts (".") use ("share");
