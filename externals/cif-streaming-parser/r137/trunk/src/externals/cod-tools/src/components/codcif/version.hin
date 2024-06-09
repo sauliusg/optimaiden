@@ -1,0 +1,13 @@
+/*---------------------------------------------------------------------------*\
+**$Author: antanas $
+**$Date: 2019-11-15 18:13:46 +0200 (Fri, 15 Nov 2019) $ 
+**$Revision: 7412 $
+**$URL: svn://cod.ibt.lt/cif-tools/trunk/src/components/codcif/version.hin $
+\*---------------------------------------------------------------------------*/
+
+#ifndef __VERSION_H
+#define __VERSION_H
+
+#define VERSION "@VERSION@"
+
+#endif

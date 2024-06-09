@@ -1,0 +1,78 @@
+#! /bin/sh
+#!perl -w # --*- Perl -*--
+eval 'exec perl -x $0 ${1+"$@"}'
+    if 0;
+#------------------------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2021-04-28 19:35:53 +0300 (Wed, 28 Apr 2021) $
+#$Revision: 8738 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/scripts/ssg_symop_string $
+#------------------------------------------------------------------------------
+#*
+#* Determine superspace group symmetry operators from symmetry matrices.
+#* Superspace group symmetry operators are output as parsable strings
+#* as described in the CIF _space_group_symop_ssg_operation_algebraic
+#* data item.
+#*
+#* USAGE:
+#*   $0 < input.matrix
+#*   $0 input.matrix
+#*   $0 input1.matrix input*.matrix
+#**
+
+use strict;
+use warnings;
+use COD::SOptions qw( getOptions );
+use COD::SUsage qw( usage );
+use COD::Spacegroups::Symop::SSGParse qw( string_from_symop );
+use COD::ToolsVersion qw( get_version_string );
+
+#* OPTIONS:
+#*   --help, --usage
+#*                     Output a short usage message (this message) and exit.
+#*   --version
+#*                     Output version information and exit.
+#**
+@ARGV = getOptions(
+    '--help,--usage' => sub { usage; exit },
+    '--version'      => sub { print get_version_string(), "\n"; exit }
+);
+
+my @matrix;
+
+while(<>) {
+    next if /^#/;
+    next if /^\s*$/;
+    chomp;
+    if( /^\s*\[\s*$/ ) {
+        @matrix = ();
+        next;
+    }
+    if( /^\s*\[/ ) { # Matrix row
+        s/^\s*\[\s*|\s*\]\s*$//g;
+        my @row = split( /,\s*/ );
+        push( @matrix, \@row );
+        next;
+    }
+    if( /^\s*\]/ ) {
+        print_commented_matrix( \@matrix );
+        print string_from_symop( \@matrix ), "\n\n";
+    }
+}
+
+sub print_commented_matrix
+{
+    my ($m) = @_;
+
+    print "# [\n";
+    for (@$m) {
+        print "#   [ ";
+        for (@$_) {
+            printf "%2s, ", $_;
+        }
+        print " ]\n";
+    }
+    print "# ]\n";
+
+    return;
+}

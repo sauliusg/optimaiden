@@ -1,0 +1,11 @@
+# \_WITH\_TWO\_UNDERSCORES
+
+Version: \*version\* is &lt;not&gt; escaped (\*date\* is &lt;not&gt; escaped too)
+
+### <a name="_category.data_item_1"></a>\_category.data\_item\_1
+
+Text here contains \*\*some\*\* mixed Markdown and HTML special sequences.
+&lt;br/&gt;
+
+### <a name="_category.data_item_1"></a>\_category.data\_item\_1
+

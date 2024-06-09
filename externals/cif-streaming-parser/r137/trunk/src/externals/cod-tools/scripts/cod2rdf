@@ -1,0 +1,406 @@
+#! /bin/sh
+#!perl -w # --*- Perl -*--
+eval 'exec perl -x $0 ${1+"$@"}'
+    if 0;
+#------------------------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2022-07-31 09:52:44 +0300 (Sun, 31 Jul 2022) $
+#$Revision: 9353 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/scripts/cod2rdf $
+#------------------------------------------------------------------------------
+#*
+#* Describe (in RDF format) properties of COD structures.
+#*
+#* USAGE:
+#*    $0 --options 1000000 "[1-9][0-9]\{6\}"
+#**
+
+use strict;
+use warnings;
+use DBI;
+use COD::RDF qw( rdf_n3 rdf_ntriples rdf_xml );
+use COD::SOptions qw( getOptions get_value );
+use COD::SUsage qw( usage options );
+use COD::ErrorHandler qw( report_message );
+use COD::ToolsVersion qw( get_version_string );
+
+my $die_on_error_level = {
+    ERROR   => 1,
+    WARNING => 0,
+    NOTE    => 0
+};
+
+my $refering_db_name = 'cod';
+my $output_format = 'xml';
+
+my $from;
+my $to;
+my $revision;
+
+my %database = (
+    host  => "www.crystallography.net",
+    user  => "cod_reader",
+    name  => "cod",
+    port  => 3306,
+    password => "",
+    platform => "mysql",
+    definition_table => "databases",
+);
+
+my $rdf_options =
+{
+    url_prefix      => 'http://www.crystallography.net/cod/',
+    url_postfix     => '.html',
+    vocabulary_name       => 'cod',
+    vocabulary_url_prefix => 'http://www.crystallography.net/cod/doc/rdf/',
+    replace_utf_code_points_from => undef,
+    utf_code_point_format        => '&#x%04X;', # default is HTML escapes
+    split_author_names           => 1,
+};
+
+#* OPTIONS:
+#*   -d, --database  cod
+#*                     Use database "cod" to query for structures.
+#*
+#*   -h, --host   www.crystallography.net
+#*   -s, --server www.crystallography.net
+#*                     Query COD database on the host 'www.crystallography.net'.
+#*
+#*   -l, --localhost
+#*                     Use database server on the localhost to query the
+#*                     COD database.
+#*
+#*   -p, --port 3306
+#*                     Use the specified port to query structures
+#*                     (default: 3306).
+#*
+#*   --platform mysql
+#*                     Use specified SQL platform (default: 'mysql').
+#*
+#*   -u, --user cod_reader
+#*                     Use user name "cod_reader" to access COD database;
+#*                     this reader should be granted SELECT privilege, i.e.
+#*                     should be able to read the COD database, without
+#*                     supplying a password.
+#*
+#*   --password
+#*                     Use the specified password to connect (default: '').
+#*
+#*   --vocabulary-namespace cod
+#*                     Use vocabulary namespace "cod" to prefix properties
+#*                     native to the queried database.
+#*
+#*   --vocabulary-url-prefix http://www.crystallography.net/cod/doc/rdf/
+#*                     Specify URL prefix for database's native namespace.
+#*
+#*   --prefix, --db-url-prefix http://www.crystallography.net/cod/
+#*                     Specify URL prefix for all objects in the queried
+#*                     database.
+#*
+#*   --postfix, --db-url-postfix .html
+#*                     Specify URL postfix for all objects in the queried
+#*                     database.
+#*
+#*   --def-table, --definition-table databases
+#*                     Look "databases" table for descriptions of remote
+#*                     databases.
+#*
+#*   --db-name, --database-name cod
+#*                     Use "cod" as the abbreviation of queried databases.
+#*                     This abbreviation is used in construction of
+#*                     cross-referencing table names, i.e. "pubchem_x_cod".
+#*
+#*   --from
+#*                     Generate RDFs for all database entries starting at
+#*                     specified entry and ending at either the entry
+#*                     specified using '--to' command line option or the
+#*                     last entry in the database.
+#*
+#*   --to
+#*                     Generate RDFs for all database entries from either the
+#*                     entry specified using '--from' command line option or
+#*                     the first entry in the database.
+#*
+#*   --range
+#*                     Generate RDFs for all database entries in the specified
+#*                     range. Range should be specified in the form 'X-Y', where
+#*                     X is the first and Y is the last entry.
+#*
+#*   --revision
+#*                     Generate RDFs for all database entries deposited in the
+#*                     specified or older Subversion revision of the database.
+#*
+#*   --split-author-names
+#*                     Split author names in internal database representation
+#*                     at semicolons (';') to produce RDF-parsable list of
+#*                     author names. Each author in such list is marked with
+#*                     "author" property instead of "authors", which is used
+#*                     for non-split value (default).
+#*
+#*   --no-split-author-names, --dont-split-author-names
+#*                     Make no assumptions about internal database
+#*                     representation of author list.
+#*
+#*   --xml-output
+#*                     Output RDF in XML carrier format (default).
+#*
+#*   --n3-output
+#*                     Output RDF in N3 (Notation3) carrier format.
+#*
+#*   --turtle-output
+#*                     Output RDF in Turtle carrier format.
+#*
+#*   --ntriples-output, --n-triples-output
+#*                     Output RDF in N-Triples carrier format.
+#*
+#*   --replace-utf-codepoints-from
+#*                     Replace Unicode code points starting at specified point
+#*                     with carrier format-specific entities.
+#*
+#*   --no-replace-utf-codepoints, --dont-replace-utf-code-points
+#*                     Leave Unicode code points unescaped (default).
+#*
+#*   --html-utf-escapes
+#*                     Escape Unicode code points using HTML hexadecimal format
+#*                     corresponding to '&#x%04X;' formatted string (default).
+#*
+#*   --internal-utf-escapes
+#*                     Escape Unicode code points using internal format
+#*                     corresponding to '\\u%04X' formatted string.
+#*
+#*   --utf-escape-format
+#*                     Escape Unicode code points using format corresponding
+#*                     to the provided formatted string.
+#*
+#*   --help, --usage
+#*                     Output a short usage message (this message) and exit.
+#*   --version
+#*                     Output version information and exit.
+#**
+@ARGV = getOptions(
+    "-d,--database"  => \$database{name},
+    "-l,--localhost" => sub { $database{host} = 'localhost' },
+    "-h,--host"      => \$database{host},
+    "-p,--port"      => \$database{port},
+    "-s,--server"    => \$database{host},
+    "-u,--user"      => \$database{user},
+    "--password"     => \$database{password},
+    "--platform"     => \$database{platform},
+
+    "--vocabulary-namespace" => \$rdf_options->{vocabulary_name},
+    "--vocabulary-url-prefix" => \$rdf_options->{vocabulary_url_prefix},
+    "--prefix,--db-url-prefix"   => \$rdf_options->{url_prefix},
+    "--postfix,--db-url-postfix" => \$rdf_options->{url_postfix},
+    "--def-table,--definition-table" => \$database{definition_table},
+    "--db-name,--database-name" => \$refering_db_name,
+
+    "--from" => \$from,
+    "--to" => \$to,
+    "--range" => sub { get_value() =~ /^([0-9]+)\-([0-9]+)$/;
+                       $from = $1;
+                       $to = $2; },
+    "--revision" => \$revision,
+
+    "--split-author-names" =>
+        sub { $rdf_options->{split_author_names} = 1 },
+    "--no-split-author-names" =>
+        sub { $rdf_options->{split_author_names} = 0 },
+    "--dont-split-author-names" =>
+        sub { $rdf_options->{split_author_names} = 0 },
+
+    "--xml-output"       => sub { $output_format = 'xml' },
+    "--n3-output"        => sub { $output_format = 'n3' },
+    "--turtle-output"    => sub { $output_format = 'turtle' },
+    "--ntriples-output"  => sub { $output_format = 'ntriples' },
+    "--n-triples-output" => sub { $output_format = 'ntriples' },
+
+    "--replace-utf-codepoints-from" =>
+        \$rdf_options->{replace_utf_code_points_from},
+    "--no-replace-utf-codepoints" =>
+        sub { $rdf_options->{replace_utf_code_points_from} = undef },
+    "--dont-replace-utf-code-points" =>
+        sub { $rdf_options->{replace_utf_code_points_from} = undef },
+
+    "--html-utf-escapes" =>
+        sub { $rdf_options->{utf_code_point_format} = '&#x%04X;' },
+    "--internal-utf-escapes" =>
+        sub { $rdf_options->{utf_code_point_format} = "\\u%04X" },
+    "--utf-escape-format"    => \$rdf_options->{utf_code_point_format},
+
+    '--options'      => sub { options; exit },
+    '--help,--usage' => sub { usage; exit },
+    '--version'      => sub { print get_version_string(), "\n"; exit }
+);
+
+binmode( STDOUT, ":encoding(UTF-8)" );
+binmode( STDERR, ":encoding(UTF-8)" );
+
+my $dbh = db_connect( $database{platform},
+                      $database{host},
+                      $database{name},
+                      $database{port},
+                      $database{user},
+                      $database{password} );
+if (!defined $dbh) {
+    report_message( {
+        'program'   => $0,
+        'err_level' => 'ERROR',
+        'message'   => "connection to the '$database{host}' failed"
+    }, $die_on_error_level->{'ERROR'} );
+}
+
+my $where_condition = "";
+if( defined $from && defined $to ) {
+    $where_condition .= "file >= $from AND file <= $to";
+} elsif( defined $from ) {
+    $where_condition .= "file >= $from";
+} elsif( defined $to ) {
+    $where_condition .= "file <= $to";
+}
+if( defined $revision ) {
+    if( $where_condition ) {
+        $where_condition .= " AND (svnrevision IS NULL OR svnrevision <= $revision)";
+    } else {
+        $where_condition = "svnrevision IS NULL OR svnrevision <= $revision";
+    }
+}
+if( @ARGV ) {
+    if( $where_condition ) {
+        $where_condition = "($where_condition) OR ";
+    }
+    $where_condition .= "file IN (" . join( ",", @ARGV ) . ")";
+}
+
+my $data = $dbh->selectall_arrayref(
+                "SELECT * FROM data " .
+                "WHERE $where_condition",
+                { Slice => {} }
+           );
+
+$data = { map { $_->{file} => $_ } @$data };
+
+my $any_data_seen = (defined $from || defined $to || defined $revision) &&
+                     keys %$data > 0;
+for my $codid (@ARGV) {
+    if( !exists $data->{$codid} ) {
+        report_message( {
+            'program'   => $0,
+            'err_level' => 'WARNING',
+            'message'   => "structure '$codid' could not "
+                         . 'be found in the COD database'
+        }, $die_on_error_level->{'WARNING'} );
+    } else {
+        $any_data_seen = 1;
+    }
+}
+if ( !$any_data_seen ) {
+    report_message( {
+        'program'   => $0,
+        'err_level' => 'ERROR',
+        'message'   => 'no data for RDF was found in the COD database'
+        }, $die_on_error_level->{'ERROR'} );
+}
+
+# Forming URLs, removing unneeded fields
+for my $entry (values %$data) {
+    $entry->{url} = $rdf_options->{url_prefix} .
+                    $entry->{file} .
+                    $rdf_options->{url_postfix};
+    delete $entry->{file};
+    delete $entry->{text};
+    delete $entry->{flags};
+
+    for my $field (qw( formula calcformula cellformula )) {
+        next if !exists  $entry->{$field};
+        next if !defined $entry->{$field};
+        $entry->{$field} =~ s/^-\s*//;
+        $entry->{$field} =~ s/\s*-$//;
+    }
+}
+
+my $databases = $dbh->selectall_arrayref(
+    "SELECT name, url_prefix, url_postfix " .
+    "FROM `$database{definition_table}`",
+    { Slice => {} }
+);
+
+my %databases = map{ lc($_->{name}) => { url_prefix => $_->{url_prefix},
+                                         url_postfix => $_->{url_postfix} } }
+                     @$databases;
+
+my $ids = join( ', ', @ARGV );
+my %vocabularies = ( $rdf_options->{vocabulary_name} =>
+                     $rdf_options->{vocabulary_url_prefix} );
+
+for my $database (keys %databases) {
+    my $table = "${database}_x_${refering_db_name}";
+    my $db_data = $dbh->selectall_arrayref( <<"SQLEND"
+        SELECT ${refering_db_name}_id AS db_id,
+               ext_id,
+               relation,
+               vocabulary,
+               rdf_relations.uri_prefix AS vocabulary_uri_prefix
+        FROM `$table`
+        JOIN rdf_relations
+            ON relation_id = rdf_relations.id
+        WHERE ${refering_db_name}_id IN ($ids)
+SQLEND
+        , { Slice => {} }
+    );
+
+    for my $entry (@$db_data) {
+        my $db_id = $entry->{db_id};
+        $vocabularies{$entry->{vocabulary}} =
+            $entry->{vocabulary_uri_prefix};
+        $data->{$db_id}{links} = [] unless exists $data->{$db_id}{links};
+        push( @{$data->{$db_id}{links}},
+            {
+                db => $database,
+                ext_id => $entry->{ext_id},
+                relation => $entry->{relation},
+                vocabulary => $entry->{vocabulary},
+            } );
+    }
+}
+
+$rdf_options->{databases}    = \%databases;
+$rdf_options->{vocabularies} = \%vocabularies;
+
+if( $output_format eq 'xml' ) {
+    print rdf_xml( [ map { $data->{$_} } sort keys %$data ],
+                   $rdf_options );
+} elsif( $output_format eq 'n3' or $output_format eq 'turtle' ) {
+    print rdf_n3( [ map { $data->{$_} } sort keys %$data ],
+                  $rdf_options );
+} elsif( $output_format eq 'ntriples' ) {
+    print rdf_ntriples( [ map { $data->{$_} } sort keys %$data ],
+                        $rdf_options );
+}
+
+# Function used to connect to database
+sub db_connect
+{
+    my ($db_platform, $db_host, $db_name, $db_port, $db_user, $db_pass) = @_;
+    my $dsn = "dbi:$db_platform:" .
+              "hostname=$db_host;".
+              "dbname=$db_name".
+              ($db_port ? ";$db_port" : "");
+    my $dbh = DBI->connect( $dsn, $db_user, $db_pass, {PrintError => 0} );
+    if( !$dbh ) {
+        report_message( {
+            'program'   => $0,
+            'err_level' => 'ERROR',
+            'message'   => 'could not connect to the database'
+                         . ( defined $DBI::errstr ? ' -- ' . lcfirst( $DBI::errstr )
+                                                  : "" )
+        }, $die_on_error_level->{'ERROR'} );
+    }
+    if( $db_platform ne 'SQLite' ) {
+        $dbh->do( 'SET CHARACTER SET utf8' );
+        $dbh->do( 'set @@character_set_client = utf8' );
+        $dbh->do( 'set @@character_set_connection = utf8' );
+        $dbh->do( 'set @@character_set_server = utf8' );
+        $dbh->do( 'set @@character_set_database = utf8' );
+    }
+    return $dbh;
+}

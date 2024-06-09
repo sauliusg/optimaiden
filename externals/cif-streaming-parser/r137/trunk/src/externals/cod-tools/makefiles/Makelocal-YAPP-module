@@ -1,0 +1,55 @@
+#---*- Makefile -*-------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2021-08-02 12:37:21 +0300 (Mon, 02 Aug 2021) $
+#$Revision: 8849 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/makefiles/Makelocal-YAPP-module $
+#------------------------------------------------------------------------------
+#*
+#  Builds a Perl module from a Yapp grammar file.
+#**
+
+# The following variables should be predefined in the Makeconf file:
+# ${PKG_LIB_DIR}
+#                   Name of the local Perl library directory in which
+#                   the assembled Perl module should be placed.
+# ${PKG_PATH}
+#                   Relative path inside the local Perl library directory
+#                   in which the assembled Perl module should be placed.
+#                   If not defined, the relative path is determined
+#                   from the ${PKG_PREFIX} variable value.
+# ${PKG_PREFIX}
+#                   Prefix of the Perl package name. For example, if
+#                   the desired package name is 'X::Y::Z', then the 
+#                   'X::Y::' value should be passed. Please note, that
+#                   the 'Z' portion of the package name is determined
+#                   automatically and is equal to the name of the
+#                   current working directory.
+
+PKG_LIB_DIR ?= lib
+PKG_PREFIX  ?=
+PKG_PATH    ?= ${patsubst %/,%, ${subst ::,/,${PKG_PREFIX}}}
+
+PKG_NAME := ${notdir $(shell pwd)}.pm
+PM_FILE  := ${PKG_NAME:%.pm=${PKG_LIB_DIR}/${PKG_PATH}/%.pm}
+
+VFILE = .version
+VERSION := $(shell grep -v "^\#" ${VFILE})
+
+.PRECIOUS: ${PM_FILE}
+.PHONY: all build install cleanAll cleanAll-YAPP-module
+
+all: build
+
+build: ${PM_FILE}
+
+${PKG_LIB_DIR}/${PKG_PATH}/%.pm: grammar.yp
+	yapp -v -m ${PKG_PREFIX}$* -o - $< | sed 's/@VERSION@/${VERSION}/' > $@
+
+install: ${PM_FILE}
+	mkdir --parents ${PREFIX}/lib/perl5/${PKG_PATH}
+	install --mode 644 $< ${PREFIX}/lib/perl5/${PKG_PATH}
+
+cleanAll distclean: cleanAll-YAPP-module
+
+cleanAll-YAPP-module:
+	rm -f ${PM_FILE} *.output

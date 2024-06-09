@@ -1,0 +1,43 @@
+#! /bin/sh
+#!perl -w # --*- Perl -*--
+eval 'exec perl -x $0 ${1+"$@"}'
+    if 0;
+#------------------------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2019-11-15 18:13:46 +0200 (Fri, 15 Nov 2019) $ 
+#$Revision: 7412 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/src/lib/perl5/COD/CIF/Parser/Bison/tests/scripts/cif_parser_test $
+#------------------------------------------------------------------------------
+#*
+#  Test driver for COD::CIF::Parser::Bison.pm module.
+#**
+use strict;
+use warnings;
+use COD::CIF::Parser::Bison;
+use Data::Dumper;
+
+$Data::Dumper::Sortkeys = 1;
+
+binmode( STDOUT, ":encoding(UTF-8)" );
+binmode( STDERR, ":encoding(UTF-8)" );
+
+my $dump = 0;
+my $options = {};
+
+my @ARGV_now;
+while( my $arg = shift @ARGV ) {
+    if( $arg eq '--dump' ) {
+        $dump = 1;
+    } elsif( $arg =~ s/^--//g ) {
+        $arg =~ s/-/_/g;
+        $options->{$arg} = 1;
+    } else {
+        push @ARGV_now, $arg;
+    }
+}
+@ARGV = @ARGV_now;
+
+my $parser = new COD::CIF::Parser::Bison;
+my( $data ) = $parser->Run( $ARGV[0], $options );
+
+print Dumper $data if $dump;

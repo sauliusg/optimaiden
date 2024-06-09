@@ -1,0 +1,15 @@
+#! /bin/bash
+#------------------------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2021-04-28 19:35:53 +0300 (Wed, 28 Apr 2021) $
+#$Revision: 8738 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/scripts/cod-tools-version.in $
+#------------------------------------------------------------------------------
+#*
+#* Print the version of cod-tools package.
+#*
+#* USAGE:
+#*    $0
+#**
+
+echo cod-tools version @VERSION@

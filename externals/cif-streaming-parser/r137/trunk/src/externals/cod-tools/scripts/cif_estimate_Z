@@ -1,0 +1,93 @@
+#! /bin/sh
+#!perl -w # --*- Perl -*--
+eval 'exec perl -x $0 ${1+"$@"}'
+    if 0;
+#------------------------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2021-04-28 19:53:55 +0300 (Wed, 28 Apr 2021) $
+#$Revision: 8742 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/scripts/cif_estimate_Z $
+#------------------------------------------------------------------------------
+#*
+#* Calculate Z value (i.e. the number of "chemical formula units" in
+#* the unit cell) using the provided cell volume, crystal density
+#* and molecular weight.
+#*
+#* USAGE:
+#*    $0 --options input1.cif input*.cif
+#**
+
+use strict;
+use warnings;
+use COD::CIF::Parser qw( parse_cif );
+use COD::CIF::Data::EstimateZ qw( cif_estimate_z );
+use COD::SOptions qw( getOptions );
+use COD::SUsage qw( usage options );
+use COD::ErrorHandler qw( process_warnings
+                          process_errors
+                          process_parser_messages );
+use COD::ToolsVersion qw( get_version_string );
+
+my $die_on_error_level = {
+    ERROR   => 1,
+    WARNING => 0,
+    NOTE    => 0
+};
+
+my $use_parser = 'c';
+
+#* OPTIONS:
+#*   --use-perl-parser
+#*                     Use development CIF parser written in Perl.
+#*   --use-c-parser
+#*                     Use faster C/Yacc CIF parser (default).
+#*
+#*   --help, --usage
+#*                     Output a short usage message (this message) and exit.
+#*   --version
+#*                     Output version information and exit.
+#**
+@ARGV = getOptions(
+    "--use-perl-parser" => sub { $use_parser = "perl" },
+    "--use-c-parser"    => sub { $use_parser = "c" },
+
+    '--options'      => sub { options; exit },
+    '--help,--usage' => sub { usage; exit },
+    '--version'      => sub { print get_version_string(), "\n"; exit }
+);
+
+@ARGV = ( "-" ) unless @ARGV;
+
+binmode STDOUT, ':encoding(UTF-8)';
+binmode STDERR, ':encoding(UTF-8)';
+
+for my $filename (@ARGV) {
+    my $options = { parser => $use_parser, no_print => 1, fix_errors => 1 };
+    my ( $data, $err_count, $messages ) = parse_cif( $filename, $options );
+    process_parser_messages( $messages, $die_on_error_level );
+
+    for my $dataset (@$data) {
+        my $dataname = 'data_' . $dataset->{'name'};
+
+        local $SIG{__WARN__} = sub {
+            process_warnings( {
+                'message'  => @_,
+                'program'  => $0,
+                'add_pos'  => $dataname,
+                'filename' => $filename
+            }, $die_on_error_level )
+        };
+
+        eval {
+            print cif_estimate_z( $dataset ), "\n";
+        };
+        if ($@) {
+            process_errors( {
+                'message'       => $@,
+                'program'       => $0,
+                'filename'      => $filename,
+                'add_pos'       => $dataname
+            }, $die_on_error_level->{'ERROR'} );
+        };
+    }
+}

@@ -1,0 +1,169 @@
+#! /bin/sh
+#!perl -w # --*- Perl -*--
+eval 'exec perl -x $0 ${1+"$@"}'
+    if 0;
+#------------------------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2021-04-28 19:35:53 +0300 (Wed, 28 Apr 2021) $
+#$Revision: 8738 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/scripts/cif_merge $
+#------------------------------------------------------------------------------
+#*
+#* Merge data values in identical data blocks of multiple CIFs. Unique
+#* data items are combined into a single data block of the output CIF;
+#* data items with equivalent values are silently merged into one. When
+#* a value differs for the same data item and the same data block in two
+#* files, a warning (error) is issued.
+#*
+#* USAGE:
+#*    $0 --options input1.cif input*.cif
+#**
+
+use strict;
+use warnings;
+use COD::CIF::Parser qw( parse_cif );
+use COD::CIF::Tags::CanonicalNames qw( canonicalize_all_names );
+use COD::CIF::Tags::Merge qw( merge_datablocks );
+use COD::CIF::Tags::Print qw( print_cif );
+use COD::SOptions qw( getOptions );
+use COD::SUsage qw( usage options );
+use COD::SUsage qw(usage options);
+use COD::ErrorHandler qw( process_warnings
+                          process_errors
+                          process_parser_messages
+                          report_message );
+use COD::ToolsVersion qw( get_version_string );
+
+my $use_parser = 'c';
+my $override_tags;
+my $override_all = 0;
+my $merge_tags;
+
+my $die_on_error_level = {
+    ERROR   => 1,
+    WARNING => 0,
+    NOTE    => 0
+};
+
+#* OPTIONS:
+#*   --override-all
+#*                     Override all data items in the recipient CIF.
+#*   --dont-override-all
+#*                     Do not override all data items in the recipient CIF
+#*                     (default).
+#*
+#*   --override-tags  _tag1,_tag2
+#*                     Replace the values of the provided data items
+#*                     (_tag1 and _tag2 in this example) with the new ones
+#*                     instead of keeping the old values.
+#*
+#*   --merge-tags  _tag1,_tag2
+#*                     Merge the values of the provided data items
+#*                     (_tag1 and _tag2 in this example).
+#*
+#*   --use-perl-parser
+#*                     Use Perl parser to parse CIF files.
+#*   --use-c-parser
+#*                     Use C parser to parse CIF files (default).
+#*
+#*   --help, --usage
+#*                     Output a short usage message (this message) and exit.
+#*   --version
+#*                     Output version information and exit.
+#**
+@ARGV = getOptions(
+    "--merge-tags"         => \$merge_tags,
+    "--override-tags"      => \$override_tags,
+    "--override-all"       => sub { $override_all = 1 },
+    "--dont-override-all"  => sub { $override_all = 0 },
+    "--use-perl-parser"    => sub { $use_parser = "perl" },
+    "--use-c-parser"       => sub { $use_parser = "c" },
+
+    '--options'      => sub { options; exit },
+    '--help,--usage' => sub { usage; exit },
+    '--version'      => sub { print get_version_string(), "\n"; exit }
+);
+
+my ( %override_tags, %merge_tags );
+
+if( $override_tags ) {
+    %override_tags =
+        map {( lc($_), $_ )} split m/,/, $override_tags;
+}
+
+if( $merge_tags ) {
+    %merge_tags =
+        map {( lc($_), $_ )} split m/,/, $merge_tags;
+}
+
+@ARGV = ( "-" ) unless @ARGV;
+
+binmode STDOUT, ':encoding(UTF-8)';
+binmode STDERR, ':encoding(UTF-8)';
+
+my %merged_datablocks;
+my @merged_datablock_names;
+
+for my $filename (@ARGV) {
+    my $options = { parser => $use_parser, no_print   => 1 };
+    my ($data, $err_count, $messages) = parse_cif($filename, $options);
+    process_parser_messages( $messages, $die_on_error_level );
+
+    canonicalize_all_names( $data );
+
+    if( !@$data || !defined $data->[0] || !defined $data->[0]{name} ) {
+        report_message( {
+           'program'   => $0,
+           'filename'  => $filename,
+           'err_level' => 'WARNING',
+           'message'   => 'file seems to be empty'
+        }, $die_on_error_level->{'WARNING'} );
+        next;
+    }
+
+    for my $datablock (@$data) {
+        my $dataname = 'data_' . $datablock->{'name'};
+
+        local $SIG{__WARN__} = sub {
+            process_warnings( {
+                'message'  => @_,
+                'program'  => $0,
+                'add_pos'  => $dataname,
+                'filename' => $filename
+            }, $die_on_error_level )
+        };
+
+        eval {
+
+        if( !exists $merged_datablocks{$dataname} ) {
+            push( @merged_datablock_names, $dataname );
+            $merged_datablocks{$dataname} = $datablock;
+        } else {
+            merge_datablocks( $datablock,
+                              $merged_datablocks{$dataname},
+                              { merge_tags      => \%merge_tags,
+                                override_tags   => \%override_tags,
+                                override_all    => $override_all,
+                                source_filename => $filename } );
+        }
+
+    };
+    if ($@) {
+        process_errors( {
+            'message'       => $@,
+            'program'       => $0,
+            'filename'      => $filename,
+            'add_pos'       => $dataname
+        }, $die_on_error_level->{'ERROR'} );
+    };
+
+    }
+}
+
+## use COD::Serialise qw( serialiseRef );
+## serialiseRef( \%merged_datablocks );
+
+for my $dataname (@merged_datablock_names) {
+    print_cif( $merged_datablocks{$dataname},
+               { keep_tag_order => 1, preserve_loop_order => 1 } );
+}

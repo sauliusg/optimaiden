@@ -1,0 +1,91 @@
+#! /bin/sh
+#!perl -w # --*- Perl -*--
+eval 'exec perl -x $0 ${1+"$@"}'
+    if 0;
+#------------------------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2022-03-10 04:08:13 +0200 (Thu, 10 Mar 2022) $
+#$Rev: 9207 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/data/AtomProperties/sources/LANL/extract_info $
+#------------------------------------------------------------------------------
+#*
+# Downloads and parses atom information from Los Alamos National Lab website.
+# Outputs data in YAML format.
+#*
+#* Usage:
+#*     $0 file1.yaml
+#**
+use strict;
+use warnings;
+
+use YAML qw( Dump Bless );
+
+my %atoms;
+
+for (my $i = 1; $i < 118; $i++ ) {
+    my $text = `curl -s https://periodic.lanl.gov/$i.shtml`;
+
+    if ( $text =~ m|.*(<h2 class="feature">.*?</table>).*|sg ) {
+        my $info_table = $1;
+
+        my %atom;
+
+        if ( $info_table =~ m|<h2 class="feature">(.*)</h2>| ) {
+            $atom{"name"} = $1;
+            $atom{"name"} =~ s|\s*<.*>||g;
+        }
+
+        my $atomic_symbol = 0;
+
+        while ( $info_table =~
+                   m|<td.*?>(<.*?>)+(.*?)<.*?td>.*?>(.*?)</td>|sg ) {
+
+            if ( $3 ne "--" ) {
+                if ( $2 eq "Atomic Number:" ) {
+                    $atom{"atomic_number"} = $3
+                } elsif ( $2 eq "Atomic Radius:" ) {
+                    $3 =~ /([0-9]+)/;
+                    $atom{"vdw_radius"} = $1/100 ; # originaly in pm
+                } elsif ( $2 eq "Atomic Symbol:" ) {
+                    $atomic_symbol = $3;
+                } elsif ( $2 eq "Atomic Weight:" ) {
+                    $3 =~ /([0-9]+)/;
+                    $atom{"atomic_weight"} = $1;
+                } elsif ( $2 eq "Oxidation States:" ) {
+                    my @oxi_states = sort (split ", ", $3 );
+                    $atom{"common_charge"} = \@oxi_states;
+                }
+
+                elsif ( $2 eq "Melting Point:" ) {}
+                elsif ( $2 eq "Boiling Point:" ) {}
+                elsif ( $2 eq "Electron Configuration:") {}
+            }
+        }
+
+        if ($atomic_symbol) {
+            $atomic_symbol =~ s/ \(temporary\)//;
+            $atoms{$atomic_symbol} = \%atom;
+        }
+    }
+}
+
+my @order = sort { $atoms{$a} -> {"atomic_number"} <=>
+                   $atoms{$b} -> {"atomic_number"}
+                            } keys %atoms;
+
+print "#" . "-"x78 . "\n" .
+      "#\$Author\$\n" .
+      "#\$Date\$\n" .
+      "#\$Rev\$\n" .
+      "#\$URL\$\n" .
+      "#" . "-"x78 . "\n" .
+      "#*\n" .
+      "# Data for this dataset was extracted from Los Alamos National Lab " .
+      "website,\n# https://periodic.lanl.gov/index.shtml\n";
+
+Bless(\%atoms)->keys(\@order);
+my $yaml_string = Dump \%atoms;
+# Double quote chemical symbols to avoid misinterpreting
+# some of them as YAML boolean values (e.g. "Y", "No").
+$yaml_string =~ s/^(([.])|([A-Za-z]+)):/"$1":/msg;
+print $yaml_string;

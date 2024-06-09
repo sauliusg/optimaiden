@@ -1,0 +1,100 @@
+#---*- Makefile -*-------------------------------------------------------------
+#$Author: antanas $
+#$Revision: 8848 $
+#$Date: 2021-08-02 12:34:43 +0300 (Mon, 02 Aug 2021) $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/src/lib/perl5/COD/CIF/Parser/Bison/Makelocal-SWIG-module $
+#------------------------------------------------------------------------------
+
+MAKECONF_FILES = ${filter-out %~, ${wildcard Makeconf*}}
+
+ifneq ("${MAKECONF_FILES}","")
+include ${MAKECONF_FILES}
+endif
+
+PKG_LIB_DIR ?= .
+PKG_PATH    ?=
+MODULE_NAME ?= ${notdir $(shell pwd)}
+
+SWIG_MODULE  = ${PKG_LIB_DIR}/${PKG_PATH}/${MODULE_NAME}.pm
+SWIG_SO_FILE = ${PKG_LIB_DIR}/auto/${PKG_PATH}/${MODULE_NAME}/${MODULE_NAME}.so
+
+SWIG_SOURCE   = source.c
+SWIG_WRAPPER  = ${SWIG_SOURCE:%.c=%_wrap.c}
+SWIG_INP_FILE = ${SWIG_SOURCE:%.c=%.i}
+OBJ              = ${SWIG_SOURCE:%.c=%.o}
+SWIG_WRAPPER_OBJ = ${SWIG_WRAPPER:%.c=%.o}
+
+OBJS = ${OBJ} ${SWIG_WRAPPER_OBJ}
+
+PERL_LDDLFLAGS = $(shell perl -MConfig -e 'print $$Config{lddlflags}')
+PERL_CCFLAGS = $(shell perl -MConfig -e 'print join(" ", @Config{qw(ccflags optimize cccdlflags)}, "-I$$Config{archlib}/CORE")')
+
+vendorarch = $(shell perl -le 'use Config; my $$p = $$Config{vendorarch}; $$p =~ s/^\/usr//; print $$p')
+vendorlib  = $(shell perl -le 'use Config; my $$p = $$Config{vendorlib}; $$p =~ s/^\/usr//; print $$p')
+
+# ${LIB_DIRS} variable contains a list of directories, each of them
+# containing a library that must be linked with programs in the
+# current directory. The library in the directory 'dir' must be called
+# 'dir/libdir.a'. We assume that the 'dir' directory contains a Makefile
+# to build a corresponding library, and simply do 'make -C dir libdir.a'
+# if the library does not exist. If the library exists, we will use
+# whatever it contains, without checking its dependencies. To build the
+# up-to-date libraries in ${LB_DIRS} directories use 'make libs' command.
+# We omit the check of library dependencies just for speed; if the library
+# is actively changed and must be constantly recompiled, one should use
+# ${OTHER_DIRS} variable to include the *.c files of that directory
+# into the compilation list.
+
+INCLUDES = ${sort -I. ${addprefix -I, ${OTHER_DIRS} ${LIB_DIRS}}}
+
+LIB_NAMES := ${notdir ${LIB_DIRS}}
+LIB_FILES := ${addprefix /lib/lib, ${addsuffix .a, ${LIB_NAMES} }}
+LIB_FILES := ${join ${LIB_DIRS}, ${LIB_FILES} }
+
+%.a:
+	${MAKE} -C $(dir $(patsubst %/,%,$(dir $@))) \
+		$(notdir $(patsubst %/,%,$(dir $@)))/$(notdir $@)
+
+#------------------------------------------------------------------------------
+
+.PHONY: all build lib libs FORCE
+
+all: build
+
+build: ${SWIG_MODULE} ${SWIG_SO_FILE}
+
+lib libs: ${LIB_DIRS}
+
+${LIB_DIRS}: FORCE
+	${MAKE} -C $@
+
+FORCE:
+
+#------------------------------------------------------------------------------
+
+${SWIG_SO_FILE}: ${OBJS} ${LIB_FILES}
+	${CC} ${PERL_LDDLFLAGS} $^ -o $@ ${LIBFLAGS}
+
+${OBJ} ${SWIG_WRAPPER_OBJ}: ${SWIG_SOURCE} ${SWIG_WRAPPER}
+	${CC} -Wall -Wno-unused-value ${PERL_CCFLAGS} ${INCLUDES} -c $+
+
+${SWIG_WRAPPER} ${SWIG_MODULE}: ${SWIG_INP_FILE} ${SWIG_SOURCE}
+	swig -perl5 -Wall -outdir ${PKG_LIB_DIR}/${PKG_PATH}/ $<
+
+#------------------------------------------------------------------------------
+
+.PHONY: install
+
+install: ${SWIG_MODULE} ${SWIG_SO_FILE}
+	mkdir --parents ${PREFIX}/lib/perl5/COD/CIF/Parser
+	mkdir --parents ${PREFIX}/lib/perl5/auto/COD/CIF/Parser/Bison
+	install --mode 644 ${SWIG_MODULE} ${PREFIX}/lib/perl5/COD/CIF/Parser
+	install ${SWIG_SO_FILE} ${PREFIX}/lib/perl5/auto/COD/CIF/Parser/Bison
+
+#------------------------------------------------------------------------------
+
+cleanAll-SWIG-module:
+	rm -f ${SWIG_WRAPPER} ${OBJ} ${SWIG_WRAPPER_OBJ} *~ *.o
+	rm -f ${SWIG_SO_FILE} ${SWIG_MODULE}
+
+cleanAll distclean: cleanAll-SWIG-module

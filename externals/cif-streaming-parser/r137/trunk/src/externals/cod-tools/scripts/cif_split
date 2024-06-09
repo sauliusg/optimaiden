@@ -1,0 +1,313 @@
+#!/bin/sh
+#!perl -w # --*- Perl -*--
+eval 'exec perl -x $0 ${1+"$@"}'
+    if 0;
+#-----------------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2022-07-31 23:15:34 +0300 (Sun, 31 Jul 2022) $
+#$Revision: 9355 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/scripts/cif_split $
+#------------------------------------------------------------------------
+#*
+#* Split CIF files into separate files with one data_ section each.
+#*
+#* This script parses given CIF files to separate the data blocks, so is
+#* capable of splitting non-correctly formatted and nested CIF files.
+#*
+#* USAGE:
+#*    $0 --options input1.cif input*.cif
+#**
+
+use strict;
+use warnings;
+
+use Encode qw( decode );
+use File::Basename qw( basename );
+
+use COD::CIF::JSON qw( cif2json );
+use COD::CIF::Parser qw( parse_cif );
+use COD::CIF::Tags::CanonicalNames qw( canonicalize_all_names );
+use COD::CIF::Tags::Print qw( print_cif );
+use COD::SOptions qw( getOptions get_value );
+use COD::SUsage qw( usage options );
+use COD::ErrorHandler qw( process_warnings
+                          process_errors
+                          process_parser_messages );
+use COD::ToolsVersion qw( get_version_string );
+
+my $die_on_error_level = {
+    ERROR   => 1,
+    WARNING => 0,
+    NOTE    => 0
+};
+
+my $verbose = 1;
+my $output_dir = '';
+my $output_prefixed = 0;
+my $output_tar = 0;
+my $split_global = 1;
+my $cif_header_file;
+
+my $use_parser = 'c';
+my $input_format  = 'cif';
+my $output_format = 'cif';
+
+#* OPTIONS:
+#*   -o, --output-dir out/
+#*                     Put all split files into the directory out/.
+#*
+#*   -p, --prefixed, --output-prefixed
+#*                     Print split data blocks to the STDOUT, each line
+#*                     prefixed by the data block name. Do not create any files.
+#*
+#*   --output-tar
+#*                     Produce TAR archive with split files to the STDOUT.
+#*
+#*   -h, --add-cif-header header_file.cif
+#*                     Prepend each of the output files with the comments
+#*                     from the beginning of the specified file.
+#*
+#*   --split-global-data-block
+#*                     Put the 'data_global' data block (if any) to each
+#*                     split file (default).
+#*   --do-not-split-global-data-block,
+#*   --dont-split-global-data-block,
+#*   --no-split-global-data-block
+#*                     Do not treat 'data_global' data block (if any) as
+#*                     special.
+#*
+#*   -v, --verbose
+#*                     Print names of the generated files to STDERR.
+#*   -q, --quiet
+#*                     Do not print file names to STDERR.
+#*
+#*   --use-perl-parser
+#*                     Use Perl parser for CIF parsing.
+#*   --use-c-parser
+#*                     Use Perl & C parser for CIF parsing.
+#*
+#*   --cif-input
+#*                     Use CIF format for input (default).
+#*   --json-input
+#*                     Use JSON format for input.
+#*   --cif-output
+#*                     Use CIF format for output (default).
+#*   --json-output
+#*                     Use JSON format for output.
+#*   --cif
+#*                     Use CIF format for both input and output (default).
+#*   --json
+#*                     Use JSON format for both input and output.
+#*
+#*   --help, --usage
+#*                     Output a short usage message (this message) and exit.
+#*   --version
+#*                     Output version information and exit.
+#**
+@ARGV = getOptions(
+    '-o,--output-dir' => sub { $output_dir = get_value(),
+                               $output_prefixed = 0;
+                               $output_tar = 0 },
+    '-p,--prefixed,--output-prefixed' => sub { $output_prefixed = 1;
+                                               $output_tar = 0 },
+    '--output-tar'    => sub { $output_tar = 1;
+                               $output_prefixed = 0 },
+
+    '-h,--add-cif-header' => \$cif_header_file,
+    '-v,--verbose'    => sub { $verbose = 1 },
+    '-q,--quiet'      => sub { $verbose = 0 },
+
+    '--split-global-data-block'        => sub { $split_global = 1 },
+    '--do-not-split-global-data-block' => sub { $split_global = 0 },
+    '--dont-split-global-data-block'   => sub { $split_global = 0 },
+    '--no-split-global-data-block'     => sub { $split_global = 0 },
+
+    '--use-perl-parser' => sub { $use_parser = 'perl' },
+    '--use-c-parser'    => sub { $use_parser = 'c' },
+
+    '--cif-input'   => sub { $input_format = 'cif' },
+    '--json-input'  => sub { $input_format = 'json' },
+
+    '--cif-output'  => sub { $output_format = 'cif' },
+    '--json-output' => sub { $output_format = 'json' },
+
+    '--cif'  => sub { $input_format = $output_format = 'cif' },
+    '--json' => sub { $input_format = $output_format = 'json' },
+
+    '--options'      => sub { options; exit },
+    '--help,--usage' => sub { usage; exit },
+    '--version'      => sub { print get_version_string(), "\n"; exit }
+);
+
+if( $input_format eq 'json' ) {
+    $use_parser = 'json';
+}
+
+binmode STDOUT, ':encoding(UTF-8)';
+binmode STDERR, ':encoding(UTF-8)';
+
+# Reading the header file
+my $cif_header;
+eval {
+    if( defined $cif_header_file ) {
+        open( my $header, '<', "$cif_header_file" ) or die 'ERROR, '
+          . 'could not open CIF header file for reading -- '
+          . lcfirst($!) . "\n";
+
+        $cif_header = '';
+        while( <$header> ) {
+            last unless /^#/;
+            $cif_header .= $_;
+        }
+
+        close( $header ) or die 'ERROR, '
+         . 'error while closing CIF header file after reading -- '
+         . lcfirst($!) . "\n";
+
+        # The header must not contain CIF 2.0 magic code. For CIF 2.0
+        # files the magic code is printed explicitly before the header.
+        $cif_header =~ s/^#\\#CIF_2\.0[ \t]*\n//;
+    }
+};
+if ($@) {
+    process_errors( {
+      'message'  => $@,
+      'program'  => $0,
+      'filename' => $cif_header_file
+    }, $die_on_error_level->{ERROR} );
+};
+
+$output_dir =~ s./+$..;
+
+my %files = ();
+my $tar;
+if( $output_tar ) {
+    require Archive::Tar;
+    $tar = Archive::Tar->new;
+}
+
+@ARGV = ("-") unless @ARGV;
+
+for my $filename (@ARGV) {
+
+    my $options = { 'parser' => $use_parser, 'no_print' => 1 };
+    my ( $data, $err_count, $messages ) = parse_cif( $filename, $options );
+    process_parser_messages( $messages, $die_on_error_level );
+    next if ( $err_count > 0 );
+
+    canonicalize_all_names( $data );
+
+    my $data_global;
+    for my $dataset (@$data) {
+
+        local $SIG{__WARN__} = sub {
+            process_warnings( {
+                'message'  => @_,
+                'program'  => $0,
+                'filename' => $filename,
+                'add_pos'  => 'data_' . $dataset->{'name'}
+            }, $die_on_error_level )
+        };
+
+        if( $split_global && $dataset->{name} eq 'global' ) {
+            if( !$data_global ) {
+                $data_global = $dataset;
+            } else {
+                warn "WARNING, second data_global encountered -- skipping\n";
+            }
+            next;
+        }
+
+        my $print_cif_stdout;
+        if( $output_format eq 'cif' ) {
+            local *STDOUT;
+            open( STDOUT, '>', \$print_cif_stdout );
+            binmode STDOUT, ':encoding(UTF-8)';
+            if( $data_global ) {
+                print_cif( $data_global,
+                           {
+                                preserve_loop_order => 1,
+                                keep_tag_order => 1
+                           }
+                         );
+            }
+            print_cif( $dataset,
+                       {
+                            preserve_loop_order => 1,
+                            keep_tag_order => 1
+                       }
+                     );
+            close STDOUT;
+            $print_cif_stdout = decode( 'utf8', $print_cif_stdout );
+        } else {
+            my @to_json = ( $dataset );
+            if( $data_global ) {
+                unshift( @to_json, $data_global );
+            }
+            $print_cif_stdout = cif2json( \@to_json );
+        }
+
+        my $cif_contents = $print_cif_stdout;
+        if( $output_format eq 'cif' && $cif_header ) {
+            if( $cif_contents =~ s/^(#\\#CIF_2.0[ \t]*\n)// ) {
+                $cif_contents = $1 . $cif_header . $cif_contents;
+            } else {
+                $cif_contents = $cif_header . $cif_contents;
+            }
+        }
+
+        if( $output_prefixed ) {
+            foreach ( split m/\n/, $cif_contents ) {
+                print $dataset->{name}, "\t", $_, "\n";
+            }
+        } else {
+            my $suffix = $dataset->{name};
+            $suffix =~ s/[^-+._a-zA-Z0-9]/_/g;
+
+            my $basename = basename( $filename, '.cif' );
+            my $output_file;
+            if( $basename ne '-' ) {
+                $output_file = "${basename}_${suffix}.${output_format}";
+            } else {
+                $output_file = "${suffix}.${output_format}";
+            }
+            if( $output_tar ) {
+                $tar->add_data( $output_file, $cif_contents );
+            } else {
+                eval {
+                    if( $output_dir ne '' ) {
+                        $output_file = $output_dir . '/' . $output_file;
+                    }
+                    my $output_handle;
+                    if( !exists $files{$output_file} ) {
+                        $files{$output_file} = $output_file;
+
+                        print "$output_file\n" if $verbose;
+                        open $output_handle, '>', $output_file or
+                            die "ERROR, could not open file for writing -- "
+                               . lcfirst($!) . "\n";
+                    } else {
+                        print "$output_file (appending)\n" if $verbose;
+                        open $output_handle, '>>', $output_file or
+                            die "ERROR, could not open file for appending -- "
+                              . lcfirst($!) . "\n";
+                    }
+                    binmode $output_handle, ':encoding(UTF-8)';
+                    print $output_handle $cif_contents;
+                    close $output_handle;
+                };
+                if ($@) {
+                    process_errors( {
+                    'message'  => $@,
+                    'program'  => $0,
+                    'filename' => $output_file
+                    }, $die_on_error_level->{ERROR} );
+                };
+            }
+        }
+    }
+}
+
+if( $output_tar ) {
+    print $tar->write();
+}

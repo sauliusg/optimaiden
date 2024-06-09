@@ -1,0 +1,1878 @@
+#! /bin/sh
+#!perl -w # --*- Perl -*--
+eval 'exec perl -x $0 ${1+"$@"}'
+    if 0;
+#------------------------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2022-09-25 19:46:37 +0300 (Sun, 25 Sep 2022) $
+#$Revision: 9432 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/scripts/cif_filter $
+#------------------------------------------------------------------------------
+#*
+#* Parse a CIF file and print out essential data values in the CIF
+#* format, the COD CIF style.
+#*
+#* This script has also many capabilities -- it can restore space group
+#* symbols from symmetry operators (consulting predefined tables),
+#* parse and tidy-up _chemical_formula_sum, compute cell volume,
+#* exclude unknown or "empty" tags, and add specified bibliography data.
+#*
+#* USAGE:
+#*    $0 --options input1.cif input*.cif
+#**
+
+use strict;
+use warnings;
+
+use COD::CIF::Data qw( get_cell get_sg_data space_group_data_names );
+use COD::CIF::JSON qw( cif2json );
+use COD::CIF::Parser qw( parse_cif );
+use COD::CIF::Tags::AMCSD;
+use COD::CIF::Tags::COD;
+use COD::CIF::Tags::CanonicalNames qw( canonicalize_names );
+use COD::CIF::Tags::DFT;
+use COD::CIF::Tags::DictTags;
+use COD::CIF::Tags::Excluded;
+use COD::CIF::Tags::Manage qw( cifversion
+                               exclude_tag
+                               exclude_empty_tags
+                               exclude_empty_non_loop_tags
+                               exclude_unknown_tags
+                               exclude_unknown_non_loop_tags
+                               new_datablock
+                               set_tag
+                               set_loop_tag
+                               tag_is_unknown );
+use COD::CIF::Tags::Merge qw( merge_datablocks );
+use COD::CIF::Tags::Print qw( print_cif pack_precision fold );
+use COD::CIF::Tags::TCOD;
+use COD::CIF::Unicode2CIF qw( unicode2cif );
+use COD::Cell qw( cell_volume );
+use COD::ErrorHandler qw( process_errors process_warnings
+                          process_parser_messages report_message );
+use COD::Formulae::Parser::AdHoc;
+use COD::SOptions qw( getOptions get_value );
+use COD::SUsage qw( usage options );
+use COD::Spacegroups::Names;
+use COD::Spacegroups::Symop::Parse qw( is_symop_parsable
+                                       string_from_symop_reduced );
+use COD::Spacegroups::Symop::SSGParse qw( symop_from_string
+                                          symop_from_ssg_operator );
+use COD::Spacegroups::Lookup qw( make_symop_hash make_symop_key );
+use COD::Spacegroups::Lookup::COD;
+use COD::ToolsVersion qw( get_version_string );
+use COD::UserMessage qw( parse_message );
+use File::Basename qw( basename );
+use HTML::Entities qw( decode_entities );
+use List::MoreUtils qw( any uniq );
+
+my %symop_lookup_table;
+
+sub merge_new_tag_values($$$$);
+
+my $leave_biblio = 0;
+my $leave_title = 0;
+my $global_priority = 0; # if set to 1, bibliography in
+                         # 'data_global' has priority over
+                         # bibliography in each other data block
+my $estimate_spacegroup = 0;
+my $exclude_empty_tags = 0;
+my $exclude_empty_non_loop_tags = 0;
+my $exclude_placeholder_tags = 0;
+my @placeholder_data_items = qw(
+    _chemical_name_systematic
+    _chemical_name_common
+);
+my $exclude_unknown_tags = 0;
+my $exclude_unknown_non_loop_tags = 0;
+my $exclude_misspelled_tags = 0;
+my $exclude_redundant_chemical_names = 0;
+my $preserve_tag_order = 0;
+my $preserve_loop_order = 0;
+my $reformat_spacegroup = 0;
+my $keep_unrecognised_spacegroups = 0;
+my $calculate_cell_volume = 0;
+my $record_original_filename = 0;
+my $fold_long_fields = 0;
+my $fold_title = 0;
+my $folding_width = 76;
+my $exclude_publ_details = 1;
+my $use_parser = 'c';
+my $input_format = 'cif';
+my $output_format = 'cif';
+my $parse_formula_sum = 0;
+my $fix_errors = 0;
+my $use_datablocks_without_coord = 0;
+my $use_datablocks_with_fobs = 1;
+my $update_database_code = 1; # Specifies whether to update
+                              # _cod_database_code tag value upon
+                              # renumbering.
+my $database_code_tag = '_cod_database_code'; # Tag for database code.
+my $original_filename_tag = '_cod_data_source_file';
+my $original_datablock_tag = '_cod_data_source_block';
+
+my $extra_tag_file;
+my $original_filename;
+
+my $die_on_errors   = 1;
+my $die_on_warnings = 0;
+my $die_on_notes    = 0;
+
+my %user_bib;
+my %bib2cif_map = (
+    'authors' => '_publ_author_name',
+    'title'   => '_publ_section_title',
+    'journal' => '_journal_name_full',
+    'issue'   => '_journal_issue',
+    'volume'  => '_journal_volume',
+    'year'    => '_journal_year',
+    'doi'     => '_journal_paper_doi',
+    'page_first' => '_journal_page_first',
+    'page_last'  => '_journal_page_last',
+);
+
+my $bib_file; # A bibliography file name, possibly marked up by XML-like
+            # or LaTeX-like tags.
+
+my $cif_comment_header; # A header with comments to printed at the
+                        # beginning of the output CIF file.
+
+my $cif_header_file; # The name of an external file that holds a CIF
+                     # header.
+
+my $data_block_nr; # If defined, specifies that data blocks should be
+                   # numbered in a COD-like fashion.
+
+my $datablock_format = '%07d';
+
+my %spacegroups = map {
+    my $key1 = $_->[1];
+    my $key2 = $_->[2];
+    $key1 =~ s/\s//g;
+    $key2 =~ s/\s//g;
+    ($key1, $_->[2], $key2, $_->[2] )
+} @COD::Spacegroups::Names::names;
+
+#* OPTIONS:
+#*   -a, --authors  'John Doe; Jane Doe; Joe Bloggs'
+#*   -j, --journal 'Acta Cryst. A'
+#*   -v, --volume    36
+#*   -i, --issue      1
+#*   -p, --page     123
+#*   --start-page   123
+#*   -e, --end-page 132
+#*   -y, --year     1999
+#*   -D, --doi      10.1010/xyz9999
+#*                     Specify bibliographic data to be included into the output.
+#*
+#*   -B, --bibliography bibliography.cif
+#*   --bibliography bibliography.mrk
+#*                     Provide a bibliography file with the bibliographic
+#*                     information  to be included into the output. The
+#*                     bibliography information can be provided in CIF format
+#*                     or in a XML-like .mrk file with data items between
+#*                     <authors>, <journal>, <volume>, <issue>, <year>,
+#*                     <pages>123-132</pages> tags.
+#*
+#*   --leave-bibliography
+#*                     Combine bibliographies from various sources. Values of lower
+#*                     precedence are overwritten, but never deleted. List of
+#*                     bibliography sources in order of increasing precedence:
+#*                       1) the bibliography tags of the original CIF file;
+#*                       2) the optional bibliography file;
+#*                       3) the user specified command line options.
+#*   --discard-bibliography
+#*                     Only retain the bibliography tags from the bibliography
+#*                     source of highest precedence (see '--leave-bibliography'
+#*                     option). Default.
+#*   --leave-title
+#*                     Do not delete the publication title obtained from the
+#*                     source of lower precedence, even if the
+#*                     '--discard-bibliography' option is enabled.
+#*
+#*   -g, --global-priority
+#*                     Assume bibliography found in 'data_global' data block
+#*                     has precedence over bibliographies found in all the other
+#*                     data blocks.
+#*   -g-, --no-global-priority
+#*                     Assume bibliography found in 'data_global' data block
+#*                     does not have precedence over bibliographies found in
+#*                     all the other data blocks. Only missing bibliographic
+#*                     information will be copied from the 'data_global' data
+#*                     block. Default.
+#*
+#*   --exclude-publication-details
+#*                     Exclude potentially copyrighted and irrelevant tags.
+#*   --dont-exclude-publication-details,
+#*   --no-exclude-publication-details
+#*                     Do not exclude potentially copyrighted and irrelevant tags.
+#*
+#*   -h, --add-cif-header header_file.cif
+#*                     Prepend each of the output files with the comments from
+#*                     the beginning of the specified file.
+#*
+#*   -s, --estimate-space-group, --estimate-spacegroup
+#*                     Estimate space group symbols from the symmetry operators
+#*                     in the input.
+#*   -s-, --dont-estimate-space-group, --no-estimate-space-group,
+#*   --dont-estimate-spacegroup, --no-estimate-spacegroup,
+#*                     Do not estimate space group symbols from the symmetry
+#*                     operators in the input. Default.
+#*
+#*   --keep-unrecognised-space-groups, --keep-unrecognised-spacegroups
+#*                     This option is a modifier for the '--estimate-space-group'
+#*                     option. Leave tags with unrecognised space group information
+#*                     as they are.
+#*   --dont-keep-unrecognised-space-groups, --no-keep-unrecognised-space-groups,
+#*   --dont-keep-unrecognised-spacegroups, --no-keep-unrecognised-spacegroups,
+#*                     This option is a modifier for the '--estimate-space-group'
+#*                     option. Replace the values of tags with unrecognised space
+#*                     group information with unknown values (represented as '?')
+#*                     and store the unrecognised space group information in
+#*                     '_cod_original_sg_*' tags. Default.
+#*
+#*   --reformat-space-group, --reformat-spacegroup
+#*                     Correct the formatting of Hermann-Mauguin symmetry
+#*                     space group symbol.
+#*   --dont-reformat-space-group, --leave-space-group
+#*   --dont-reformat-spacegroup, --leave-spacegroup
+#*                     Leave the Hermann-Mauguin symmetry space group symbol
+#*                     as is. Default.
+#*
+#*   --exclude-empty-tags
+#*                     Remove data items that contain only empty values.
+#*                     A value is considered empty if it is equal to a
+#*                     single question mark ('?') or a single period ('.').
+#*   --dont-exclude-empty-tags, --no-exclude-empty-tags
+#*                     Disable the '--exclude-empty-tags' option. Default.
+#*
+#*   --placeholder-tag-list '_chemical_name_common,_chemical_name_systematic'
+#*                     A comma-separated list of data items that should be
+#*                     checked for placeholder values. Default:
+#*                     '_chemical_name_common,_chemical_name_systematic'.
+#*   --exclude-placeholder-tags
+#*                     Remove data items that contain common placeholder values
+#*                     (i.e. multiline value consisting only of white spaces
+#*                     and question marks. Only data items specified using
+#*                     the --placeholder-tag-list are affected by this option.
+#*   --dont-exclude-placeholder-tags, --no-exclude-placeholder-tags
+#*                     Disable the '--exclude-placeholder-tags' option. Default.
+#*
+#*   --exclude-redundant-chemical-names
+#*                     Remove data items related to various chemical names
+#*                     (systematic, common, mineral) if the stored values
+#*                     match the chemical formula.
+#*   --dont-exclude-redundant-chemical-names,
+#*   --no-exclude-redundant-chemical-names
+#*                     Disable the '--exclude-redundant-chemical-names' option.
+#*                     Default.
+#*
+#*   --exclude-empty-non-loop-tags
+#*                     Remove tags that contain empty values and are not
+#*                     contained within the CIF _loop structure. For the
+#*                     definition of empty values, see '--exclude-empty-tags'
+#*                     option. This option does not override the
+#*                     '--exclude-empty-tags' option.
+#*   --dont-exclude-non-loop-empty-tags,
+#*   --no-exclude-non-loop-empty-tags
+#*                     Disable the '--exclude-empty-non-loop-tags' option.
+#*                     Default.
+#*
+#*   --exclude-unknown-tags
+#*                     Remove tags that contain only unknown values. A value is
+#*                     considered unknown if it is equal to a single question
+#*                     mark ('?').
+#*   --dont-exclude-unknown-tags, --no-exclude-unknown-tags
+#*                     Disable the '--exclude-unknown-tags' option. Default.
+#*
+#*   --exclude-unknown-non-loop-tags
+#*                     Remove tags that contain unknown values and are not
+#*                     contained within the CIF _loop structure. For the
+#*                     definition of unknown values, see '--exclude-unknown-tags'
+#*                     option. This option does not override the
+#*                     '--exclude-unknown-tags' option.
+#*   --dont-exclude-non-loop-unknown-tags,
+#*   --no-exclude-non-loop-unknown-tags
+#*                     Disable the '--exclude-unknown-non-loop-tags' option.
+#*                     Default.
+#*
+#*   -x, --extra-tag-list tag-list.lst
+#*                     Add additional tags to the list of recognised CIF tags.
+#*                     These extra tags are presented in a separate file, one
+#*                     tag per line.
+#*   --exclude-misspelled-tags
+#*                     Remove tags that were not present in the recognised tag list.
+#*   --dont-exclude-misspelled-tags,
+#*   --no-exclude-misspelled-tags
+#*                     Disable the '--exclude-misspelled-tags' option. Default.
+#*
+#*   --parse-formula-sum
+#*                     Parse '_chemical_formula_sum' tag value and reformat it
+#*                     according to the Hill system ordering. If the original and
+#*                     reformatted formulae differ, replace the original value
+#*                     with the reformatted one and store the original value as
+#*                     the '_cod_original_formula_sum' tag value. Default.
+#*   --dont-parse-formula-sum, --no-parse-formula-sum
+#*                     Do not parse '_chemical_formula_sum' tag value.
+#*
+#*   --fix-syntax-errors
+#*                     Try to fix syntax errors in the input CIF files that can
+#*                     be corrected unambiguously.
+#*   --dont-fix-syntax-errors, --no-fix-syntax-errors
+#*                     Do not try to fix syntax errors in input CIF files. Default.
+#*
+#*   --retain-tag-order
+#*                     Print tags in the same order they appeared in the
+#*                     original file.
+#*   --dont-retain-tag-order
+#*                     Disregard original tag order while printing the tags.
+#*                     Default.
+#*
+#*   --preserve-loop-order
+#*                     Print loops in the same order they appeared in the original
+#*                     file.
+#*   --use-internal-loop-order
+#*                     Disregard original loop order while printing the tags.
+#*                     Default.
+#*
+#*   --calculate-cell-volume
+#*                     Calculate the unit cell volume from the cell constants.
+#*                     If the calculated value differs from the one already
+#*                     present in the CIF, replace the original value with
+#*                     the calculated one and store the original value as
+#*                     the '_cod_original_cell_volume' tag value.
+#*   --dont-calculate-cell-volume
+#*                     Do not calculate unit cell volume from the cell constants.
+#*                     Default.
+#*
+#*   --original-filename data_source.cif
+#*                     Use the provided string as the name of the original file.
+#*                     (see --record-original-filename).
+#*   --clear-original-filename
+#*                     Do not use any previously provided strings as the name of
+#*                     the original file.
+#*   --record-original-filename
+#*                     Record the original filename and the original data block
+#*                     name for each data block as the '_cod_data_source_*' tag
+#*                     values.
+#*   --dont-record-original-filename
+#*                     Do not record the original filename and the original data
+#*                     block name. Default.
+#*
+#*   -S, --start-data-block-number 1234567
+#*                     Use the provided number as the start number when renaming
+#*                     data blocks. Default: '7000001'. Setting this option
+#*                     enables the '-R' option.
+#*   -d, --datablock-format '%07d'
+#*                     Use the provided format to determine new data block names
+#*                     from the provided data block numbers. Default: '%07d'.
+#*   -R, --renumber-data-blocks
+#*                     Rename all data blocks. The new names are constructed by
+#*                     taking a start number (specified by the '-S' option),
+#*                     applying the string format (specified by the '-d' option)
+#*                     and then incrementing the start number for each sequential
+#*                     data block.
+#*   -R-, --dont-renumber-data-blocks
+#*                     Do not rename data blocks. Default. Enabling this option
+#*                     sets the '-S' option to default value.
+#*
+#*   --original-filename-tag _cod_data_source_file
+#*   --original-data-block-tag _cod_data_source_block
+#*                     Use the provided tags to record original filename/data
+#*                     block name. Default: '_cod_data_source_file' and
+#*                     '_cod_data_source_block'.
+#*
+#*   --database-code-tag _cod_database_code
+#*                     Use the provided tag while adding or updating
+#*                     the database code upon renaming the data blocks.
+#*                     Default: '_cod_database_code'.
+#*   --update-database-code
+#*                     Update the database code tag value upon renaming
+#*                     the data blocks. Default.
+#*   --dont-update-database-code
+#*                     Do not update the database code tag value upon renaming
+#*                     the data blocks.
+#*
+#*   --use-datablocks-without-coordinates,
+#*   --use-all-datablocks
+#*                     Do not remove data blocks without coordinates.
+#*   --do-not-use-datablocks-without-coordinates,
+#*   --dont-use-datablocks-without-coordinates,
+#*   --no-use-datablocks-without-coordinates,
+#*   --skip-datablocks-without-coordinates
+#*                     Remove data blocks without coordinates. Default.
+#*
+#*   --use-datablocks-with-structure-factors
+#*                     Do not remove data blocks with structure factors (Fobs).
+#*   --dont-use-datablocks-with-structure-factors,
+#*   --no-use-datablocks-with-structure-factors,
+#*   --skip-datablocks-with-structure-factors
+#*                     Filter out data blocks with structure factors (Fobs).
+#*                     Default.
+#*
+#*   --folding-width 78
+#*                     Specify the length of the longest unfolded line.
+#*                     Default: 76.
+#*
+#*   --fold-title
+#*                     Folds the title, if longer than folding width.
+#*   --dont-fold-title
+#*                     Do not fold the title. Default.
+#*
+#*   --fold-long-fields
+#*                     Fold fields, longer than folding width.
+#*   --dont-fold-long-fields
+#*                     Do not fold fields. Default.
+#*
+#*   --use-perl-parser
+#*                     Use Perl parser for CIF parsing.
+#*   --use-c-parser
+#*                     Use Perl & C parser for CIF parsing. Default.
+#*
+#*   --cif-input
+#*                     Use CIF format for input. Default.
+#*   --json-input
+#*                     Use JSON format for input.
+#*   --cif-output
+#*                     Use CIF format for output. Default.
+#*   --json-output
+#*                     Use JSON format for output.
+#*   --cif
+#*                     Use CIF format for both input and output. Default.
+#*   --json
+#*                     Use JSON format for both input and output.
+#*
+#*   --help, --usage
+#*                     Output a short usage message (this message) and exit.
+#*   --version
+#*                     Output version information and exit.
+#**
+@ARGV = getOptions(
+    '-a,--authors'  => sub{ $user_bib{'authors'} = get_value() },
+    '-j,--journal'  => sub{ $user_bib{'journal'} = get_value() },
+    '-v,--volume'   => sub{ $user_bib{'volume'} = get_value() },
+    '-i,--issue'    => sub{ $user_bib{'issue'} = get_value() },
+    '-p,--page'     => sub{ $user_bib{'page_first'} = get_value() },
+    '--start-page'  => sub{ $user_bib{'page_first'} = get_value() },
+    '-e,--end-page' => sub{ $user_bib{'page_last'} = get_value() },
+    '-y,--year'     => sub{ $user_bib{'year'} = get_value() },
+    '-D,--doi'      => sub{ $user_bib{'doi'} = get_value() },
+    '-B,--bibliography' => \$bib_file,
+
+    '-d,--datablock-format' => \$datablock_format,
+
+    '-g,--global-priority'     => sub { $global_priority = 1 },
+    '-g-,--no-global-priority' => sub { $global_priority = 0 },
+
+    '-h,--add-cif-header' => \$cif_header_file,
+
+    '-s,--estimate-space-group' => sub { $estimate_spacegroup = 1; },
+    '-s-,--no-estimate-space-group' => sub { $estimate_spacegroup = 0; },
+    '--dont-estimate-space-group' => sub { $estimate_spacegroup = 0; },
+
+    '--estimate-spacegroup' => sub { $estimate_spacegroup = 1; },
+    '--no-estimate-spacegroup' => sub { $estimate_spacegroup = 0; },
+    '--dont-estimate-spacegroup' => sub { $estimate_spacegroup = 0; },
+
+    '-x,--extra-tag-list' => \$extra_tag_file,
+
+    '--exclude-empty-tags'      => sub { $exclude_empty_tags = 1; },
+    '--dont-exclude-empty-tags' => sub { $exclude_empty_tags = 0; },
+    '--no-exclude-empty-tags'   => sub { $exclude_empty_tags = 0; },
+
+    '--exclude-empty-non-loop-tags'      => sub { $exclude_empty_non_loop_tags = 1; },
+    '--dont-exclude-non-loop-empty-tags' => sub { $exclude_empty_non_loop_tags = 0; },
+    '--no-exclude-non-loop-empty-tags'   => sub { $exclude_empty_non_loop_tags = 0; },
+
+    '--placeholder-tag-list'          => sub {
+                    @placeholder_data_items = split( /,/, get_value() )
+    },
+    '--exclude-placeholder-tags'      => sub { $exclude_placeholder_tags = 1 },
+    '--dont-exclude-placeholder-tags' => sub { $exclude_placeholder_tags = 0 },
+    '--no-exclude-placeholder-tags'   => sub { $exclude_placeholder_tags = 0 },
+
+    '--exclude-unknown-tags'      => sub { $exclude_unknown_tags = 1; },
+    '--dont-exclude-unknown-tags' => sub { $exclude_unknown_tags = 0; },
+    '--no-exclude-unknown-tags'   => sub { $exclude_unknown_tags = 0; },
+
+    '--exclude-unknown-non-loop-tags'      => sub { $exclude_unknown_non_loop_tags = 1; },
+    '--dont-exclude-non-loop-unknown-tags' => sub { $exclude_unknown_non_loop_tags = 0; },
+    '--no-exclude-non-loop-unknown-tags'   => sub { $exclude_unknown_non_loop_tags = 0; },
+
+    '--exclude-misspelled-tags'      => sub { $exclude_misspelled_tags = 1; },
+    '--dont-exclude-misspelled-tags' => sub { $exclude_misspelled_tags = 0; },
+    '--no-exclude-misspelled-tags'   => sub { $exclude_misspelled_tags = 0; },
+
+    '--exclude-redundant-chemical-names'
+         => sub { $exclude_redundant_chemical_names = 1 },
+    '--dont-exclude-redundant-chemical-names'
+         => sub { $exclude_redundant_chemical_names = 0 },
+    '--no-exclude-redundant-chemical-names'
+         => sub { $exclude_redundant_chemical_names = 0 },
+
+    '--keep-unrecognised-space-groups'
+        => sub { $keep_unrecognised_spacegroups = 1; },
+    '--dont-keep-unrecognised-space-groups'
+        => sub { $keep_unrecognised_spacegroups = 0; },
+    '--no-keep-unrecognised-space-groups'
+        => sub { $keep_unrecognised_spacegroups = 0; },
+
+    '--keep-unrecognised-spacegroups'
+        => sub { $keep_unrecognised_spacegroups = 1; },
+    '--dont-keep-unrecognised-spacegroups'
+        => sub { $keep_unrecognised_spacegroups = 0; },
+    '--no-keep-unrecognised-spacegroups'
+        => sub { $keep_unrecognised_spacegroups = 0; },
+
+    '--parse-formula-sum'       => sub { $parse_formula_sum = 1; },
+    '--dont-parse-formula-sum'  => sub { $parse_formula_sum = 0; },
+    '--no-parse-formula-sum'    => sub { $parse_formula_sum = 0; },
+
+    '--fix-syntax-errors'       => sub { $fix_errors = 1; },
+    '--dont-fix-syntax-errors'  => sub { $fix_errors = 0; },
+    '--no-fix-syntax-errors'    => sub { $fix_errors = 0; },
+
+    '--preserve-loop-order'     => sub { $preserve_loop_order = 1; },
+    '--use-internal-loop-order' => sub { $preserve_loop_order = 0; },
+
+    '--retain-tag-order'        => sub { $preserve_tag_order = 1; },
+    '--dont-retain-tag-order'   => sub { $preserve_tag_order = 0; },
+
+    '--reformat-space-group'      => sub { $reformat_spacegroup = 1; },
+    '--dont-reformat-space-group' => sub { $reformat_spacegroup = 0; },
+    '--leave-space-group'         => sub { $reformat_spacegroup = 0; },
+
+    '--reformat-spacegroup'       => sub { $reformat_spacegroup = 1; },
+    '--dont-reformat-spacegroup'  => sub { $reformat_spacegroup = 0; },
+    '--leave-spacegroup'          => sub { $reformat_spacegroup = 0; },
+
+    '--calculate-cell-volume'      => sub { $calculate_cell_volume = 1; },
+    '--dont-calculate-cell-volume' => sub { $calculate_cell_volume = 0; },
+
+    '--original-filename' => sub { $original_filename = get_value();
+                                   $record_original_filename = 1 },
+    '--clear-original-filename' => sub { undef $original_filename },
+
+    '--record-original-filename'      => sub { $record_original_filename = 1; },
+    '--dont-record-original-filename' => sub { $record_original_filename = 0; },
+
+    '--original-filename-tag'   => \$original_filename_tag,
+    '--original-data-block-tag' => \$original_datablock_tag,
+
+    '--update-database-code'          => sub { $update_database_code = 1; },
+    '--dont-update-database-code'     => sub { $update_database_code = 0; },
+
+    '--database-code-tag' => \$database_code_tag,
+
+    '-S,--start-data-block-number'    => \$data_block_nr,
+    '-R,--renumber-data-blocks'       => sub { $data_block_nr = 7000001 },
+    '-R-,--dont-renumber-data-blocks' => sub { undef $data_block_nr },
+
+    '--use-datablocks-without-coordinates'
+        => sub{ $use_datablocks_without_coord = 1 },
+    '--use-all-datablocks'
+        => sub{ $use_datablocks_without_coord = 1 },
+
+    '--do-not-use-datablocks-without-coordinates'
+        => sub{ $use_datablocks_without_coord = 0 },
+    '--dont-use-datablocks-without-coordinates'
+        => sub{ $use_datablocks_without_coord = 0 },
+    '--no-use-datablocks-without-coordinates'
+        => sub{ $use_datablocks_without_coord = 0 },
+    '--skip-datablocks-without-coordinates'
+        => sub{ $use_datablocks_without_coord = 0 },
+
+    '--use-datablocks-with-structure-factors'
+        => sub{ $use_datablocks_with_fobs = 1 },
+    '--dont-use-datablocks-with-structure-factors'
+        => sub{ $use_datablocks_with_fobs = 0 },
+    '--no-use-datablocks-with-structure-factors'
+        => sub{ $use_datablocks_with_fobs = 0 },
+    '--skip-datablocks-with-structure-factors'
+        => sub{ $use_datablocks_with_fobs = 0 },
+
+    '--folding-width'         => \$folding_width,
+    '--fold-title'            => sub{ $fold_title = 1 },
+    '--dont-fold-title'       => sub{ $fold_title = 0 },
+    '--fold-long-fields'      => sub{ $fold_long_fields = 1 },
+    '--dont-fold-long-fields' => sub{ $fold_long_fields = 0 },
+
+    '--use-perl-parser'       => sub{ $use_parser = 'perl' },
+    '--use-c-parser'          => sub{ $use_parser = 'c' },
+
+    '--leave-bibliography'   => sub{ $leave_biblio = 1 },
+    '--discard-bibliography' => sub{ $leave_biblio = 0 },
+
+    '--exclude-publication-details'      => sub{ $exclude_publ_details = 1 },
+    '--dont-exclude-publication-details' => sub{ $exclude_publ_details = 0 },
+    '--no-exclude-publication-details'   => sub{ $exclude_publ_details = 0 },
+
+    '--leave-title'          => sub{ $leave_title = 1 },
+
+    '--cif-input'   => sub { $input_format = 'cif' },
+    '--json-input'  => sub { $input_format = 'json' },
+
+    '--cif-output'  => sub { $output_format = 'cif' },
+    '--json-output' => sub { $output_format = 'json' },
+
+    '--cif'  => sub { $input_format = $output_format = 'cif' },
+    '--json' => sub { $input_format = $output_format = 'json' },
+
+    '--options'      => sub { options; exit },
+    '--help,--usage' => sub { usage; exit },
+    '--version'      => sub { print get_version_string(), "\n"; exit }
+);
+
+my $die_on_error_level = {
+    ERROR   => $die_on_errors,
+    WARNING => $die_on_warnings,
+    NOTE    => $die_on_notes
+};
+
+if( $input_format eq 'json' ) {
+    $use_parser = 'json';
+}
+
+# The following snippet of code mimics the previous script behaviour when
+# user defined bibliography keys were defined as separate global variables.
+foreach my $key ( keys %user_bib ) {
+    if ( $user_bib{$key} =~ /^$/ ) {
+        delete $user_bib{$key};
+    }
+}
+
+if ( defined $user_bib{'authors'} ) {
+    $user_bib{'authors'} = [ split /(?:[;:])\s*/, $user_bib{'authors'} ];
+}
+
+binmode STDOUT, ':encoding(UTF-8)';
+binmode STDERR, ':encoding(UTF-8)';
+
+# Constructing a list of recognised data names from various sources
+my @extra_tags = ();
+eval {
+    if( defined $extra_tag_file ) {
+        open my $extra, '<', "$extra_tag_file" or die 'ERROR, '
+          . 'could not open tag list for reading -- ' . lcfirst($!) . "\n";
+
+        @extra_tags = map { s,\s,,g; lc $_ }
+                        map { split } grep { /^\s*_/ } <$extra>;
+
+        close $extra or die 'ERROR, '
+          . 'error while closing tag list file after reading -- '
+          . lcfirst($!) . "\n";
+    }
+};
+if ($@) {
+    process_errors( {
+      'message'  => $@,
+      'program'  => $0,
+      'filename' => $extra_tag_file
+    }, $die_on_errors );
+};
+
+my %excluded_tags  = map { ($_,$_) } @COD::CIF::Tags::Excluded::tag_list;
+
+my @dictionary_tags = ( @COD::CIF::Tags::DictTags::tag_list,
+                        @COD::CIF::Tags::COD::tag_list,
+                        @COD::CIF::Tags::AMCSD::tag_list,
+                        @COD::CIF::Tags::TCOD::tag_list,
+                        @COD::CIF::Tags::DFT::tag_list,
+                        @extra_tags );
+
+my %dictionary_tags = map { $_ => $_ } @dictionary_tags;
+
+# Reading the header file
+eval {
+    if( defined $cif_header_file ) {
+        open my $header, '<', "$cif_header_file" or die 'ERROR, '
+          . 'could not open CIF header file for reading -- ' . lcfirst($!) . "\n";
+
+        $cif_comment_header = '';
+        while( <$header> ) {
+            last unless /^\#|^\s*$/;
+            $cif_comment_header .= $_;
+        }
+
+        close $header or die 'ERROR, '
+         . 'error while closing CIF header file after reading -- '
+         . lcfirst($!) . "\n";
+
+        # The header must not contain CIF 2.0 magic code. For CIF 2.0
+        # files the magic code is printed explicitly before the header.
+        $cif_comment_header =~ s/^#\\#CIF_2\.0[ \t]*\n//;
+    }
+};
+if ($@) {
+    process_errors( {
+      'message'  => $@,
+      'program'  => $0,
+      'filename' => $cif_header_file
+    }, $die_on_errors );
+};
+
+# Reading bibliography from additional sources
+my $ref_bib;
+my $bib_blocks;
+
+if( defined $bib_file ) {
+    if( $bib_file =~ /\.cif/i ) {
+        my ($err_count, $messages);
+        # For now, always use Perl parser for bibliographies, since C
+        # parser is not (yet) reenterable :(: (still applicable?)
+        my $bib_options = { parser     => 'perl',
+                            no_print   => 1,
+                            fix_errors => 1 };
+        ($bib_blocks, $err_count, $messages) = parse_cif($bib_file, $bib_options);
+        process_parser_messages( $messages, $die_on_error_level );
+    } else {
+        my $reference;
+        eval {
+            open my $biblio, '<:encoding(UTF-8)', $bib_file or die 'ERROR, '
+              . 'could not open bibliography file for reading -- '
+              . lcfirst($!) . "\n";
+
+            if( $bib_file =~ /\.ref/ ) {
+                $reference = <$biblio>; # read the first line
+            } elsif( $biblio =~ /\.xrf/ ) {
+                my @reference = grep { !/^\#/ } <$biblio>;
+                $reference = $reference[0]; # read the first non-comment line
+            } else {
+                local $/ = undef; # read the whole file
+                $reference = <$biblio>;
+            }
+
+            close $biblio or die 'ERROR, '
+              . 'error while closing bibliography file after reading -- '
+              . lcfirst($!) . "\n";
+        };
+        if ($@) {
+            process_errors( {
+              'message'  => $@,
+              'program'  => $0,
+              'filename' => $bib_file
+            }, $die_on_errors );
+        };
+
+        if ( defined $reference ) {
+            chomp $reference;
+            $ref_bib = ref2bib( $reference );
+        }
+    }
+}
+
+# Main program
+@ARGV = ( '-' ) unless @ARGV;
+
+for my $filename (@ARGV) {
+    my $options = { parser     => $use_parser,
+                    no_print   => 1,
+                    fix_errors => $fix_errors };
+
+    my ($data, $err_count, $messages) = parse_cif($filename, $options);
+    process_parser_messages( $messages, $die_on_error_level );
+
+    if( !@{$data} || !defined $data->[0] || !defined $data->[0]{name} ) {
+        report_message( {
+           'program'   => $0,
+           'filename'  => $filename,
+           'err_level' => 'WARNING',
+           'message'   => 'file seems to be empty'
+        }, $die_on_warnings );
+        next;
+    }
+
+#------------------------------------------------------------------------------
+
+    my @global_biblio_keys = qw(
+        _journal_name_full
+        _journal_volume
+        _journal_issue
+        _journal_page_first
+        _journal_page_last
+        _journal_year
+        _publ_section_title
+        _publ_author_name
+        _publ_author_id_orcid
+        _journal_coeditor_code
+        _journal_paper_doi
+    );
+    my %global_bibliography;
+
+
+    eval {
+        local $SIG{__WARN__} = sub { process_warnings( {
+                                       'message'  => @_,
+                                       'program'  => $0,
+                                       'filename' => $filename
+                                     }, {
+                                       'WARNING' => $die_on_warnings,
+                                       'NOTE'    => $die_on_notes
+                                     } ) };
+
+        %global_bibliography =
+              %{ extract_publ_from_global_data_block( $data,
+                                                      \@global_biblio_keys) };
+
+    };
+    if ($@) {
+        process_errors( {
+          'message'  => $@,
+          'program'  => $0,
+          'filename' => $filename
+        }, $die_on_errors );
+    };
+
+    # FIXME: currently the bibliographic information of powder diffraction
+    # files is handled in a somewhat unusual way that needs to be explicitly
+    # explained or properly refactored. For one, the bibliographic information
+    # is taken from multiple data blocks -- both the overall information and
+    # the publication ones. However, later on in the code the bibliographic
+    # information is only used if there was at least one publication block,
+    # totally ignoring the data values that could have been extracted from
+    # the overall info data blocks. I propose to either use the overall info
+    # data despite there not being any bibliography blocks or not extract
+    # information from the overall blocks at all
+    my $pd_global_publ_data;
+    my $pd_publ_datablock_count = grep {
+            !is_pd_overall_info_data_block($_) &&
+             is_pd_publication_data_block($_) } @{$data};
+    eval {
+        local $SIG{__WARN__} = sub { process_warnings( {
+                                       'message'  => @_,
+                                       'program'  => $0,
+                                       'filename' => $filename
+                                     }, {
+                                       'WARNING' => $die_on_warnings,
+                                       'NOTE'    => $die_on_notes
+                                     } ) };
+
+    # FIXME: the $global_priority variable should probably not be passed
+    # to this subroutine since it is only supposed to affect the treatment
+    # of the 'global_' block in regards to the other data blocks.
+    # The behaviour of the pd block should either be controlled by
+    # a dedicated variable or harcdoded into the subroutine all-together
+        $pd_global_publ_data =
+            build_pd_global_publ_data_block( $data, $global_priority )
+    };
+    if ($@) {
+        process_errors( {
+          'message'  => $@,
+          'program'  => $0,
+          'filename' => $filename
+        }, $die_on_errors );
+    };
+
+    # Assume that there are no data blocks with coordinates until a data block
+    # with coordinates is found
+
+    my $no_coordinates = 1;
+
+    for my $dataset (@{$data}) {
+
+        my $dataname = 'data_' . $dataset->{name};
+        my $datablok = $dataset->{values};
+        next if !defined $datablok;
+
+        local $SIG{__WARN__} = sub { process_warnings( {
+                                       'message'  => @_,
+                                       'program'  => $0,
+                                       'filename' => $filename,
+                                       'add_pos'  => $dataname
+                                     }, {
+                                       'WARNING' => $die_on_warnings,
+                                       'NOTE'    => $die_on_notes
+                                     } ) };
+
+        eval { { # Double eval braces are needed to compensate for the
+                 # 'next' statements inside the code
+            # Add bibliography from a global section, if any:
+            if( %global_bibliography ) {
+                local $SIG{__WARN__} = sub {}; # silencing warnings
+                merge_datablocks( \%global_bibliography,
+                                  $dataset,
+                                  {
+                                      tags => [ sort keys %{$global_bibliography{values}} ],
+                                      override_all => $global_priority,
+                                  } );
+            }
+
+            if( $pd_publ_datablock_count ) {
+                local $SIG{__WARN__} = sub {}; # silencing warnings
+                merge_datablocks( $pd_global_publ_data,
+                                  $dataset,
+                                  {
+                                      tags => [ sort keys %{$pd_global_publ_data->{values}} ],
+                                      override_all => $global_priority,
+                                  } );
+            }
+
+            # convert all tags to a "canonical" form:
+            canonicalize_names( $dataset );
+
+
+            next if !$use_datablocks_without_coord &&
+                    !defined $datablok->{_atom_site_label} &&
+                    ( ( grep { /^_refln_index_.$/ } keys %{$datablok} ) == 0 ||
+                      ! $use_datablocks_with_fobs );
+
+            $no_coordinates = 0;
+
+            # Remove empty tags, if requested:
+
+            if( $exclude_empty_tags ) {
+                exclude_empty_tags( $dataset );
+            }
+
+            if( $exclude_empty_non_loop_tags ) {
+                exclude_empty_non_loop_tags( $dataset );
+            }
+
+            if( $exclude_placeholder_tags ) {
+                exclude_placeholder_data_items( $dataset,
+                                                \@placeholder_data_items );
+            }
+
+            # Remove unknown tags, if requested:
+
+            if( $exclude_unknown_tags ) {
+                exclude_unknown_tags( $dataset );
+            }
+
+            if( $exclude_unknown_non_loop_tags ) {
+                exclude_unknown_non_loop_tags( $dataset );
+            }
+
+            # Process the bibliography file that was supplied on the command
+            # line:
+
+            if( defined $bib_blocks ) {
+                my $bibdata;
+
+                if( @{$bib_blocks} > 1 ) {
+                    warn "WARNING, the supplied bibliography file '${bib_file}' "
+                       . 'has ' . @{$bib_blocks} . ' bibliography entries -- '
+                       . 'bibliography from a data block that has the same name '
+                       . 'as the coordinate data block will be used' . "\n";
+                    for my $block (@{$bib_blocks}) {
+                        if( $block->{name} eq $dataset->{name} ) {
+                            $bibdata = $block->{values};
+                            last
+                        }
+                    }
+                } else {
+                    $bibdata = $bib_blocks->[0]{values};
+                }
+                if( !defined $bibdata ) {
+                    warn "WARNING, the supplied bibliography file '${bib_file}' "
+                       . 'does not have a matching bibliography data block -- '
+                       . 'no bibliography will be taken for this data block'
+                       . "\n";
+                } else {
+                    if( !$leave_biblio ) {
+                        for my $key ( grep { /_journal_|
+                                              _publ_section_title|
+                                              _author_/x } keys %{$datablok} ) {
+                            next if $key eq '_journal_coeditor_code';
+
+                            if( $key ne '_publ_section_title' || !$leave_title ) {
+                                exclude_tag( $dataset, $key );
+                            }
+                        }
+                    }
+                    for my $bibtag (@global_biblio_keys) {
+                        next if  exists $datablok->{$bibtag};
+                        next if !exists $bibdata->{$bibtag};
+
+                        if( $bibtag eq '_publ_author_name' ) {
+                            set_loop_tag( $dataset, $bibtag, undef,
+                                          $bibdata->{$bibtag} );
+                        } else {
+                            set_tag( $dataset, $bibtag,
+                                     $bibdata->{$bibtag}[0] );
+                        }
+                    }
+                }
+            } elsif( defined $ref_bib ) {
+                if( !$leave_biblio ) {
+                    for my $key ( grep { /_journal_|
+                                          _publ_section_title|
+                                          _author_/x } keys %{$datablok} ) {
+                        next if $key eq '_journal_coeditor_code';
+
+                        if( $key ne '_publ_section_title' || !$leave_title ) {
+                            exclude_tag( $dataset, $key );
+                        }
+                    }
+                }
+
+                foreach my $key ( keys %{$ref_bib} ) {
+                    next if defined $user_bib{$key};
+
+                    if ( $key eq 'authors' ) {
+                        set_loop_tag( $dataset, $bib2cif_map{$key}, undef,
+                                      [ map { unicode2cif($_) }
+                                                 @{$ref_bib->{$key}} ] );
+                    } else {
+                        set_tag( $dataset, $bib2cif_map{$key},
+                                 unicode2cif( $ref_bib->{$key} ) );
+                    }
+                }
+            }
+
+            # User specified bibliography is processed last since it must take
+            # precedence over the original CIF bibliography and over the
+            # bibliography file data:
+
+            if( %user_bib ) {
+                if( !$leave_biblio ) {
+                    for my $key ( grep { /_journal_|
+                                          _publ_section_title|
+                                          _author_/x } keys %{$datablok} ) {
+                        if( $key ne '_publ_section_title' || !$leave_title ) {
+                            exclude_tag( $dataset, $key );
+                        }
+                    }
+                }
+
+                foreach my $key ( keys %user_bib ) {
+                    use Encode 'decode_utf8';
+                    my @values;
+                    if( ref $user_bib{$key} ) {
+                        @values = @{$user_bib{$key}};
+                    } else {
+                        @values = ( $user_bib{$key} );
+                    }
+
+                    ## use encoding 'utf8';
+                    for my $value (@values) {
+                        # This does not work, alas:
+                        ## map { pack('U*', unpack('C*', $_ )) }
+
+                        # Insist that the names are well-formed utf8:
+                        $value = decode_utf8($value);
+
+                        # Unicode symbols must be CIF-encoded for CIF 1.1:
+                        if( !cifversion( $dataset ) ||
+                             cifversion( $dataset ) ne '2.0' ) {
+                            $value = unicode2cif($value);
+                        }
+
+                        # Cleaning of white space should be performed
+                        # only for arrays, therefore, just for the
+                        # value of 'authors':
+                        if( ref $user_bib{$key} ) {
+                            $value =~ s/^\s+|\s+$//g;
+                            $value =~ s/\n/ /g;
+                            $value =~ s/\s+/ /g;
+                        }
+                    }
+
+                    if( ref $user_bib{$key} ) {
+                        set_loop_tag( $dataset, $bib2cif_map{$key},
+                                      undef, \@values );
+                    } else {
+                        set_tag( $dataset, $bib2cif_map{$key},
+                                 $values[0] );
+                    }
+                }
+            }
+
+            # Restore the full final page number if only trailing digits of
+            # the _journal_page_last are given:
+
+            if( defined $datablok->{_journal_page_first} &&
+                defined $datablok->{_journal_page_last} &&
+                $datablok->{_journal_page_first}[0] =~ /^[0-9]+$/ &&
+                $datablok->{_journal_page_last}[0] =~ /^[0-9]+$/ &&
+                $datablok->{_journal_page_first}[0] >
+                $datablok->{_journal_page_last}[0] ) {
+                $datablok->{_journal_page_last}[0] =
+                    restore_last_page( $datablok->{_journal_page_first}[0],
+                                       $datablok->{_journal_page_last}[0] );
+            }
+
+            # Fold title if requested:
+            if( $fold_title && exists $datablok->{_publ_section_title} ) {
+                my $cif_title = join( ' ', @{$datablok->{_publ_section_title}} );
+                $cif_title =~ s/\n/ /g;
+                $datablok->{_publ_section_title} = [
+                            "\n" . join( "\n", map { ' ' . $_ }
+                             fold( $folding_width - 2, ' +', ' ', $cif_title ))
+                            ];
+            }
+
+            # Exclude potentially copyrighted and irrelevant tags if requested:
+            if( $exclude_publ_details ) {
+                my @tag_list = @{$dataset->{tags}};
+                for my $tag (@tag_list) {
+                    if( exists $excluded_tags{$tag} || $tag =~ /^_vrf_/ ) {
+                        exclude_tag( $dataset, $tag );
+                    }
+                }
+            }
+
+            # Check for misspelled tags:
+
+            for my $tag (@{$dataset->{tags}}) {
+                if ( !exists $dictionary_tags{$tag} ) {
+                    warn "WARNING, data name '$tag' is not recognised" . "\n";
+                }
+            }
+
+            # Exclude the misspelled tags if requested:
+            if( $exclude_misspelled_tags ) {
+                my @tag_list = @{$dataset->{tags}};
+                for my $tag (@tag_list) {
+                    unless( exists $dictionary_tags{$tag} ) {
+                        exclude_tag( $dataset, $tag );
+                    }
+                }
+            }
+
+            # Add the data source file name, if requested:
+            if( $record_original_filename ) {
+                my $basename;
+                if( defined $original_filename ) {
+                    $basename = basename( $original_filename );
+                } elsif( defined $filename && $filename ne '-' ) {
+                    $basename = basename( $filename );
+                } else {
+                    $basename = '?';
+                }
+                set_tag( $dataset, $original_filename_tag, $basename );
+                set_tag( $dataset, $original_datablock_tag, $dataset->{name} );
+            }
+
+            # Clean up the resulting CIF data structure:
+            for my $excluded_tag (qw( _publ_author_address
+                                      _publ_author.address
+                                      _publ_author_email
+                                      _publ_author.email
+                                      _publ_author_footnote
+                                      _publ_author.footnote
+                                      _publ_author_id_iucr
+                                      _publ_author.id_iucr )) {
+                if( exists $datablok->{$excluded_tag} ) {
+                    exclude_tag( $dataset, $excluded_tag );
+                }
+            }
+
+            my $sg_data;
+            if( $reformat_spacegroup || $estimate_spacegroup ) {
+                $sg_data = get_sg_data( $dataset );
+            }
+
+            # Correct the formatting of the H-M space group symbol:
+            if( $reformat_spacegroup &&
+                defined $sg_data->{hermann_mauguin} ) {
+                my $clean_sg = $sg_data->{hermann_mauguin};
+                $clean_sg =~ s/[()~_\s]//g;
+                if( exists $spacegroups{$clean_sg} &&
+                    $sg_data->{hermann_mauguin} ne $spacegroups{$clean_sg} ) {
+                    record_original_sg_h_m( $dataset, $sg_data->{hermann_mauguin} );
+                    $sg_data->{hermann_mauguin} = $spacegroups{$clean_sg};
+                    for my $sg_tag (@{$sg_data->{tags_all}{hermann_mauguin}}) {
+                        $datablok->{$sg_tag}[0] = $spacegroups{$clean_sg};
+                    }
+                }
+            }
+
+            # If no 3D space group information is provided but a SSG
+            # (superspace group) operators are provided, extract an
+            # average space-group (?)
+            if( $estimate_spacegroup &&
+                !(exists $datablok->{'_space_group_symop_operation_xyz'} or
+                  exists $datablok->{'_symmetry_equiv_pos_as_xyz'}) &&
+                exists $datablok->{'_space_group_symop_ssg_operation_algebraic'} ) {
+                my $ssg_symops =
+                    $datablok->{'_space_group_symop_ssg_operation_algebraic'};
+
+                use COD::Spacegroups::Builder;
+                my $spacegroup = COD::Spacegroups::Builder->new;
+                for my $ssgop (@{$ssg_symops}) {
+                    my $matrix = symop_from_string( $ssgop );
+                    my $symop3d = symop_from_ssg_operator( $matrix );
+                    $spacegroup->insert_symop( $symop3d );
+                }
+                my @symops = $spacegroup->all_symops();
+                set_loop_tag( $dataset, '_space_group_symop_id',
+                              undef, # set the new in_loop ID
+                              [ 1 .. scalar @symops ]  );
+                set_loop_tag( $dataset, '_space_group_symop_operation_xyz',
+                              '_space_group_symop_id', # in_loop ID
+                              [ map {string_from_symop_reduced($_)} @symops ] );
+            }
+
+            # Determine space group symbols from symmetry elements if requested:
+
+            if( $estimate_spacegroup ) {
+                if( !%symop_lookup_table ) {
+                    %symop_lookup_table = make_symop_hash( [
+                        \@COD::Spacegroups::Lookup::COD::table,
+                        \@COD::Spacegroups::Lookup::COD::extra_settings
+                    ] );
+                }
+
+                my @symops;
+                if( exists $datablok->{'_space_group_symop_operation_xyz'} ) {
+                    @symops = @{$datablok->{'_space_group_symop_operation_xyz'}};
+                } elsif( exists $datablok->{'_symmetry_equiv_pos_as_xyz'} ) {
+                    @symops = @{$datablok->{'_symmetry_equiv_pos_as_xyz'}};
+                }
+
+                if( @symops ) {
+                    # TODO: an almost identical check is implemented in the
+                    # cif_cod_check module. In the future it might be worth
+                    # refactoring this functionality into a separate module
+                    my $symops_parsable = 1;
+                    foreach (@symops) {
+                        if ( !is_symop_parsable($_) ) {
+                            warn "WARNING, symmetry operator '$_' could not be parsed\n";
+                            $symops_parsable = 0;
+                        }
+                    }
+
+                    if( $symops_parsable ) {
+                        my $key = make_symop_key( \@symops );
+                        my $original_sg_H_M = $sg_data->{hermann_mauguin};
+                        my $original_sg_Hall = $sg_data->{hall};
+                        my $original_sg_number =
+                            defined $datablok->{'_space_group_IT_number'} ?
+                            $datablok->{'_space_group_IT_number'}[0] :
+                            undef;
+                        my $sg_data_names = space_group_data_names();
+
+                        if( exists $symop_lookup_table{$key} ) {
+                            my $estimated_sg = $symop_lookup_table{$key};
+
+                            my $estimated_sg_H_M = $estimated_sg->{'universal_h_m'};
+                            if ( defined $original_sg_H_M &&
+                                 $original_sg_H_M ne $estimated_sg_H_M ) {
+                                record_original_sg_h_m( $dataset, $original_sg_H_M );
+                            }
+                            for my $tag ('_space_group_name_H-M_alt',
+                                         @{$sg_data->{tags_all}{hermann_mauguin}}) {
+                                set_tag( $dataset, $tag, $estimated_sg_H_M );
+                            }
+                            for my $tag (@{$sg_data_names->{hermann_mauguin}}) {
+                                next if !exists $datablok->{$tag};
+                                next if !tag_is_unknown( $dataset, $tag );
+                                exclude_tag( $dataset, $tag );
+                            }
+
+                            my $estimated_sg_Hall = $estimated_sg->{hall};
+                            $estimated_sg_Hall =~ s/^\s+//;
+                            if( defined $original_sg_Hall &&
+                                $original_sg_Hall ne '?' &&
+                                $original_sg_Hall ne $estimated_sg_Hall ) {
+                                set_tag( $dataset, '_cod_original_sg_symbol_Hall',
+                                         $original_sg_Hall );
+                            }
+                            for my $tag ('_space_group_name_Hall',
+                                         @{$sg_data->{tags_all}{hall}}) {
+                                set_tag( $dataset, $tag, $estimated_sg_Hall );
+                            }
+                            for my $tag (@{$sg_data_names->{hall}}) {
+                                next if !exists $datablok->{$tag};
+                                next if !tag_is_unknown( $dataset, $tag );
+                                exclude_tag( $dataset, $tag );
+                            }
+
+                            my $estimated_sg_number = $estimated_sg->{number};
+                            if( defined $original_sg_number &&
+                                $original_sg_number ne '?' &&
+                                $original_sg_number ne $estimated_sg_number ) {
+                                set_tag( $dataset, '_cod_original_sg_number',
+                                         $original_sg_number );
+                            }
+                            set_tag( $dataset, '_space_group_IT_number',
+                                     $estimated_sg_number );
+                        } else {
+                            if( !$keep_unrecognised_spacegroups ) {
+                                record_original_sg_h_m( $dataset, $original_sg_H_M );
+                                for my $tag (@{$sg_data->{tags_all}{hermann_mauguin}}) {
+                                    set_tag( $dataset, $tag, '?' );
+                                }
+
+                                if( defined $original_sg_Hall && $original_sg_Hall ne '?' ) {
+                                    set_tag( $dataset, '_cod_original_sg_symbol_Hall',
+                                             $original_sg_Hall );
+                                }
+                                for my $tag (@{$sg_data->{tags_all}{hall}}) {
+                                    set_tag( $dataset, $tag, '?' );
+                                }
+
+                                if( defined $original_sg_number ) {
+                                    set_tag( $dataset, '_cod_original_sg_number',
+                                             $original_sg_number );
+                                }
+                                set_tag( $dataset, '_space_group_IT_number', '?' );
+                            }
+                            warn 'WARNING, the space group could not be ' .
+                                 'estimated from the symmetry operators' . "\n";
+                        }
+                    }
+                } else {
+                    warn 'WARNING, the data block does not contain symmetry '
+                       . 'operators' . "\n";
+                }
+            }
+
+            # Try to parse and correct chemical formula if requested:
+
+            if( $parse_formula_sum && defined $datablok->{_chemical_formula_sum} ) {
+                my $old_formula = $datablok->{_chemical_formula_sum}[0];
+
+                my $new_formula;
+                my @formula_parser_warnings;
+                eval {
+                    local $SIG{__WARN__} = sub {
+                        push @formula_parser_warnings, @_;
+                    };
+                    $new_formula = canonicalise_summary_formula( $old_formula );
+                };
+                for( @formula_parser_warnings ) {
+                    process_warnings( parse_message($_), $die_on_error_level );
+                }
+
+                if( defined $new_formula && $old_formula ne $new_formula ) {
+                    set_tag( $dataset, '_cod_original_formula_sum', $old_formula );
+                    set_tag( $dataset, '_chemical_formula_sum', $new_formula );
+                }
+            }
+
+            if ( $exclude_redundant_chemical_names ) {
+                exclude_redundant_chemical_names($dataset);
+            }
+
+            # Calculate essential information if it is missing but requested:
+
+            if( $calculate_cell_volume ) {
+                my @cell = map { defined $_ && ( /^\s*[?.]\s*$/ ) ? undef : $_ }
+                             get_cell( $datablok, { silent => 1} );
+                my @sigcell = map { defined $_ && ( /^\s*[?.]\s*$/ ) ? undef : $_ }
+                             get_cell( $dataset->{precisions}, { silent => 1} );
+                $cell[3] = 90 unless defined $cell[3];
+                $cell[4] = 90 unless defined $cell[4];
+                $cell[5] = 90 unless defined $cell[5];
+
+                my $has_cell = !grep { !defined $_ } @cell;
+                my $has_precisions = grep { defined $_ && $_ != 0 } @sigcell;
+
+                if( $has_cell ) {
+                    my ( $V, $sigV );
+                    if( $has_precisions ) {
+                        @sigcell = map { defined $_ ? $_ : 0 } @sigcell;
+                        ($V, $sigV) = cell_volume( @cell, @sigcell );
+                        $V = pack_precision( $V, $sigV );
+                    } else {
+                        $V = sprintf '%.3f', scalar cell_volume( @cell );
+                    }
+                    if( exists $datablok->{'_cell_volume'} &&
+                        !exists $datablok->{'_cod_original_cell_volume'} &&
+                        $datablok->{'_cell_volume'}[0] ne $V ) {
+                        set_tag( $dataset, '_cod_original_cell_volume',
+                                 $datablok->{'_cell_volume'}[0] );
+                    }
+                    set_tag( $dataset, '_cell_volume', $V );
+                } else {
+                    warn 'WARNING, no unit cell information found -- cannot '
+                       . 'compute cell volume' . "\n";
+                }
+            }
+
+            # Add default cell angles of 90 degrees if these are missing:
+            if( exists $datablok->{'_cell_length_a'} ||
+                exists $datablok->{'_cell_length_b'} ||
+                exists $datablok->{'_cell_length_c'} ) {
+                for my $tag (qw( _cell_angle_alpha
+                                 _cell_angle_beta
+                                 _cell_angle_gamma)) {
+                    next if exists $datablok->{$tag};
+                    set_tag( $dataset, $tag, 90 );
+                }
+            }
+
+            # Print out the CIF header if requested:
+            if( defined $cif_comment_header ) {
+                # Ensure that for CIF v2.0 the magic code comes
+                # before the CIF comment header:
+                if( exists $dataset->{cifversion} &&
+                           $dataset->{cifversion}{major} == 2 ) {
+                    printf( "#\\#CIF_%d.%d\n",
+                            $dataset->{cifversion}{major},
+                            $dataset->{cifversion}{minor} );
+                }
+                print $cif_comment_header;
+            }
+
+            # Calculate the data block name:
+
+            if( defined $data_block_nr ) {
+                $dataset->{name} = sprintf $datablock_format, $data_block_nr;
+                if( $update_database_code ) {
+                    set_tag( $dataset, $database_code_tag, $dataset->{name} );
+                }
+                $data_block_nr ++;
+            }
+
+            # Make sure we do not print out datasets with empty names if
+            # we fix CIFs:
+
+            if( $dataset->{name} eq '' ) {
+                $dataset->{name} = $filename;
+                $dataset->{name} =~ s/\s/_/g;
+            }
+
+            # Print out requested tags:
+
+            if( $output_format eq 'cif' ) {
+                print_cif( $dataset, {
+                    exclude_misspelled_tags => $exclude_misspelled_tags,
+                    preserve_loop_order => $preserve_loop_order,
+                    fold_long_fields => $fold_long_fields,
+                    folding_width => $folding_width,
+                    dictionary_tags => \%dictionary_tags,
+                    dictionary_tag_list => \@dictionary_tags,
+                    keep_tag_order => $preserve_tag_order,
+                           } );
+            } else {
+                use COD::CIF::Tags::Manage qw( clean_cif );
+                clean_cif( $dataset, {
+                    exclude_misspelled_tags => $exclude_misspelled_tags,
+                    preserve_loop_order => $preserve_loop_order,
+                    dictionary_tags => \%dictionary_tags,
+                    dictionary_tag_list => \@dictionary_tags,
+                    keep_tag_order => $preserve_tag_order,
+                           } );
+                print cif2json( $dataset );
+            }
+        } };
+        if ($@) {
+            process_errors( {
+              'message'       => $@,
+              'program'       => $0,
+              'filename'      => $filename,
+              'add_pos'       => $dataname
+            }, $die_on_errors );
+        };
+    };
+
+    if( $no_coordinates ) {
+        report_message( {
+           'program'   => $0,
+           'filename'  => $filename,
+           'err_level' => 'WARNING',
+           'message'   => 'no data blocks that contain coordinates found'
+        }, $die_on_warnings );
+    }
+}
+
+#
+# Subroutines:
+#
+
+##
+# Merges two CIF structures by copying values of the desired tags
+# from the source CIF structure to the destination CIF structure.
+#
+# @param $tag_list
+#       Reference to an array of tag names, that should be merged.
+# @param $dst
+#       Reference to the destination CIF structure that contains the
+#       original values. Merged values are stored in this structure.
+# @param $src
+#       Source CIF structure that contains new values.
+# @param $src_priority
+#       Logical value that determines whether source CIF values
+#       should overwrite already existent destination CIF values.
+# @return $dst
+#       Reference to the destination CIF structure with the merged
+#       values.
+##
+sub merge_new_tag_values($$$$)
+{
+    my ($tag_list, $dst, $src, $src_priority) = @_;
+
+    my %tag_list = map { $_ => 1 } @{$tag_list};
+
+    for my $key (@{$tag_list}) {
+        if( defined $src->{values}{$key} &&
+          ( !exists $dst->{values}{$key} || $src_priority ) ) {
+
+            if( exists $dst->{values}{$key} ) {
+                exclude_tag( $dst, $key )
+            }
+
+            if( exists $src->{inloop}{$key} ) {
+                set_loop_tag( $dst, $key, undef, $src->{values}{$key} )
+            } else {
+                set_tag( $dst, $key, $src->{values}{$key}[0] )
+            }
+        }
+    }
+
+    return $dst;
+}
+
+##
+# Parses a bibliographic reference string into a bibliography hash.
+#
+# @param $reference
+#       Bibliographic reference text.
+# @return $bibliography
+#       Reference to the bibliography hash. An example of the returned
+#       structure with all possible key-value pairs:
+#
+#       $bibliography = {
+#           'title'      => 'Title of the paper',
+#           'journal'    => 'Name of the journal',
+#           'issue'      => '1',
+#           'volume'     => '2',
+#           'year'       => '2015'
+#           'doi'        => '10.1000/182'
+#           'page_first' => '7'
+#           'page_last'  => '42'
+#           'authors'    => [ 'Author, First',
+#                             'Second Author',
+#                             'Author, T.' ]
+#       }
+##
+sub ref2bib
+{
+    my ( $reference ) = @_;
+
+    my %bibliography;
+
+    if ( $reference =~ /<.*?>.*?<.*?>/s ||
+         $reference =~ /\\.*?(?:\[.*?\])?\{.*?\}/s ) {
+
+        for my $key ('title', 'journal', 'issue', 'volume', 'year', 'doi' ) {
+            if( $reference =~ /<$key>(.*?)<\/$key>/s ||
+                $reference =~ /\\$key\{(.*?)\}/s ) {
+                $bibliography{$key} = $1;
+                if( substr( $&, 0, 1 ) eq '<' ) {
+                    $bibliography{$key} = decode_entities $bibliography{$key};
+                }
+            }
+        }
+
+        $bibliography{title} =~ s/\n/ /g    if $bibliography{title};
+        $bibliography{year}  =~ s/[^0-9]//g if $bibliography{year};
+
+        if ( $reference =~ /<pages?>(.*?)<\/pages?>/s ||
+             $reference =~ /\\pages?\{(.*?)\}/s ) {
+            my @pages = split  m/-/, $1;
+            foreach (@pages) { $_ =~ s/\s//g };
+            $bibliography{'page_first'} = $pages[0];
+            if ( scalar @pages > 1 ) {
+                $bibliography{'page_last'} = $pages[1];
+            }
+        }
+
+        if ( $reference =~ /<authors?\s?(.*?)>(.*?)<\/authors?>/s ||
+             $reference =~ /\\authors?(?:\[(.*?)\])?\{(.*?)\}/s ) {
+            my $attributes = $1;
+            my $author_list = $2;
+            my $separator = qr/,\s*and|\sand\s|,/;
+            my $is_xml = substr( $&, 0, 1 ) eq '<';
+            if( $attributes && $attributes =~ /separator\s*=\s*"(.*?)"/ ) {
+                $separator = $1;
+            }
+
+            my @authors;
+            foreach my $author ( split quotemeta( $separator ), $author_list ) {
+                $author =~ s/^\s+|\s+$//g;
+                $author =~ s/\n/ /g;
+                $author =~ s/\s+/ /g;
+                $author = decode_entities $author if $is_xml;
+                push @authors, $author;
+            }
+            $bibliography{'authors'} = \@authors;
+        }
+    }
+
+    return \%bibliography;
+}
+
+sub restore_last_page
+{
+    my ( $page_first, $page_last ) = @_;
+
+    if( $page_last > $page_first ) {
+        return $page_last;
+    } else {
+        my $length_last  = length $page_last;
+        my $length_first = length $page_first;
+        my $extra = $length_first - $length_last;
+
+        my $leading_digits = substr $page_first, 0, $extra;
+
+        return $leading_digits . $page_last;
+    }
+}
+
+##
+# Removes the given data items in case they contain values that match
+# the common placeholder values.
+#
+# @param $dataset
+#       Reference to the CIF data structure as returned by the COD::CIF::Parser.
+# @param $data_names
+#       Names of the data names that should be checked for placeholder values.
+##
+sub exclude_placeholder_data_items
+{
+    my ($dataset, $data_names) = @_;
+
+    for my $tag ( @{$data_names} ) {
+        if ( exists $dataset->{'values'}{$tag} &&
+             $dataset->{'values'}{$tag}[0] =~ m/^[-.?\s\n]*$/ ) {
+            exclude_tag( $dataset, $tag );
+        }
+    }
+
+    return;
+}
+
+##
+# Removes data items related to various chemical names if the stored values
+# match the chemical formula.
+#
+# @param $dataset
+#       Reference to the CIF data structure as returned by the COD::CIF::Parser.
+##
+sub exclude_redundant_chemical_names
+{
+    my ($dataset, $data_names) = @_;
+
+    return if !exists $dataset->{'values'}{'_chemical_formula_sum'};
+
+    my $formula = $dataset->{'values'}{'_chemical_formula_sum'}[0];
+    # check if the chemical formula is a proper one
+    my $canonical_formula;
+    eval {
+        # capturing parsing errors
+        local $SIG{__WARN__} = sub {};
+        $canonical_formula = canonicalise_summary_formula($formula);
+    };
+
+    if ( defined $canonical_formula ) {
+        for my $tag ( '_chemical_name_systematic',
+                      '_chemical_name_common',
+                      '_chemical_name_mineral' ) {
+            next if !exists $dataset->{'values'}{$tag};
+
+            my $chem_name = $dataset->{'values'}{$tag}[0];
+            $chem_name =~ s/\n/ /g;
+            $chem_name =~ s/^\s+|\s+$//g;
+            if ( $formula eq $chem_name ) {
+                exclude_tag( $dataset, $tag );
+            }
+        }
+    }
+
+    return;
+}
+
+##
+# Parses the summary formula string and outputs in a canonical form that
+# follows the Hill notation.
+#
+# @param $formula
+#       The summary formula string.
+# @return
+#       Canonical string in case of successful canonicalisation,
+#       undef value otherwise.
+##
+sub canonicalise_summary_formula
+{
+    my ( $formula ) = @_;
+    $formula =~ s/\n/ /g;
+    $formula =~ s/^\s+|\s+$//g;
+    my $parser = COD::Formulae::Parser::AdHoc->new;
+    $parser->ParseString( $formula );
+
+    return $parser->SprintFormula;
+}
+
+##
+# Extracts the publication information from the global data block.
+# @param $data_blocks
+#       A parsed CIF data structure as returned by the COD::CIF::Parser.
+# @param $publ_data_names
+#       Reference to an array of data item names that should be extracted.
+# @return $global_bibliography
+#       Reference to a hash containing the extracted publication data values.
+##
+sub extract_publ_from_global_data_block
+{
+    my ($data_blocks, $publ_data_names) = @_;
+
+    my $global_bibliography = new_datablock();
+    # Look for a data_global data block and extract the publication information.
+    # This section may occur at the very end of the CIF file, so all data
+    # blocks need to be scanned to find it
+    my $last_global_data_block;
+    my $global_block_count = 0;
+    for my $data_block (@{$data_blocks}) {
+        next if $data_block->{'name'} ne 'global';
+        $global_block_count++;
+        $last_global_data_block = $data_block;
+    }
+
+    if ( defined $last_global_data_block ) {
+        local $SIG{__WARN__} = sub {}; # silencing warnings
+        merge_datablocks( $last_global_data_block,
+                          $global_bibliography,
+                          {
+                            tags => $publ_data_names,
+                            override_all => 1,
+                          } );
+    }
+
+    if( $global_block_count > 1 ) {
+        warn "WARNING, file had $global_block_count global sections -- "
+           . 'taking the last one into account, others were removed' . "\n";
+    }
+
+    return $global_bibliography;
+}
+
+##
+# Builds a global data block of the powder diffraction experiment by
+# extracting information from all overall info and publication data blocks.
+# @param $data_blocks
+#       A parsed CIF data structure as returned by the COD::CIF::Parser.
+# @param $prefer_later_data_blocks
+#       Logical value that determines whether information from later
+#       data blocks (array-wise) should overwrite the information
+#       extracted from previous data blocks.
+# @return $pd_global_publ_data
+#       A data block containing the information merged information.
+##
+sub build_pd_global_publ_data_block
+{
+    my ($data_blocks, $prefer_later_data_blocks) = @_;
+
+    my $pd_global_publ_data = new_datablock( 'pd_global_publ_data' );
+    my @pd_data_blocks = grep { $_->{values}{'_pd_block_id'} } @{$data_blocks};
+    return $pd_global_publ_data if !@pd_data_blocks;
+
+    my $pd_publ_data_block_count = 0;
+    my $pd_overall_info_data_block_count = 0;
+
+    for my $data_block (@{$data_blocks}) {
+        if( is_pd_overall_info_data_block( $data_block ) ) {
+            $pd_overall_info_data_block_count++;
+        } elsif ( is_pd_publication_data_block( $data_block ) ) {
+            $pd_publ_data_block_count++;
+        } else {
+            next;
+        }
+
+        # FIXME: a proper powder diffraction experiment CIF file should
+        # not contain more than a single overall information data block
+        # and a single publication data block so there does not seem to
+        # be an official IUCr opinion on how to treat such cases
+        # (merge the data, give preference to later data blocks, etc.)
+        # I propose that we decide on an approach for these corner cases,
+        # document it well and stick to it. Potentially, this subroutine
+        # might not even need the "$prefer_later_data_blocks" variable
+        merge_new_tag_values(
+                [ grep { !/^(?:_pd_block_id|
+                               _pd_phase_block_id|
+                               _pd_block_diffractogram_id)$/x
+                       } keys %{$data_block->{'values'}} ],
+                $pd_global_publ_data,
+                $data_block, $prefer_later_data_blocks );
+    }
+
+    if( $pd_publ_data_block_count > 1 ) {
+        warn "WARNING, file had $pd_publ_data_block_count powder diffraction "
+           . 'publication section data blocks -- data block information '
+           . 'was merged' . "\n";
+    }
+
+    if( $pd_overall_info_data_block_count > 1 ) {
+        warn "WARNING, file had $pd_overall_info_data_block_count powder "
+           . 'diffraction overall information data blocks -- data block '
+           . 'information was merged' . "\n"
+    }
+
+    return $pd_global_publ_data;
+}
+
+##
+# Evaluates if the given data block matches the criteria of a powder
+# diffraction experiment overall information data block. The overall
+# information data block contains both the _pd_phase_block_id and
+# the _pd_block_diffractogram_id loops.
+#
+# For more information see: Toby et al., Journal of Applied Crystallography
+# (2003), doi: 10.1107/S0021889803016819
+# @param $data_block
+#       A CIF data block as returned by the COD::CIF::Parser.
+# @return
+#       1 if the data block meets the criteria, 0 otherwise.
+##
+sub is_pd_overall_info_data_block
+{
+    my ($data_block) = @_;
+
+    return 0 if !exists $data_block->{'values'}{'_pd_phase_block_id'};
+    return 0 if !exists $data_block->{'values'}{'_pd_block_diffractogram_id'};
+
+    return 1;
+}
+
+##
+# Evaluates if the given data block matches the criteria of a powder
+# diffraction experiment publication data block. The publication data
+# block is recognised as having the _audit_*, _publ_* or _journal_*
+# data items and having no coordinates or structure factors.
+#
+# For more information see: Toby et al., Journal of Applied Crystallography
+# (2003), doi: 10.1107/S0021889803016819
+# @param $data_block
+#       A CIF data block as returned by the COD::CIF::Parser.
+# @return
+#       1 if the data block meets the criteria, 0 otherwise.
+##
+sub is_pd_publication_data_block
+{
+    my ($data_block) = @_;
+
+    my $values = $data_block->{'values'};
+
+    return 0 if !any { /^_(audit|publ|journal)_*/ } keys %{$values};
+    return 0 if any { /^_refln_index_.$/ } keys %{$values};
+    return 0 if exists $values->{'_atom_site_label'};
+
+    return 1;
+}
+
+##
+# Records the given original Hermann-Mauguin symmetry space group symbol
+# in the provided data block.
+#
+# @param $data_block
+#       Reference to a CIF data block as returned by the COD::CIF::Parser.
+# @param $original_sg_h_m
+#       Original space group symbol that should be stored.
+##
+sub record_original_sg_h_m
+{
+    my ( $data_block, $original_sg_h_m ) = @_;
+
+    return if !defined $original_sg_h_m;
+    return if $original_sg_h_m eq '?';
+    return if exists $data_block->{'values'}{'_[local]_cod_cif_authors_sg_H-M'};
+    return if exists $data_block->{'values'}{'_cod_cif_authors_sg_H-M'};
+    return if exists $data_block->{'values'}{'_cod_original_sg_symbol_H-M'};
+
+    set_tag( $data_block, '_cod_original_sg_symbol_H-M', $original_sg_h_m );
+
+    return;
+}

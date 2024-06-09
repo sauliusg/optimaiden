@@ -1,0 +1,351 @@
+#! /bin/sh
+#!perl -w # --*- Perl -*--
+eval 'exec perl -x $0 ${1+"$@"}'
+    if 0;
+#------------------------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2020-09-29 10:54:47 +0300 (Tue, 29 Sep 2020) $
+#$Revision: 8533 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/scripts/cif_cod_numbers $
+#------------------------------------------------------------------------------
+#*
+#* Find COD numbers for the CIF files in given directories of file lists.
+#*
+#* USAGE:
+#*    $0 --options input1.cif input*.cif
+#**
+
+use strict;
+use warnings;
+use COD::CIF::Parser qw( parse_cif );
+use COD::CIF::Data::CODNumbers qw( cif_fill_data fetch_duplicates );
+use COD::CIF::Tags::CanonicalNames qw( canonicalize_all_names );
+use COD::SOptions qw( getOptions );
+use COD::SUsage qw( usage options );
+use COD::ErrorHandler qw( process_warnings
+                          process_errors
+                          process_parser_messages );
+use COD::ToolsVersion qw( get_version_string );
+
+my %database = (
+        host  => 'www.crystallography.net',
+        user  => 'cod_reader',
+        name  => 'cod',
+        table => 'data',
+        password => '',
+        platform => 'mysql',
+    );
+
+my $use_parser = 'c';
+my $input_format = 'cif';
+
+my $die_on_error_level = {
+    ERROR   => 1,
+    WARNING => 0,
+    NOTE    => 0
+};
+
+my $print_datablock_name = 0;
+
+my %options = (
+    'check_bibliography' => 1,
+    'check_compound_source' => 0,
+    'check_sample_history' => 0,
+    'use_su' => 1,
+    'max_cell_length_diff' => 0.5, # angstrom
+    'max_cell_angle_diff'  => 1.2, # degree of arc
+);
+my %cif_fill_data_options = (
+    'use_attached_hydrogens' => 1,
+);
+
+#* OPTIONS:
+#*   --platform 'SQLite'
+#*                     Use the SQL database platform 'SQLite' to query structures
+#*                     (default: 'mysql').
+#*
+#*   -d, --database  cod
+#*                     Use database "cod" to query for structures.
+#*
+#*   -h, --host   www.crystallography.net
+#*   -s, --server www.crystallography.net
+#*                     Query COD database on the host 'www.crystallography.net'.
+#*
+#*   -l, --localhost
+#*                     Use database server on the localhost to query the
+#*                     COD database.
+#*
+#*   -p, --port 3306
+#*                     Use use the specified port to query structures
+#*                     (default: 3306).
+#*
+#*   -t, --table  data
+#*                     Use SQL table "data" to query for structures.
+#*
+#*   -u, --user cod_reader
+#*                     Use user name "cod_reader" to access COD database;
+#*                     this reader should be granted SELECT privilege, i.e.
+#*                     should be able to read the COD database without
+#*                     supplying a password.
+#*
+#*   --password
+#*                     Use the specified password to connect (default: '').
+#*
+#*   -P, --print-datablock-name
+#*                     Print data block name as the fifth column.
+#*   -P-, --no-print-datablock-name, --dont-print-datablock-name
+#*                     Do not print data block names (default).
+#*
+#*   -S, --series 9
+#*                     Check only COD entries starting with 9 (so called 9* series).
+#*                     Default: check the whole COD database. Set series to
+#*                     "" (empty string) to restore the default behaviour.
+#*
+#*   --max-cell-length-difference 0.5
+#*                     Maximum difference of unit cell lengths allowed
+#*                     for entries regarded as the same, in angstroms
+#*                     (default: 0.5).
+#*
+#*   --max-cell-angle-difference 1.2
+#*                     Maximum difference of unit cell angles allowed for
+#*                     entries regarded as the same, in angstroms
+#*                     (default: 1.2).
+#*
+#*   --check-bibliography
+#*                     Only CIFs that have different bibliography data are
+#*                     declared different if all other parameters match
+#*                     CIFs with missing bibliographies are assumed to
+#*                     have matching bibliographies (default).
+#*   --no-check-bibliography, --dont-check-bibliography
+#*                     Ignore bibliographic data of all CIFs; thus even files
+#*                     with different bibliographies will be regarded the same
+#*                     if their cells, chemical formulae and measurement
+#*                     conditions match.
+#*
+#*   --use-sigma, --no-ignore-sigma, --dont-ignore-sigma
+#*                     Use standard deviations (sigmas) when comparing unit
+#*                     cell constants (default).
+#*   --no-use-sigma, --dont-use-sigma, --ignore-sigma
+#*                     Ignore standard deviations (sigmas) when comparing unit
+#*                     cell constants.
+#*
+#*   --check-sample-history
+#*                     Only CIFs that have different sample history data
+#*                     (as recorded in the _exptl_crystal_thermal_history
+#*                     and _exptl_crystal_pressure_history tags) are declared
+#*                     different if all other parameters match.
+#*   --no-check-sample-history,
+#*   --dont-check-sample-history,
+#*   --disregard-sample-history
+#*                     Ignore sample history of all CIFs; thus even files
+#*                     with different sample histories will be regarded the
+#*                     same if their cells, chemical formulae and measurement
+#*                     conditions match (default).
+#*
+#*   --check-compound-source
+#*                     Only CIFs that have different compound source
+#*                     (as recorded in the _chemical_compound_source)
+#*                     are declared different if all other parameters
+#*                     match.
+#*   --no-check-compound-source,
+#*   --dont-check-compound-source,
+#*   --disregard-compound-source
+#*                     Ignore compound source of all CIFs; thus even files
+#*                     with different compound sources will be regarded the
+#*                     same if other conditions match (default).
+#*
+#*   --use-attached-hydrogens
+#*                     Include number of implicit hydrogens, specified using
+#*                     _atom_site_attached_hydrogens tag, into the formula
+#*                     sum (default).
+#*   --no-use-attached-hydrogens,
+#*   --dont-use-attached-hydrogens,
+#*   --ignore-attached-hydrogens
+#*                     Ignore number of implicit hydrogens, specified using
+#*                     _atom_site_attached_hydrogens tag, in calculation of
+#*                     the formula sum.
+#*
+#*   --use-perl-parser
+#*                     Use the Perl-only CIF parser.
+#*   --use-c-parser
+#*                     Use the speed-optimised C/Perl parser (default).
+#*
+#*   --cif-input
+#*                     Use CIF format for input (default).
+#*   --json-input
+#*                     Use JSON format for input.
+#*
+#*   --help, --usage
+#*                     Output a short usage message (this message) and exit.
+#*   --version
+#*                     Output version information and exit.
+#**
+@ARGV = getOptions(
+    '-d,--database'  => \$database{'name'},
+    '-l,--localhost' => sub { $database{'host'} = 'localhost' },
+    '-h,--host'      => \$database{'host'},
+    '-p,--port'      => \$database{'port'},
+    '-s,--server'    => \$database{'host'},
+    '-t,--table'     => \$database{'table'},
+    '-u,--user'      => \$database{'user'},
+    '--password'     => \$database{'password'},
+    '--platform'     => \$database{'platform'},
+
+    '-P,--print-datablock-name'     => sub{ $print_datablock_name = 1 },
+    '-P-,--no-print-datablock-name' => sub{ $print_datablock_name = 0 },
+    '--dont-print-datablock-name'   => sub{ $print_datablock_name = 0 },
+
+    '-S,--series' => \$options{'cod_series_prefix'},
+
+    '--max-cell-length-difference' => \$options{'max_cell_length_diff'},
+    '--max-cell-angle-difference'  => \$options{'max_cell_angle_diff'},
+
+    '--check-bibliography'      => sub { $options{'check_bibliography'} = 1 },
+    '--dont-check-bibliography' => sub { $options{'check_bibliography'} = 0 },
+    '--no-check-bibliography'   => sub { $options{'check_bibliography'} = 0 },
+
+    '--check-sample-history'
+                            => sub { $options{'check_sample_history'} = 1 },
+    '--dont-check-sample-history'
+                            => sub { $options{'check_sample_history'} = 0 },
+    '--no-check-sample-history'
+                            => sub { $options{'check_sample_history'} = 0 },
+    '--disregard-sample-history'
+                            => sub { $options{'check_sample_history'} = 0 },
+
+    '--check-compound-source'
+                            => sub { $options{'check_compound_source'} = 1 },
+    '--dont-check-compound-source'
+                            => sub { $options{'check_compound_source'} = 0 },
+    '--no-check-compound-source'
+                            => sub { $options{'check_compound_source'} = 0 },
+    '--disregard-compound-source'
+                            => sub { $options{'check_compound_source'} = 0 },
+
+    '--ignore-sigma'        => sub{ $options{'use_su'} = 0 },
+    '--dont-ignore-sigma'   => sub{ $options{'use_su'} = 1 },
+    '--no-ignore-sigma'     => sub{ $options{'use_su'} = 1 },
+
+    '--use-sigma'           => sub{ $options{'use_su'} = 1 },
+    '--dont-use-sigma'      => sub{ $options{'use_su'} = 0 },
+    '--no-use-sigma'        => sub{ $options{'use_su'} = 0 },
+
+    '--use-attached-hydrogens' =>
+            sub { $cif_fill_data_options{'use_attached_hydrogens'} = 1 },
+    '--dont-use-attached-hydrogens' =>
+            sub { $cif_fill_data_options{'use_attached_hydrogens'} = 0 },
+    '--no-use-attached-hydrogens' =>
+            sub { $cif_fill_data_options{'use_attached_hydrogens'} = 0 },
+    '--ignore-attached-hydrogens' =>
+            sub { $cif_fill_data_options{'use_attached_hydrogens'} = 0 },
+
+    '--use-perl-parser'       => sub{ $use_parser = 'perl' },
+    '--use-c-parser'          => sub{ $use_parser = 'c' },
+
+    '--cif-input'  => sub { $input_format = 'cif' },
+    '--json-input' => sub { $input_format = 'json' },
+
+    '--options'      => sub { options; exit },
+    '--help,--usage' => sub { usage; exit },
+    '--version'      => sub { print get_version_string(), "\n"; exit }
+);
+
+if( $input_format eq 'json' ) {
+    $use_parser = 'json';
+}
+
+@ARGV = ('-') unless @ARGV;
+
+binmode STDOUT, ':encoding(UTF-8)';
+binmode STDERR, ':encoding(UTF-8)';
+
+for my $filename (@ARGV) {
+    my $parser_options = { 'parser' => $use_parser, 'no_print' => 1 };
+    my ( $data, $err_count, $messages ) = parse_cif( $filename, $parser_options );
+    process_parser_messages( $messages, $die_on_error_level );
+
+    canonicalize_all_names( $data );
+
+    local $SIG{__WARN__} = sub { process_warnings( {
+                                    'message'       => @_,
+                                    'program'       => $0,
+                                    'filename'      => $filename
+                               }, $die_on_error_level ) };
+
+    if( !defined $data->[0] || !defined $data->[0]{name} ) {
+        warn "WARNING, file seems to be empty\n";
+        next;
+    }
+
+    my %structures = ();
+    my $index = 0;
+    foreach my $dataset ( @{$data} ) {
+
+        my $dataname = 'data_' . $dataset->{name};
+
+        local $SIG{__WARN__} = sub { process_warnings( {
+                                       'message'       => @_,
+                                       'program'       => $0,
+                                       'filename'      => $filename,
+                                       'add_pos'       => $dataname
+                                     }, $die_on_error_level ) };
+
+        eval {
+            my $structure = cif_fill_data( $dataset,
+                                           $filename,
+                                           $index,
+                                           \%cif_fill_data_options );
+            if ( defined $structure ) {
+                $structures{$structure->{id}} = $structure;
+                $index++;
+            }
+        };
+        if ($@) {
+            process_errors( {
+              'message'  => $@,
+              'program'  => $0,
+              'filename' => $filename,
+              'add_pos'  => $dataname
+            }, $die_on_error_level->{'ERROR'} );
+        };
+    }
+
+    my $duplicates;
+    eval {
+        $duplicates = fetch_duplicates( \%structures, \%database, \%options );
+    };
+    if ($@) {
+        process_errors( {
+            'message'  => $@,
+            'program'  => $0,
+            'filename' => $filename,
+            }, $die_on_error_level->{'ERROR'} );
+    };
+
+    for my $datablock ( @{$duplicates} ) {
+        if( keys %{ $datablock->{duplicates} } > 0 ) {
+            for my $key (sort keys %{ $datablock->{duplicates} } ) {
+                my $cod_entry = $datablock->{duplicates}{$key};
+                printf
+                    '%-35s %15s %3d %s',
+                    $datablock->{formula},
+                    $cod_entry->{filename},
+                    scalar keys %{ $datablock->{duplicates} },
+                    $filename;
+                if( $print_datablock_name ) {
+                    printf ' %s', $datablock->{datablock}{id};
+                }
+                print "\n"
+            }
+        } else {
+            printf
+                '%-35s %15s %3d %s',
+                $datablock->{formula}, '?', 0,
+                $filename;
+            if( $print_datablock_name ) {
+                printf ' %s', $datablock->{datablock}{id};
+            }
+            print "\n"
+        }
+    }
+}

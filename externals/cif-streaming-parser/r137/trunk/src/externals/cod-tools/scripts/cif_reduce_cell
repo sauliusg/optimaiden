@@ -1,0 +1,212 @@
+#! /bin/sh
+#!perl -w # --*- Perl -*--
+eval 'exec perl -x $0 ${1+"$@"}'
+    if 0;
+#------------------------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2022-07-31 09:41:50 +0300 (Sun, 31 Jul 2022) $
+#$Revision: 9352 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/scripts/cif_reduce_cell $
+#------------------------------------------------------------------------------
+#*
+#* Perform reductions of the unit cell using different algorithms.
+#*
+#* USAGE:
+#*    $0 --options input1.cif input*.cif
+#**
+
+use strict;
+use warnings;
+use File::Basename qw( basename );
+use COD::CIF::Parser qw( parse_cif );
+use COD::CIF::Data qw( get_cell );
+use COD::CIF::Tags::CanonicalNames qw( canonicalize_all_names );
+use COD::CIF::Tags::Manage qw( set_tag );
+use COD::CIF::Tags::Print qw( print_cif );
+use COD::Cell::Niggli::KG76;
+use COD::Cell::Delaunay::Delaunay;
+use COD::SOptions qw( getOptions get_value );
+use COD::SUsage qw( usage options );
+use COD::ErrorHandler qw( process_warnings
+                          process_errors
+                          process_parser_messages );
+use COD::ToolsVersion qw( get_version_string );
+
+my $die_on_error_level = {
+    ERROR   => 1,
+    WARNING => 0,
+    NOTE    => 0
+};
+
+my $base0 = basename( $0 );
+
+my $use_parser = 'c';
+my $debug = 0;
+my $epsilon = 1E-4;
+
+# Default formats for floating-point numbers (for unit cell
+# parameters) -- large enough for IEEE double precision floating point
+# number:
+my $cell_fformat = "%.12g";
+
+my $Pi = 4 * atan2(1,1);
+
+#* OPTIONS:
+#*   --use-perl-parser
+#*                     Use Perl parser for CIF parsing.
+#*   --use-c-parser
+#*                     Use Perl & C parser for CIF parsing (default).
+#*
+#*   -F, --float-format "%15.12f"
+#*                     Specify format to print out floating point numbers.
+#*
+#*   -C, --cell-format "%15.12f"
+#*                     Specify format to print out floating point numbers for
+#*                     atomic coordinates.
+#*
+#*   -e, --epsilon 1E-6
+#*                     Tolerance to compare cell parameter equality in cell
+#*                     reductions.
+#*
+#*   --debug, --no-debug
+#*                     Turn on/off the debug prints of reduction algorithm.
+#*                     Default: off.
+#*
+#*   --help, --usage
+#*                     Output a short usage message (this message) and exit.
+#*   --version
+#*                     Output version information and exit.
+#**
+@ARGV = getOptions(
+    "--debug"    => sub{ $debug = 1 },
+    "--no-debug" => sub{ $debug = 0 },
+
+    "-e,--epsilon" => \$epsilon,
+
+    "-F,--float-format" => sub { $cell_fformat = get_value() },
+    "-C,--cell-format" => \$cell_fformat,
+
+    "--use-perl-parser" => sub { $use_parser = "perl" },
+    "--use-c-parser"    => sub { $use_parser = "c" },
+
+    '--options'      => sub { options; exit },
+    '--help,--usage' => sub { usage; exit },
+    '--version'      => sub { print get_version_string(), "\n"; exit }
+);
+
+@ARGV = ( "-" ) unless @ARGV;
+
+binmode STDOUT, ':encoding(UTF-8)';
+binmode STDERR, ':encoding(UTF-8)';
+
+for my $filename (@ARGV) {
+
+    my $options = { 'parser' => $use_parser, 'no_print' => 1 };
+    my ( $data, $err_count, $messages ) = parse_cif( $filename, $options );
+    process_parser_messages( $messages, $die_on_error_level );
+    next if $err_count > 0;
+
+    canonicalize_all_names( $data );
+
+    for my $datablock (@$data) {
+        my $values = $datablock->{values};
+        my $dataname = 'data_' . $datablock->{'name'};
+
+        local $SIG{__WARN__} = sub {
+            process_warnings( {
+                'message'  => @_,
+                'program'  => $0,
+                'filename' => $filename,
+                'add_pos'  => $dataname
+            }, $die_on_error_level )
+        };
+
+        eval {
+            my @cell = get_cell( $values );
+
+            # Niggli reduction:
+            use COD::Cell::Niggli::KG76;
+            $COD::Cell::Niggli::KG76::debug = $debug;
+
+            my @Niggli_cell =
+                COD::Cell::Niggli::KG76::reduce( @cell, $epsilon );
+
+            my $tag_prefix = "_[local]_Niggli_${base0}";
+            set_tag( $datablock, $tag_prefix."_length_a",
+                     sprintf( $cell_fformat, $Niggli_cell[0] ));
+            set_tag( $datablock, $tag_prefix."_length_b",
+                     sprintf( $cell_fformat, $Niggli_cell[1] ));
+            set_tag( $datablock, $tag_prefix."_length_c",
+                     sprintf( $cell_fformat, $Niggli_cell[2] ));
+            set_tag( $datablock, $tag_prefix."_angle_alpha",
+                     sprintf( $cell_fformat, $Niggli_cell[3] ));
+            set_tag( $datablock, $tag_prefix."_angle_beta",
+                     sprintf( $cell_fformat, $Niggli_cell[4] ));
+            set_tag( $datablock, $tag_prefix."_angle_gamma",
+                     sprintf( $cell_fformat, $Niggli_cell[5] ));
+
+            # Delaunay reduction:
+            use COD::Cell::Delaunay::Delaunay qw(reduce);
+            $COD::Cell::Delaunay::Delaunay::debug = $debug;
+
+            my @Delaunay_cell =
+                COD::Cell::Delaunay::Delaunay::reduce( @cell, $epsilon );
+
+            $tag_prefix = "_[local]_Delaunay_${base0}";
+            set_tag( $datablock, $tag_prefix."_length_a",
+                     sprintf( $cell_fformat, $Delaunay_cell[0] ));
+            set_tag( $datablock, $tag_prefix."_length_b",
+                     sprintf( $cell_fformat, $Delaunay_cell[1] ));
+            set_tag( $datablock, $tag_prefix."_length_c",
+                     sprintf( $cell_fformat, $Delaunay_cell[2] ));
+            set_tag( $datablock, $tag_prefix."_angle_alpha",
+                     sprintf( $cell_fformat, $Delaunay_cell[3] ));
+            set_tag( $datablock, $tag_prefix."_angle_beta",
+                     sprintf( $cell_fformat, $Delaunay_cell[4] ));
+            set_tag( $datablock, $tag_prefix."_angle_gamma",
+                     sprintf( $cell_fformat, $Delaunay_cell[5] ));
+
+            # Estimate conventional cell:
+            use COD::Cell::Conventional::deWG91 qw(conventional_cell);
+            $COD::Cell::Conventional::deWG91::debug = $debug;
+
+            my @primitive_cell = @Niggli_cell[0..5];
+            my @conventional_cell = conventional_cell( @primitive_cell, $epsilon );
+
+            $tag_prefix = "_[local]_Niggli_conv_${base0}";
+            set_tag( $datablock, $tag_prefix."_length_a",
+                     sprintf( $cell_fformat, $conventional_cell[0] ));
+            set_tag( $datablock, $tag_prefix."_length_b",
+                     sprintf( $cell_fformat, $conventional_cell[1] ));
+            set_tag( $datablock, $tag_prefix."_length_c",
+                     sprintf( $cell_fformat, $conventional_cell[2] ));
+            set_tag( $datablock, $tag_prefix."_angle_alpha",
+                     sprintf( $cell_fformat, $conventional_cell[3] ));
+            set_tag( $datablock, $tag_prefix."_angle_beta",
+                     sprintf( $cell_fformat, $conventional_cell[4] ));
+            set_tag( $datablock, $tag_prefix."_angle_gamma",
+                     sprintf( $cell_fformat, $conventional_cell[5] ));
+
+            set_tag( $datablock, $tag_prefix."_crystal_system",
+                     $conventional_cell[7] );
+
+            # Print out CIF data:
+            $COD::CIF::Tags::Print::max_cif_tag_len = 46;
+
+            print_cif( $datablock,
+               {
+                    preserve_loop_order => 1,
+                    keep_tag_order => 1
+               }
+            );
+        };
+        if ($@) {
+            process_errors( {
+              'message'       => $@,
+              'program'       => $0,
+              'filename'      => $filename,
+              'add_pos'       => $dataname
+            }, $die_on_error_level->{'ERROR'} );
+        }
+    }
+}

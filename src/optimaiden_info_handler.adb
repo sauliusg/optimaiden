@@ -26,12 +26,13 @@ package body Optimaiden_Info_Handler is
 
    --  Serialise Info endpoint as JSON:
 
-   procedure Write_OPTIMADE_Data
+   procedure Write
      (
       Stream : out Util.Serialize.IO.JSON.Output_Stream;
       Info : Info_Type
      ) is
    begin
+      Stream.Start_Document;
       Stream.Start_Entity ("data");
       Stream.Start_Entity ("attributes");
       Stream.Write_Entity ("api_version", Info.API_Version);
@@ -43,37 +44,10 @@ package body Optimaiden_Info_Handler is
       Stream.End_Entity ("");
       Stream.End_Array ("available_api_versions");
 
-      Stream.Start_Array ("available_endpoints");
-      Stream.Write_Attribute ("", "references");
-      Stream.Write_Attribute ("", "structures");
-      Stream.End_Array ("available_api_versions");
-
-      Stream.Start_Entity ("entry_types_by_format");
-      Stream.Start_Array ("json");
-      Stream.Write_Attribute ("", "references");
-      Stream.Write_Attribute ("", "structures");
-      Stream.End_Array ("json");
-      Stream.End_Entity ("entry_types_by_format");
-
-      Stream.Start_Array ("formats");
-      Stream.Write_Attribute ("", "json");
-      Stream.Write_Attribute ("", "xml");
-      Stream.End_Array ("formats");
-
       Stream.Write_Entity ("id", Info.Id);
       Stream.Write_Entity ("type", Info.Endpoint_Type);
       Stream.End_Entity ("attributes");
       Stream.End_Entity ("data");
-   end Write_OPTIMADE_Data;
-
-   procedure Write
-     (
-      Stream : out Util.Serialize.IO.JSON.Output_Stream;
-      Info : Info_Type
-     ) is
-   begin
-      Stream.Start_Document;
-      Write_OPTIMADE_Data (Stream, Info);
       Stream.End_Document;
    end Write;
 

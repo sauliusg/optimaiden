@@ -1,0 +1,148 @@
+++ Fix the COD search bug: not the search engine finds "N", "Na" and
+   "Mn" when search for "N". It should finr only N; besides, it should
+   give a possibility to search for N4, returning structure files with
+   exactely four nitrogens in the _chemical_formula_sum.
+
+++ Add backreferences to Acta Cryst paper using coeditor code.
+
+++ Modify COD search scripts to deal with "formulas" like
+   '- C? Cl? H? Ir? S? -'.
+
+++ Modify COD web site so that it correctly uses UTF8 text from the
+   COD MySQL database.
+
+++ Display the number of structures and records in the COD front page
+   dynamically.
+   With correct plural version of word 'entries'.
+
+++ Display exact number of hits even if only 300 hits are returned,
+   with an appropriate message.
+
+++ Add possibility to search by the COD number range, and to retrieve
+   a specific COD number.
+
+-- Add possibility to change end-of-line encoding for downloadable COD
+   files on the fly (i.e. transform to MAC/DOS eol encoding upon
+   request, and if user's browser indicates that it comes from the
+   specified systems).
+
++- Add possibility to download all found files in one .zip file; add
+   query text and query date into the archive. Make it possible to
+   choose end-of-line encodings.
+
+++ Rename 'cod_old' database into 'cod'.
+
+++ Check PCOD database, fix it if necessary (create the 'pcod'
+   database).
+
+++ Eliminate entries with duplicate 'file' field from the COD data
+   table.
+
+++ ALTER TABLE data MODIFY COLUMN file MEDIUMINT(7) UNSIGNED UNIQUE;
+   load splitted CIF files into COD svn repository, and load their
+   data into MySQL database.
+
+++ Make 'entry' unique (primary).
+
+++ Add headers with SVN keywords, COD URL, and copying policy into
+   each COD CIF file that does not have it. Add svn:keywords property
+   to all existing COD CIF files.
+
+-- Add svn:keywords auto-property into our .svn/conf files.
+
+-- Add extra fields to the COD 'data' table:
+   JOURNAL (from the _journal_name_full),
+   JOURNAL_ID at some stage, when information regarding journal
+   abbreviations is fetched.
+   VOLUME (journal volume),
+   ISSUE (journal issue),
+   YEAR (publication year),
+   FIRST_PAGE, LAST_PAGE
+   TITLE (from _publ_section_title)
+   CHEM_NAME_SYSTEMATIC
+   CHEM_NAME_TRIVIAL
+   ACTA_CRYST_COEDITOR_CODE (ACCE_CODE)
+   AUTHORS (would point to a separate
+   table 'authors' containing autor lists for each entry)
+   #
+   For unpublished but COD-deposited structures I suggest listing
+   'Crystallography Open Database (personal communication)' in the
+   _journal_name_full to indicate their status, and to list authors in
+   the _publ_author_name/_publ_author_address tags. The year would be
+   COD deposition year.
+
+-- Add table 'authors'.
+
++- Revise error messages in the CIFParser module ('bogus data'), clear
+   al "decorations" from error messages ('!' or '.' at the end,
+   capital letter at the beginning). Change "pos." -> "character",
+   "position", "column".
+
+++ Add option into 'cif_filter' to print CIFs with SVN headers. Or
+   maybe this should be a 'cif_split_primitive' option?
+   (cif_split_primitive already takes the very first header of the
+   file and prints it out into all splitted files).
+
++- Add option/functionality into 'cif_filter' to exclude "empty" tags
+   (i.e. tags that have values '?' or '.'). (So far, all values except
+   the empty text fields are eliminated).
+
+-- In the 'cif_filter' script, exclude _publ_author_address from the
+   output CIF; add consistent exclusion of tags from loops, either by
+   checking if the tags exists in a loop printout procedure, or by
+   eliminating tags from loop description arrays in the CIF internal
+   representation.
+
+++ Write cif2cod in Perl, using the CIFParser, so that it gets all CIF
+   fields correctly.
+
+++ Prepare automatic deposition procedure that uses a command line
+   script ('cod_deposit'), with all checks (syntactic, semantic,
+   duplicate, etc).
+
+++ Prepare automatic deposition procedure that uses a Web-based
+   interface, with all checks (syntactic, semantic, duplicate, etc).
+
+-- Update PCOD website, so that it won't contain explicitly COD specific 
+   elements.
+
+-- Replace some COD entries that were corrected.
+
+++ Check all COD CIF files for syntactic correctness, fix syntax
+   errors, commit changes.
+
+-- Check all COD CIF files for semantic error (e.g. missing
+   bibliography, missing chemical information, missing
+   crystallographic information, inconsistent CIF "entity"
+   identificators in loops, incompatibilities with dictionaries).
+
+-- Check file names within ZIP archives.
+
+++ Make Subversion log messages visible in information cards for each
+   structure in COD; make older versions of each CIF file downloadable
+   from the information card page.
+
+-- Add depositor comments (from _cod_depositor_comments tag) and
+   validation messages (probably from cod.validation database table) to
+   the information card page.
+
+-- Add links to crude CIF files in information card pages.
+
+-- Make Fobs archives downloadable.
+
+-- Improve the search -- harness BioDB framework.
+
+-- Check CIF-Fobs pairs with checkCIF, PLATON or similar programs in
+   validation and deposition stages.
+
+-- Implement classification of structures in the COD entries
+   (inorganics, minerals, organics etc.)
+
+-- Improve the web site design :)
+
+-- Add a short disclaimer to the personal communication depositor page 
+   that would inform people on the preferable way to cite COD in their 
+   publications.
+
+-- Move text pages (tips.html, donators/*.html, petition/*.html etc) to
+   COD Wiki.

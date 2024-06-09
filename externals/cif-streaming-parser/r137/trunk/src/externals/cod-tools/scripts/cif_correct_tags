@@ -1,0 +1,309 @@
+#! /bin/sh
+#!perl -w # --*- Perl -*--
+eval 'exec perl -x $0 ${1+"$@"}'
+    if 0;
+#------------------------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2022-04-12 11:56:07 +0300 (Tue, 12 Apr 2022) $
+#$Revision: 9268 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/scripts/cif_correct_tags $
+#------------------------------------------------------------------------------
+#*
+#* Correct misspelt tags in a CIF file and output made changes into the
+#* standard I/O streams. By default, only tags from CIF Core and CIF COD
+#* dictionaries with extra '^_+' prefixes are corrected. Additionally, a
+#* replacement list file can be provided for the correction of misspelt tags.
+#*
+#* USAGE:
+#*    $0 --options input.cif input*.cif
+#**
+
+use strict;
+use warnings;
+use COD::CIF::ChangeLog qw( append_changelog_to_single_item );
+use COD::CIF::JSON qw( cif2json );
+use COD::CIF::Parser qw( parse_cif );
+use COD::CIF::Tags::CanonicalNames qw( canonicalize_all_names
+                                       canonical_tag_name );
+use COD::CIF::Tags::DictTags;
+use COD::CIF::Tags::COD;
+use COD::CIF::Tags::Manage qw( rename_tag exclude_tag );
+use COD::CIF::Tags::Print qw( print_cif );
+use COD::SOptions qw( getOptions );
+use COD::SUsage qw( usage options );
+use COD::ErrorHandler qw( process_warnings
+                          process_errors
+                          process_parser_messages
+                          report_message );
+use COD::ToolsVersion qw( get_version_string );
+
+##
+# Checks a data name against a hash of known misspelt names and replaces it
+# with a correct name if possible. Looped data items and data items with
+# differing values are reported, but not replaced.
+#
+# @param $data_frame
+#       Reference to a data frame structure as returned by the COD::CIF::Parser.
+# @param $tag
+#       Data name that should be checked against the known misspelt names.
+# @param $tag_replacements
+#       Reference to a hash of misspelt data names. The misspelt names serve
+#       as the keys and are associated with their proper name counterparts.
+# @param $replacement_list
+#       Name of the file that contained the replacement list.
+#       Used in changelog messages.
+# @return
+#       Reference to an array of changelog messages.
+##
+sub correct_tags
+{
+    my ( $data_frame, $tag, $tag_replacements, $replacement_list ) = @_;
+
+    return [] if !exists $tag_replacements->{$tag};
+    my $old_tag = $tag;
+    my $correct = $tag_replacements->{$tag};
+
+    my @changelog_notes;
+    if( !exists $data_frame->{'values'}{$correct} ) {
+        rename_tag( $data_frame, $old_tag, $correct );
+        my $report_msg =
+            "data name '$old_tag' was replaced with '$correct' as specified " .
+            "in the replacement file '$replacement_list'.";
+        warn "NOTE, $report_msg" . "\n";
+        push @changelog_notes, $report_msg;
+        return \@changelog_notes;
+    }
+
+    # comparing looped values is out of the scope of this script
+    if ( exists $data_frame->{'inloop'}{$old_tag} ||
+         exists $data_frame->{'inloop'}{$correct} ) {
+        warn "NOTE, data item '$old_tag' was left intact -- it should have " .
+             "been renamed to '$correct' as specified in the replacement " .
+             "file '$replacement_list', but the replacement data item was " .
+             'already present in the data block. Value comparison was skipped ' .
+             'since the \'' .
+             (exists $data_frame->{'inloop'}{$old_tag} ? $old_tag : $correct ) .
+             '\' data item was found within a loop structure' . "\n";
+        return [];
+    }
+
+    if ( $data_frame->{'values'}{$old_tag}[0] ne
+         $data_frame->{'values'}{$correct}[0] ) {
+        warn "NOTE, data item '$old_tag' was left intact -- it should have " .
+             "been renamed to '$correct' as specified in the replacement " .
+             "file '$replacement_list', but the replacement data item was " .
+             'already present in the data block and had a different value ' .
+             "than the '$old_tag' data item" . "\n";
+        return [];
+    }
+
+    exclude_tag( $data_frame, $old_tag );
+    my $report_msg =
+        "data item '$old_tag' was removed -- it should have been renamed " .
+        "to '$correct' as specified in the replacement file " .
+        "'$replacement_list', but the replacement data item was already " .
+        'present in the data block and had the same value as the ' .
+        "'$old_tag' data item.";
+    push @changelog_notes, $report_msg;
+    warn "NOTE, $report_msg" . "\n";
+
+    return \@changelog_notes;
+}
+
+my $keep_tag_order = 0;
+my $Id = '$Id: cif_correct_tags 9268 2022-04-12 08:56:07Z antanas $';
+my $replacement_list;
+my $use_parser = 'c';
+my $input_format = 'cif';
+my $output_format = 'cif';
+
+#* OPTIONS:
+#*   --keep-tag-order
+#*                     Keep the original tag order in CIF file. Default.
+#*   --sort-tags
+#*                     Reorder tags in CIF file according to COD.
+#*
+#*   -r, --replacement-list 'replacement-file.lst'
+#*                     Name of the multi-line replacement list file with
+#*                     entries of form '_incorrect_tag _correct_tag' to be
+#*                     used in the correction of misspelt tags.
+#*
+#*   --cif-input
+#*                     Use CIF format for input. Default.
+#*   --json-input
+#*                     Use JSON format for input.
+#*   --cif-output
+#*                     Use CIF format for output. Default.
+#*   --json-output
+#*                     Use JSON format for output.
+#*   --cif
+#*                     Use CIF format for both input and output. Default.
+#*   --json
+#*                     Use JSON format for both input and output.
+#*
+#*   --use-perl-parser
+#*                     Use Perl parser to parse CIF files.
+#*   --use-c-parser
+#*                     Use C parser to parse CIF files. Default.
+#*
+#*   --help, --usage
+#*                     Output a short usage message (this message) and exit.
+#*   --version
+#*                     Output version information and exit.
+#**
+@ARGV = getOptions(
+    '--keep-tag-order'  => sub { $keep_tag_order = 1; },
+    '--sort-tags'       => sub { $keep_tag_order = 0; },
+    '-r,--replacement-list' => \$replacement_list,
+    '--use-perl-parser' => sub{ $use_parser = 'perl' },
+    '--use-c-parser'    => sub{ $use_parser = 'c' },
+
+    '--cif-input'   => sub { $input_format = 'cif' },
+    '--json-input'  => sub { $input_format = 'json' },
+
+    '--cif-output'  => sub { $output_format = 'cif' },
+    '--json-output' => sub { $output_format = 'json' },
+
+    '--cif'  => sub { $input_format = $output_format = 'cif' },
+    '--json' => sub { $input_format = $output_format = 'json' },
+
+    '--options'      => sub { options; exit },
+    '--help,--usage' => sub { usage; exit },
+    '--version'      => sub { print get_version_string(), "\n"; exit }
+);
+
+my $die_on_error_level = {
+    ERROR   => 1,
+    WARNING => 0,
+    NOTE    => 0
+};
+
+if( $input_format eq 'json' ) {
+    $use_parser = 'json';
+}
+
+binmode STDOUT, ':encoding(UTF-8)';
+binmode STDERR, ':encoding(UTF-8)';
+
+my %tag_spelling = ();
+eval {
+    local $SIG{__WARN__} = sub { process_warnings( {
+                                   'message'  => @_,
+                                   'program'  => $0,
+                                   'filename' => $replacement_list,
+                                 }, $die_on_error_level ) };
+
+    if ( $replacement_list ) {
+        open my $list, '<', $replacement_list or
+            die 'ERROR, could not open the replacement list file for reading' .
+                ' -- ' . ( lcfirst $! ) . "\n";
+
+        while ( <$list> ) {
+            chomp;
+            next if m/^#/ || m/^\s*$/;
+            if( /^\s*(\S+)\s+(\S+)\s*$/ ) {
+                $tag_spelling{$1} = $2;
+            } else {
+                report_message( {
+                    'program'   => $0,
+                    'filename'  => $replacement_list,
+                    'line_no'   => $.,
+                    'err_level' => 'WARNING',
+                    'message'   =>
+                        'line does not match the replacement list entry ' .
+                        'syntax -- line will be skipped',
+                    'line_content' => $_,
+                },
+                $die_on_error_level->{'WARNING'} );
+            }
+        }
+
+        close $list or
+            die 'ERROR, could not properly close the replacement list file ' .
+                'after reading -- ' . ( lcfirst $! ) . "\n";
+    }
+};
+if ($@) {
+    process_errors( {
+      'message'       => $@,
+      'program'       => $0,
+      'filename'      => $replacement_list,
+    }, $die_on_error_level->{'ERROR'} )
+};
+
+my @dictionary_tags = ( @COD::CIF::Tags::DictTags::tag_list,
+                        @COD::CIF::Tags::COD::tag_list );
+my %dictionary_tags = map { $_ => $_ } @dictionary_tags;
+
+@ARGV = ('-') unless @ARGV;
+
+for my $filename (@ARGV) {
+    my $options = { 'parser' => $use_parser, 'no_print' => 1 };
+    my ( $data, $err_count, $messages ) = parse_cif( $filename, $options );
+    process_parser_messages( $messages, $die_on_error_level );
+
+    canonicalize_all_names( $data );
+
+    for my $dataset ( @{$data} ) {
+
+        local $SIG{__WARN__} = sub {
+            process_warnings( {
+                'message'       => @_,
+                'program'       => $0,
+                'filename'      => $filename,
+                'add_pos'       => 'data_' . $dataset->{'name'}
+            }, $die_on_error_level )
+        };
+
+        my @insert_reports;
+        for my $tag ( @{$dataset->{tags}} ) {
+            push @insert_reports, @{correct_tags(
+                                        $dataset,
+                                        $tag,
+                                        \%tag_spelling,
+                                        $replacement_list
+                                  )};
+
+            if( $tag =~ /^_+(_[^_].*)$/ ) {
+                my $old_tag = $tag;
+                my $correct = canonical_tag_name($1);
+                if( exists $dictionary_tags{$correct} &&
+                    !exists $dataset->{'values'}{$correct} ) {
+                    rename_tag( $dataset, $tag, $correct );
+                    my $report_msg = "data name '$old_tag' was replaced with " .
+                                     "'$correct'.";
+                    push @insert_reports, $report_msg;
+                    warn "NOTE, $report_msg" . "\n";
+                }
+            }
+        }
+        append_changelog_to_single_item( $dataset, \@insert_reports, {
+                                            'signature' => $Id
+                                        } );
+    }
+
+    eval {
+        for my $dataset ( @{$data} ) {
+            if( $output_format eq 'cif' ) {
+                print_cif( $dataset, {
+                    exclude_misspelled_tags => 0,
+                    preserve_loop_order => 1,
+                    fold_long_fields => 0,
+                    dictionary_tags => \%dictionary_tags,
+                    dictionary_tag_list => \@dictionary_tags,
+                    keep_tag_order => $keep_tag_order,
+                } );
+            } elsif( $output_format eq 'json' ) {
+                print cif2json( $dataset );
+            } else {
+                die "ERROR, unknown output format '$output_format'\n";
+            }
+        }
+    };
+    if ($@) {
+        process_errors( {
+          'message'       => $@,
+          'program'       => $0,
+        }, $die_on_error_level->{'ERROR'} )
+    };
+}

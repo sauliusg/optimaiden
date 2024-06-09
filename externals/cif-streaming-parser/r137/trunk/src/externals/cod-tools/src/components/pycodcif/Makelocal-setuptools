@@ -1,0 +1,37 @@
+VERSION := $(shell grep -v "^\#" ../../../.version)
+
+EGG_DIR = pycodcif-${VERSION}.egg-info
+
+.PHONY: all build build-2 build-3 install install-2 install-3
+
+all: build
+
+build: ${TEST_MODULE}
+
+install: install-3
+
+${SETUP_PY}: ${SETUP_PYIN}
+	sed 's/@@VERSION@@/'${VERSION}'/' < $< > $@
+
+${PYTHON2_PYCODCIF_PY}: ${SETUP_PY} ${SWIG_C_FILE} ${SWIG_I_FILE}
+	python ${SETUP_PY} build --build-lib $(dir $(@D))
+
+install-2: ${SETUP_PY}
+	mkdir --parents ${PREFIX}/lib/python2.7/site-packages
+	PYTHONPATH=${PREFIX}/lib/python2.7/site-packages \
+		python ${SETUP_PY} install --prefix ${PREFIX}
+	rm -rf dist
+
+${PYTHON3_PYCODCIF_PY}: ${SETUP_PY} ${SWIG_C_FILE} ${SWIG_I_FILE}
+	python3 ${SETUP_PY} build --build-lib $(dir $(@D)) && touch $@
+
+install-3: ${SETUP_PY}
+	python3 ${SETUP_PY} install --root ${PREFIX}
+
+clean:
+	rm  -f pycodcif_wrap.c
+	rm -rf build pycodcif.egg-info
+
+distclean cleanAll: clean
+	rm -f ${SETUP_PY} pycodcif.py _pycodcif.so
+	rm -rf dist sdist

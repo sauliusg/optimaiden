@@ -1,0 +1,107 @@
+#!/bin/sh
+#------------------------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2021-04-28 19:35:53 +0300 (Wed, 28 Apr 2021) $
+#$Revision: 8738 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/scripts/cif_CODify $
+#------------------------------------------------------------------------------
+#*
+#* Extract essential data from the input CIF file and format it
+#* using the rules of the Crystallography Open Database (COD).
+#*
+#* USAGE:
+#*   $0 1000000.cif
+#*   $0 4000042.cif --options
+#**
+
+set -ue
+# set -x
+
+CIF_FILTER="cif_filter"
+CIF_FILE=""
+ARGS=""
+
+while [ $# -gt 0 ]
+do
+  case $1 in
+      --options|--option|--optio|--opti|--opt|--op|--o)
+          echo "$(basename "$0"):: The '--options' option is a placeholder."
+          echo "$(basename "$0"):: It should be replaced by one of the following options:"
+          awk '/#\* OPTIONS:/,/#\*\*/ {
+                  sub("OPTIONS:", "");
+                  sub("^ *#[*]?[*]?", "");
+                  gsub("\\$0","'"$0"'");
+                  print $0
+              }' $(dirname $0)/${CIF_FILTER}
+          echo "$0:: NOTE, the option list was retrieved from the '${CIF_FILTER}' script."
+          exit
+          ;;
+      --help|--hel|--he|--h|--usage)
+          gawk '/^#\*/,/^#\*\*/ {
+                  sub("^ *#[*]?[*]?", "");
+                  gsub("\\$0","'"$0"'");
+                  print $0
+              }' "$0"
+          awk '/#\* OPTIONS:/,/#\*\*/ {
+                  sub("^ *#[*]?[*]?", "");
+                  gsub("\\$0","'"$0"'");
+                  print $0
+              }' "$(dirname "$0")"/${CIF_FILTER}
+          echo "$0:: NOTE, the option list was retrieved from the '${CIF_FILTER}' script."
+          exit
+          ;;
+      --version)
+          $(dirname $0)/cod-tools-version
+          exit
+          ;;
+      *)
+          if [ -z "${CIF_FILE}" ];
+          then
+             CIF_FILE=$1
+          else
+             ARGS="${ARGS} $1"
+          fi
+          ;;
+    esac
+    shift
+done
+
+if [ -z "${CIF_FILE}" ];
+then
+    echo "$0:: ERROR, the mandatory input CIF file was not provided." 1>&2
+    exit 1;
+fi
+
+if head "${CIF_FILE}" | grep -q '^#' > /dev/null 2>&1
+then
+    awk '{if( match( $0, "^#" )) print; else exit}' "${CIF_FILE}"
+else
+    cat <<EOF
+#------------------------------------------------------------------------------
+#\$Date\$
+#\$Revision\$
+#\$URL\$
+#------------------------------------------------------------------------------
+#
+# This file is available in the Crystallography Open Database (COD),
+# http://www.crystallography.net/
+#
+# All data on this site have been placed in the public domain by the
+# contributors.
+#
+EOF
+fi
+
+NUMBER=`basename "${CIF_FILE}" .cif | sed -e 's/[^0-9]//g'`
+
+${CIF_FILTER} \
+    --renumber \
+    --start-data="${NUMBER}" \
+    --exclude-empty-non-loop-tags \
+    --estimate-spacegroup \
+    --reformat-spacegroup \
+    --keep-unrecognised-spacegroup \
+    --parse-formula-sum \
+    --calculate-cell-volume \
+    --use-all-datablocks \
+    "${CIF_FILE}" ${ARGS}

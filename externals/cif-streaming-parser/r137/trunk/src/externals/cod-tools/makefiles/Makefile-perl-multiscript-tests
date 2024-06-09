@@ -1,0 +1,373 @@
+#---*- Makefile -*-------------------------------------------------------------
+#$Author: antanas $
+#$Revision: 9331 $
+#$Date: 2022-07-04 17:37:16 +0300 (Mon, 04 Jul 2022) $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/makefiles/Makefile-perl-multiscript-tests $
+#------------------------------------------------------------------------------
+
+MAKECONF_FILES = ${filter-out %~, ${wildcard Makeconf*}}
+
+ifneq ("${MAKECONF_FILES}","")
+include ${MAKECONF_FILES}
+endif
+
+CWD ?= ${shell pwd}
+TOP ?= ${CWD}
+
+PATH := ${TOP}/scripts:${TOP}/src/components/codcif:${PATH}
+export PATH
+
+# Set COD_TOOLS variables to empty strings to avoid unintended interactions
+COD_TOOLS_DDLM_IMPORT_PATH :=
+export COD_TOOLS_DDLM_IMPORT_PATH
+
+YAPP_SOURCES := $(wildcard $(addsuffix /*.yp, ${YAPP_MODULE_DIRS}))
+YAPP_MODULES := ${YAPP_MODULE_DIRS:${PERL_SOURCE_TOP}/%=${LOCAL_PERL_LIB}/%.pm}
+
+# Upon compiling the interface, SWIG generates shared object (*.so) files.
+# In case of Perl modules (*.pm), these objects are expected to be found in
+# the 'auto' directory. For example, if the directory hierarchy of the compiled
+# package 'X::Y::PackageName' is placed under the 'lib' directory, the following
+# is true:
+#   * path to the .pm file: lib/X/Y/PackageName.pm
+#   * path to the .so file: lib/auto/X/Y/PackageName/PackageName.so
+PERL_SWIG_MODULES   := ${PERL_SWIG_MODULE_DIRS:${PERL_SOURCE_TOP}/%=${LOCAL_PERL_LIB}/%.pm}
+SHARED_SWIG_OBJECTS := $(foreach mod, $(PERL_SWIG_MODULES), \
+    $(mod:${LOCAL_PERL_LIB}/%.pm=${LOCAL_PERL_LIB}/auto/%)/$(patsubst %.pm,%.so,$(notdir $(mod))) \
+)
+
+PYTHON_SWIG_SOURCES := $(wildcard $(addsuffix /*.i, ${PYTHON_SWIG_MODULE_DIRS}))
+PYTHON_SWIG_MODULES := ${PYTHON_SWIG_SOURCES:%/pycodcif.i=%/build/python3/pycodcif/pycodcif.py}
+
+SWIG_MODULES := ${PERL_SWIG_MODULES}
+
+# Require Python modules if Python 3 is present:
+ifneq ("$(shell command -v python3 ;)", "")
+SWIG_MODULES += ${PYTHON_SWIG_MODULES}
+endif
+
+COMPILED_MODULES := ${YAPP_MODULES} ${SWIG_MODULES} \
+                    scripts/cod-tools-version \
+                    src/lib/perl5/COD/ToolsVersion.pm
+
+# Build Graph::Nauty if nauty headers are present:
+ifneq ("$(shell test -d /usr/include/nauty && echo found nauty)", "")
+COMPILED_MODULES += src/externals/Graph-Nauty/blib/lib/Graph/Nauty.pm
+endif
+
+.PRECIOUS: %.py %.pm ${COMPILED_MODULES}
+
+##.NOTPARALLEL:
+
+#
+# TEST variable should be defined in the Makeconf file, or on the
+# command line, and specifies the main executable (target). This
+# executable will be run for every file in ./inputs when 'make test'
+# is invoked.
+#
+
+.PHONY: all build check
+
+all: build
+
+build: ${LOCAL_LIB_FILES} ${C_PROGRAM_EXE_FILES} ${COMPILED_MODULES}
+
+#------------------------------------------------------------------------------
+
+${LOCAL_PERL_LIB}/%.pm: ${PERL_SOURCE_TOP}/%/grammar.yp
+	${MAKE} -C $(dir $<)
+	cp $(dir $<)/lib/$*.pm $@
+
+${LOCAL_PERL_LIB}/%.pm: ${PERL_SOURCE_TOP}/%/source.c \
+                        ${PERL_SOURCE_TOP}/%/source.i
+	${MAKE} -C  $(dir $<)
+	cp $(<D)/lib/$*.pm $@
+	cp $(dir $<)/lib/auto/$*/$(*F).so ${LOCAL_PERL_LIB}/auto/$*/$(*F).so
+
+%.pm: %.c %.i
+	${MAKE} -C $(@D) $(@F) all
+
+src/externals/Graph-Nauty/blib/lib/Graph/Nauty.pm:
+	${MAKE} -C src/externals/Graph-Nauty all
+
+%/build/python3/pycodcif/pycodcif.py: %/pycodcif.c %/pycodcif.i
+	${MAKE} -C $* all
+
+# Rule to make required library files
+
+%.a:
+	${MAKE} -C $(dir $(patsubst %/,%,${dir $@})) \
+		$(notdir $(patsubst %/,%,${dir $@}))/${notdir $@}
+	${MAKE} -C $(dir $(patsubst %/,%,${dir $@})) all
+
+# Rule to make executable program files required for testing
+${C_PROGRAM_EXE_FILES}:
+	${MAKE} -C $(dir $@)
+
+#------------------------------------------------------------------------------
+
+MAKELOCAL_FILES = ${filter-out %~, ${wildcard Makelocal*}}
+
+ifneq ("${MAKELOCAL_FILES}","")
+include ${MAKELOCAL_FILES}
+endif
+
+#------------------------------------------------------------------------------
+
+SCRIPT_DIR = scripts
+
+OUTPUT_DIR     = ./tests/outputs
+DESC_EXT       = tst
+DIFF_EXT       = diff
+INP            = .inp
+OPT            = .opt
+SCRIPT_TST_DIR = ./tests/cases
+SCRIPT_INPUTS  = ${wildcard ${SCRIPT_TST_DIR}/*${INP}}
+SCRIPT_OPTIONS = ${wildcard ${SCRIPT_TST_DIR}/*${OPT}}
+SCRIPT_TESTS   = $(sort ${SCRIPT_INPUTS:%${INP}=%} ${SCRIPT_OPTIONS:%${OPT}=%})
+SCRIPT_OUTPUTS = ${SCRIPT_TESTS:${SCRIPT_TST_DIR}/%=${OUTPUT_DIR}/%.out}
+SCRIPT_DIFFS   = ${filter-out ${EXCLUDE_SCRIPT_DIFFS}, ${SCRIPT_TESTS:${SCRIPT_TST_DIR}/%=${OUTPUT_DIR}/%.diff}}
+
+#
+# Outputs and tests from the shell-driven tests
+#
+
+SHELL_TSTDIR = ./tests/shtests
+SHELL_OUTDIR = ./tests/shoutputs
+
+SHELL_TESTS   = ${sort ${wildcard ${SHELL_TSTDIR}/*.sh}}
+SHELL_BASES   = ${notdir ${SHELL_TESTS}}
+SHELL_OUTPUTS = ${addprefix ${SHELL_OUTDIR}/, ${SHELL_BASES:%.sh=%.out}}
+SHELL_DIFFS   = ${filter-out ${EXCLUDE_SHELL_DIFFS}, ${addprefix ${SHELL_OUTDIR}/, ${SHELL_BASES:%.sh=%.diff}}}
+
+#------------------------------------------------------------------------------
+# Generate %.diff file dependencies from their respective scripts:
+
+DIFF_DEPEND = .diff.depend
+
+include ${DIFF_DEPEND}
+
+SCRIPT_DEPENDS = ${CODTOOLS_SCRIPTS:${SCRIPT_DIR}/%=${SCRIPT_DIR}/.%.d}
+
+TEST_DRIVER_DIR = tests/scripts
+TEST_DRIVER_SCRIPTS = ${sort ${wildcard ${TEST_DRIVER_DIR}/*}}
+TEST_DRIVER_DEPENDS = ${TEST_DRIVER_SCRIPTS:${TEST_DRIVER_DIR}/%=${TEST_DRIVER_DIR}/.%.d}
+
+ALL_INPUTS = $(wildcard ${SCRIPT_TST_DIR}/*.* ${SHELL_TSTDIR}/*.sh)
+
+${DIFF_DEPEND}: .script.depend ${ALL_INPUTS}
+	@tools/mkdiffdepend --script-depend $< --output ${OUTPUT_DIR} \
+		${filter-out $<, $^} > $@
+
+${SCRIPT_DIR}/.%.d: ${SCRIPT_DIR}/%
+	-tools/mkperldepend $< > $@
+	@touch $@
+
+${TEST_DRIVER_DIR}/.%.d: ${TEST_DRIVER_DIR}/%
+	-tools/mkperldepend $< > $@
+	@touch $@
+
+.script.depend: ${SCRIPT_DEPENDS} ${TEST_DRIVER_DEPENDS}
+	@sed 's/: /:/' $+ | sort -t ':' --key 1,1 > $@
+
+#------------------------------------------------------------------------------
+
+define filter_perl_messages
+perl -pe 's/Id: [-\w]+ \d+ [-\d]+ [:\dZ]+ \w+/Id: <script_name> <revision_nr> <date> <time> <author>/' \
+| perl -pe 's,at [-+\.\/\w\d]+ line \d+\.?,at <script_name> line <line_no>.,' \
+| perl -pe 's/(U|u)se of uninitialized value [^\s]+ in/$$1se of uninitialized value in/g' \
+| perl -pe 's/(Use of uninitialized value in pattern match \(m\/\/\) at )([a-zA-Z0-9\-\/]+)\/([a-zA-Z0-9\-\.]+) line \d+, <([^>])+> line \d+/$$1$$3 line <line_no>/g' \
+| perl -pe 's/(unknown )(?:MySQL )?(server host .*?)(\(-?\d*\))\.?$$/$$1$$2(<error code>)./' \
+| perl -pe 's/OpenBabel\d+.*/OpenBabel9999999999D/' \
+| perl -pe 's/(_cod_hold_until_date .* )(\d{4}-\d{2}-\d{2})/$$1<date>/' \
+| perl -pe 's/^(CIF\s+_journal_year\s+)\d{4}/$$1<year>/' \
+| ${filter_perl_messages_user}
+endef
+
+define buffer_output
+perl -0777 -lne 'print $$_;'
+endef
+
+.PHONY: out outputs test fake-tests
+
+out outputs: ${TST_OUTPUTS} ${SCRIPT_OUTPUTS}
+
+test: ${TST_DIFFS} ${SCRIPT_DIFFS}
+
+fake-tests:
+	touch ${TST_DIFFS} ${SCRIPT_DIFFS}
+
+# Rule to ensure that libraries, required for tested scripts, are compiled
+
+${TST_DIFFS} ${SCRIPT_DIFFS}: ${LOCAL_LIB_FILES} ${C_PROGRAM_EXE_FILES}
+
+# Rules to run script-specific tests
+
+${OUTPUT_DIR}/%.diff: ${SCRIPT_TST_DIR}/%${INP} ${SCRIPT_TST_DIR}/%${OPT} \
+                      ${COMPILED_MODULES}
+	-@printf "%-30s " "$<:" ; \
+	if [ ! -f ${SCRIPT_TST_DIR}/$*.chk ] || ${SCRIPT_TST_DIR}/$*.chk; \
+	then \
+	( ${SCRIPT_DIR}/$(shell echo $* | sed -e 's/_[0-9]*$$//') \
+	    $(shell grep -v '^#' ${word 2, $^}) \
+	    $< \
+	| ${buffer_output} ) 2>&1 \
+	| ${filter_perl_messages} \
+	| diff ${OUTPUT_DIR}/$*.out - > $@ ; \
+	if [ $$? = 0 ]; then echo "OK"; else echo "FAILED:"; cat $@; fi \
+	else \
+	touch $@; \
+	fi
+
+${OUTPUT_DIR}/%.diff: ${SCRIPT_TST_DIR}/%${INP} ${COMPILED_MODULES}
+	-@printf "%-30s " "$<:" ; \
+	if [ ! -f ${SCRIPT_TST_DIR}/$*.chk ] || ${SCRIPT_TST_DIR}/$*.chk; \
+	then \
+	( ${SCRIPT_DIR}/$(shell echo $* | sed -e 's/_[0-9]*$$//') $< \
+	| ${buffer_output} ) 2>&1 \
+	| ${filter_perl_messages} \
+	| diff ${OUTPUT_DIR}/$*.out - > $@ ; \
+	if [ $$? = 0 ]; then echo "OK"; else echo "FAILED:"; cat $@; fi \
+	else \
+	touch $@; \
+	fi
+
+${OUTPUT_DIR}/%.diff: ${SCRIPT_TST_DIR}/%${OPT} ${COMPILED_MODULES}
+	-@printf "%-30s " "$<:" ; \
+	if [ ! -f ${SCRIPT_TST_DIR}/$*.chk ] || ${SCRIPT_TST_DIR}/$*.chk; \
+	then \
+	( ${SCRIPT_DIR}/$(shell echo $* | sed -e 's/_[0-9]*$$//') \
+	     $(shell grep -v '^#' ${word 1, $^}) \
+	| ${buffer_output} ) 2>&1 \
+	| ${filter_perl_messages} \
+	| diff ${OUTPUT_DIR}/$*.out - > $@ ; \
+	if [ $$? = 0 ]; then echo "OK"; else echo "FAILED:"; cat $@; fi \
+	else \
+	touch $@; \
+	fi
+
+${OUTPUT_DIR}/%.out: ${SCRIPT_TST_DIR}/%${INP} ${SCRIPT_TST_DIR}/%${OPT} ${COMPILED_MODULES}
+	-@test -f $@ || echo "$@:"
+	-@test -f $@ || \
+	( ${SCRIPT_DIR}/$(shell echo $* | sed -e 's/_[0-9]*$$//') \
+	    $(shell grep -v '^#' ${word 2, $^}) \
+	    $< \
+	| ${buffer_output} ) 2>&1 \
+	| ${filter_perl_messages} \
+	| tee $@
+	-@touch $@
+
+${OUTPUT_DIR}/%.out: ${SCRIPT_TST_DIR}/%${INP} ${COMPILED_MODULES}
+	-@test -f $@ || echo "$@:"
+	-@test -f $@ || \
+	( ${SCRIPT_DIR}/$(shell echo $* | sed -e 's/_[0-9]*$$//') \
+	    $< \
+	| ${buffer_output} ) 2>&1 \
+	| ${filter_perl_messages} \
+	| tee $@
+	-@touch $@
+
+${OUTPUT_DIR}/%.out: ${SCRIPT_TST_DIR}/%${OPT} ${COMPILED_MODULES}
+	-@test -f $@ || echo "$@:"
+	-@test -f $@ || \
+	( ${SCRIPT_DIR}/$(shell echo $* | sed -e 's/_[0-9]*$$//') \
+	    $(shell grep -v '^#' ${word 1, $^}) \
+	| ${buffer_output} ) 2>&1 \
+	| ${filter_perl_messages} \
+	| tee $@
+	-@touch $@
+
+# Rules to run standalone executable test drives:
+
+${TST_OUT_DIR}/%.out: ${TST_EXE_DIR}/% ${COMPILED_MODULES}
+	-@test -f $@ || echo "$@:"
+	-@test -f $@ || \
+	( $< | ${buffer_output} ) 2>&1 \
+	| ${filter_perl_messages} | tee $@
+	-@touch $@
+
+${TST_OUT_DIR}/%.diff: ${TST_EXE_DIR}/% ${COMPILED_MODULES}
+	-@printf "%-30s " "$<:" ; \
+	( ${SCRIPT_DIR}/$< \
+	| ${buffer_output} ) 2>&1 \
+	| ${filter_perl_messages} \
+	| diff ${TST_OUT_DIR}/$*.out - > $@ ; \
+	if [ $$? = 0 ]; then echo "OK"; else echo "FAILED:"; cat $@; fi
+
+.PHONY: shoutputs shout shtests shtest fake-shtests
+
+shoutputs shout: ${SHELL_OUTPUTS}
+
+shtest shtests: ${SHELL_DIFFS}
+
+fake-shtests:
+	touch ${SHELL_DIFFS}
+
+${SHELL_OUTDIR}/%.out: ${SHELL_TSTDIR}/%.sh ${COMPILED_MODULES}
+	-@test -f $@ || echo "$@:"
+	-@test -f $@ || \
+	( $< \
+	| ${buffer_output} ) 2>&1 \
+	| ${filter_perl_messages} | tee $@
+	-@touch $@
+
+${SHELL_OUTDIR}/%.diff: ${SHELL_TSTDIR}/%.sh ${COMPILED_MODULES}
+	-@printf "%-30s " "$<:" ; \
+	if [ ! -f ${SHELL_TSTDIR}/$*.chk ] || ${SHELL_TSTDIR}/$*.chk; \
+	then \
+	( $< \
+	| ${buffer_output} ) 2>&1 \
+	| ${filter_perl_messages} \
+	| diff ${SHELL_OUTDIR}/$*.out - > $@ ; \
+	if [ $$? = 0 ]; then echo "OK"; else echo "FAILED:"; cat $@; fi; \
+	else \
+	touch $@; \
+	fi
+
+.PHONY: tests alltests check check-components
+
+tests alltests check: check-components test shtests
+
+check-components:
+	${MAKE} -C src check
+
+.PHONY: listdiff blame
+
+listdiff: # test
+	@find ./src ${OUTPUT_DIR} ${SHELL_OUTDIR} -name \*.${DIFF_EXT} -size +0 \
+	| sort -u
+
+blame:
+	@-( test -d ${OUTPUT_DIR} && \
+	    ls -l ${OUTPUT_DIR}/*.${DIFF_EXT} | awk '{if( $$5 > 0 ) print $$NF}' | \
+	    ifne xargs -n1 basename | \
+	    perl -pe "s/(.*)\.${DIFF_EXT}/\$$1/" | xargs -i sh -c '\
+	            DESC_FILE="${SCRIPT_TST_DIR}/{}.${DESC_EXT}"; \
+	            echo "{}:"; \
+	            if test -f "$${DESC_FILE}"; \
+	                then cat $${DESC_FILE}; \
+	                else echo "No description is given for this test."; fi; \
+	            echo' \
+	            )  ||\
+	    true
+
+#------------------------------------------------------------------------------
+
+.PHONY: clean cleanAll distclean
+
+clean:
+	rm -f *~
+	rm -f ${SCRIPT_DIFFS}
+	rm -f ${TST_DIFFS}
+	rm -f ${SHELL_DIFFS}
+
+MAKE_DIRS = $(dir $(wildcard */Makefile)) ${LOCAL_CLEAN_TARGETS}
+cleanAll distclean: clean
+	rm -f ${COMPILED_MODULES}
+	rm -f ${SHARED_SWIG_OBJECTS}
+	rm -f ${SCRIPT_DEPENDS}
+	rm -f ${TEST_DRIVER_DEPENDS}
+	rm -f ${DIFF_DEPEND} .script.depend
+	for DIR in ${MAKE_DIRS}; do \
+		${MAKE} -C $$DIR $@; \
+	done

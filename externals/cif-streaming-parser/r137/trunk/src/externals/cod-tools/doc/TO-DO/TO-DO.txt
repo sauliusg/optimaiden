@@ -1,0 +1,11 @@
+-- Create a CIF object and an object-oriented interface to CIFParser,
+   returning the CIF Perl object;
+
+-- Refactor cif_mark_disorder by moving its core functionality to a seperate
+   module. The same strategy can probably be applied to several other scripts
+   as well.
+
+-- Add --exclude-dummies option to cif_cell_contents.
+
+-- Rewrite Symop::{Algebra,Parse} in C with SWIG interface to fasten
+   cif_molecule, cif_p1 and the like.

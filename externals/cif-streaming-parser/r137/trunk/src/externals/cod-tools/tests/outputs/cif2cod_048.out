@@ -1,0 +1,37 @@
+scripts/cif2cod: tests/cases/cif2cod_048.inp data_pirmasis_duomenų_blokas: WARNING, data item '_chemical_formula_sum' is absent.
+scripts/cif2cod: tests/cases/cif2cod_048.inp data_pirmasis_duomenų_blokas: WARNING, data item '_publ_section_title' is absent.
+scripts/cif2cod: tests/cases/cif2cod_048.inp data_pirmasis_duomenų_blokas: WARNING, data item '_journal_year' is absent.
+scripts/cif2cod: tests/cases/cif2cod_048.inp data_pirmasis_duomenų_blokas: WARNING, data item '_journal_volume' is absent.
+scripts/cif2cod: tests/cases/cif2cod_048.inp data_pirmasis_duomenų_blokas: WARNING, data item '_journal_page_first' is absent.
+scripts/cif2cod: tests/cases/cif2cod_048.inp data_pirmasis_duomenų_blokas: WARNING, no Hermann-Mauguin space group symbol found.
+scripts/cif2cod: tests/cases/cif2cod_048.inp data_pirmasis_duomenų_blokas: WARNING, no Hall space group symbol found.
+scripts/cif2cod: tests/cases/cif2cod_048.inp data_pirmasis_duomenų_blokas: WARNING, at least one of the lattice parameters has an undefined value -- cell volume could not be calculated.
+scripts/cif2cod: tests/cases/cif2cod_048.inp data_pirmasis_duomenų_blokas: WARNING, data item '_cell_formula_units_Z' was not found -- the Z value will be estimated.
+scripts/cif2cod: tests/cases/cif2cod_048.inp data_pirmasis_duomenų_blokas: WARNING, not enough data to estimate Z; cell volume undefined; crystal density undefined; molecular weight undefined -- assuming Z = 1.
+scripts/cif2cod: tests/cases/cif2cod_048.inp data_pirmasis_duomenų_blokas: WARNING, summary formula could not be calculated -- cell length data item '_cell_length_a' was not found.
+scripts/cif2cod: tests/cases/cif2cod_048.inp data_pirmasis_duomenų_blokas: WARNING, unit cell summary formula could not be calculated -- cell length data item '_cell_length_a' was not found.
+scripts/cif2cod: tests/cases/cif2cod_048.inp data_antrasis_duomenų_blokas: WARNING, data item '_chemical_formula_sum' is absent.
+scripts/cif2cod: tests/cases/cif2cod_048.inp data_antrasis_duomenų_blokas: WARNING, data item '_publ_section_title' is absent.
+scripts/cif2cod: tests/cases/cif2cod_048.inp data_antrasis_duomenų_blokas: WARNING, data item '_journal_year' is absent.
+scripts/cif2cod: tests/cases/cif2cod_048.inp data_antrasis_duomenų_blokas: WARNING, data item '_journal_volume' is absent.
+scripts/cif2cod: tests/cases/cif2cod_048.inp data_antrasis_duomenų_blokas: WARNING, data item '_journal_page_first' is absent.
+scripts/cif2cod: tests/cases/cif2cod_048.inp data_antrasis_duomenų_blokas: WARNING, no Hermann-Mauguin space group symbol found.
+scripts/cif2cod: tests/cases/cif2cod_048.inp data_antrasis_duomenų_blokas: WARNING, no Hall space group symbol found.
+scripts/cif2cod: tests/cases/cif2cod_048.inp data_antrasis_duomenų_blokas: WARNING, at least one of the lattice parameters has an undefined value -- cell volume could not be calculated.
+scripts/cif2cod: tests/cases/cif2cod_048.inp data_antrasis_duomenų_blokas: WARNING, data item '_cell_formula_units_Z' was not found -- the Z value will be estimated.
+scripts/cif2cod: tests/cases/cif2cod_048.inp data_antrasis_duomenų_blokas: WARNING, not enough data to estimate Z; cell volume undefined; crystal density undefined; molecular weight undefined -- assuming Z = 1.
+scripts/cif2cod: tests/cases/cif2cod_048.inp data_antrasis_duomenų_blokas: WARNING, summary formula could not be calculated -- cell length data item '_cell_length_a' was not found.
+scripts/cif2cod: tests/cases/cif2cod_048.inp data_antrasis_duomenų_blokas: WARNING, unit cell summary formula could not be calculated -- cell length data item '_cell_length_a' was not found.
+file pirmasis_duomenų_blokas
+nel 0
+formula ?
+journal Sąžininga
+flags 
+text \n\nSąžininga\n\n()\n
+
+file antrasis_duomenų_blokas
+nel 0
+formula ?
+journal Žąsis
+flags 
+text \n\nŽąsis\n\n()\n

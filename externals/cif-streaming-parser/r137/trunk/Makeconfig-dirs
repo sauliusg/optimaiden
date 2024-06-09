@@ -1,0 +1,5 @@
+#---*- Makefile -*-------------------------------------------------------
+# Configuring Makefile variables that set paths for this project
+
+BIN_DIR = bin
+

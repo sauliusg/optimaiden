@@ -1,0 +1,31 @@
+PKG_LIB_DIR = .
+
+CWD = ${notdir $(shell pwd)}
+TEST_MODULE = ${CWD}.py
+TEST_DEPEND =
+
+SWIG_C_FILE = ${CWD}.c
+SWIG_I_FILE = ${CWD}.i
+
+PYTHON2_PYCODCIF_PY =
+PYTHON3_PYCODCIF_PY =
+
+PYTHON2_BUILD =
+PYTHON3_BUILD =
+
+ifneq ("$(shell command -v python2.7 ;)", "")
+    PYTHON2_PYCODCIF_PY := build/python2.7/${CWD}/${TEST_MODULE}
+endif
+ifneq ("$(shell command -v python3 ;)", "")
+    PYTHON3_PYCODCIF_PY := build/python3/${CWD}/${TEST_MODULE}
+    TEST_MODULE := ${PYTHON3_PYCODCIF_PY}
+    TEST_DEPEND := ${PYTHON3_PYCODCIF_PY}
+endif
+
+SETUP_PY   = setup.py
+SETUP_PYIN = setup.pyin
+
+PYTHONPATH := build/python2.7:build/python3:${PYTHONPATH}
+export PYTHONPATH
+
+PREFIX = /

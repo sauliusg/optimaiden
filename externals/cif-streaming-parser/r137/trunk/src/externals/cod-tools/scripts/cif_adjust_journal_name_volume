@@ -1,0 +1,124 @@
+#! /bin/sh
+#!perl -w # --*- Perl -*--
+eval 'exec perl -x $0 ${1+"$@"}'
+    if 0;
+#------------------------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2021-04-28 19:35:53 +0300 (Wed, 28 Apr 2021) $
+#$Revision: 8738 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/scripts/cif_adjust_journal_name_volume $
+#------------------------------------------------------------------------------
+#*
+#* Parse a CIF file, update the journal name and journal volume based on
+#* heuristics and output the updated file to STDOUT.
+#*
+#* The following heuristic is applied: if journal volume starts with a
+#* letter, add this letter to the journal name, and leave journal volume
+#* purely numeric.
+#*
+#* USAGE:
+#*    $0 --options input1.cif input*.cif
+#**
+
+use strict;
+use warnings;
+use COD::CIF::Parser qw( parse_cif );
+use COD::CIF::Tags::CanonicalNames qw( canonicalize_all_names );
+use COD::CIF::Tags::DictTags;
+use COD::CIF::Tags::COD;
+use COD::CIF::Tags::Print qw( print_cif );
+use COD::SOptions qw( getOptions );
+use COD::SUsage qw( usage options );
+use COD::ErrorHandler qw( process_parser_messages );
+use COD::ToolsVersion qw( get_version_string );
+
+my $die_on_error_level = {
+    ERROR   => 1,
+    WARNING => 0,
+    NOTE    => 0
+};
+
+my $use_parser = 'c';
+my $keep_tag_order = 0;
+
+#* OPTIONS:
+#*   --keep-tag-order
+#*                     Keep the original tag order in CIF file (default).
+#*   --sort-tags
+#*                     Reorder tags in CIF file according to COD.
+#*
+#*   --use-perl-parser
+#*                     Use Perl parser to parse CIF files.
+#*   --use-c-parser
+#*                     Use C parser to parse CIF files (default).
+#*
+#*   --help, --usage
+#*                     Output a short usage message (this message) and exit.
+#*   --version
+#*                     Output version information and exit.
+#**
+@ARGV = getOptions(
+    "--keep-tag-order"  => sub { $keep_tag_order = 1; },
+    "--sort-tags"       => sub { $keep_tag_order = 0; },
+    "--use-perl-parser" => sub { $use_parser = "perl" },
+    "--use-c-parser"    => sub { $use_parser = "c" },
+
+    '--options'      => sub { options; exit },
+    '--help,--usage' => sub { usage; exit },
+    '--version'      => sub { print get_version_string(), "\n"; exit }
+);
+
+my @dictionary_tags = ( @COD::CIF::Tags::DictTags::tag_list,
+                        @COD::CIF::Tags::COD::tag_list );
+my %dictionary_tags = map { $_, $_ } @dictionary_tags;
+
+@ARGV = ("-") unless @ARGV;
+
+binmode STDOUT, ':encoding(UTF-8)';
+binmode STDERR, ':encoding(UTF-8)';
+
+for my $filename (@ARGV) {
+    my $options = { 'parser' => $use_parser, 'no_print' => 1 };
+    my ( $data, $err_count, $messages ) = parse_cif( $filename, $options );
+    process_parser_messages( $messages, $die_on_error_level );
+
+    canonicalize_all_names( $data );
+
+    for my $dataset (@$data) {
+
+        my $values = $dataset->{values};
+
+        if( exists $values->{_journal_name_full} &&
+            exists $values->{_journal_volume} ) {
+            my $journal = $values->{_journal_name_full}[0];
+            my $volume = $values->{_journal_volume}[0];
+
+            if( $volume =~ /^\s*([A-Za-z]+)([0-9]+)/ ) {
+                my $letter = $1;
+                my $new_volume = $2;
+                my $new_journal = $journal;
+                if( $journal !~ /$letter$/ ) {
+                    $new_journal = $journal . " ". $letter;
+                }
+                do {
+                    print ">>> $filename $dataset->{name}: '$journal' " .
+                        "-> '$new_journal'\n";
+                    print ">>> $filename $dataset->{name}: '$volume' " .
+                        "-> '$new_volume'\n";
+                } if 0;
+
+                $values->{_journal_name_full}[0] = $new_journal;
+                $values->{_journal_volume}[0] = $new_volume;
+            }
+        }
+
+        print_cif( $dataset, {
+            exclude_misspelled_tags => 0,
+            preserve_loop_order => 1,
+            fold_long_fields => 0,
+            dictionary_tags => \%dictionary_tags,
+            dictionary_tag_list => \@dictionary_tags,
+            keep_tag_order => $keep_tag_order,
+        } );
+    }
+}

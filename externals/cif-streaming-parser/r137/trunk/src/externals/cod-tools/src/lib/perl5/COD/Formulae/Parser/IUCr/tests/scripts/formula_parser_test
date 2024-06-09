@@ -1,0 +1,24 @@
+#! /bin/sh
+#!perl -w # --*- Perl -*--
+eval 'exec perl -x $0 ${1+"$@"}'
+    if 0;
+#------------------------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2019-11-15 18:13:46 +0200 (Fri, 15 Nov 2019) $ 
+#$Revision: 7412 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/src/lib/perl5/COD/Formulae/Parser/IUCr/tests/scripts/formula_parser_test $
+#------------------------------------------------------------------------------
+#*
+#  Test driver for COD::Formulae::Parser::IUCr.pm module.
+#**
+use strict;
+use warnings;
+use COD::Formulae::Parser::IUCr;
+
+@ARGV = ("-") unless @ARGV;
+
+foreach my $filename ( @ARGV ) {
+    my $parser = new COD::Formulae::Parser::IUCr;
+    $parser->Run($filename);
+    $parser->PrintFormula;
+};

@@ -1,0 +1,39 @@
+#---*- Makefile -*-------------------------------------------------------------
+#$Author: antanas $
+#$Revision: 7429 $
+#$Date: 2019-11-18 11:08:55 +0200 (Mon, 18 Nov 2019) $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/makefiles/Makefile-run_coms $
+#------------------------------------------------------------------------------
+
+COMS   = ${wildcard *.com}
+LOGS   = ${COMS:%.com=%.log}
+DEPEND = ${COMS:%.com=.%.d}
+
+#------------------------------------------------------------------------------
+
+.PHONY: all run clean cleanAll
+
+all: run
+
+include ${DEPEND}
+
+run: ${LOGS}
+
+#------------------------------------------------------------------------------
+
+%.log: %.com
+	./$< 2>&1 | tee $@
+
+.%.d: %.com
+	mkcomdepend $< > $@
+
+%: %.log;
+
+#------------------------------------------------------------------------------
+
+clean:
+	rm -f ${LOGS}
+
+cleanAll distclean: clean
+	rm -f ${DEPEND}
+	rm -f ${CLEAN_FILES}

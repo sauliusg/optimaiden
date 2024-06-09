@@ -1,0 +1,24 @@
+#---*- Makefile -*-------------------------------------------------------------
+#$Author: antanas $
+#$Revision: 7425 $
+#$Date: 2019-11-15 20:10:14 +0200 (Fri, 15 Nov 2019) $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/makefiles/Makefile-backbone $
+#------------------------------------------------------------------------------
+
+MAKECONF_FILES = ${filter-out %~, ${wildcard Makeconf*}}
+
+ifneq ("${MAKECONF_FILES}","")
+include ${MAKECONF_FILES}
+endif
+
+all:
+
+clean:
+
+cleanAll distclean: clean
+
+MAKELOCAL_FILES = ${filter-out %~, ${wildcard Makelocal*}}
+
+ifneq ("${MAKELOCAL_FILES}","")
+include ${MAKELOCAL_FILES}
+endif

@@ -1,0 +1,263 @@
+#! /bin/sh
+#!perl -w # --*- Perl -*--
+eval 'exec perl -x $0 ${1+"$@"}'
+    if 0;
+#------------------------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2021-04-28 19:35:53 +0300 (Wed, 28 Apr 2021) $
+#$Revision: 8738 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/scripts/cif_overlay $
+#------------------------------------------------------------------------------
+#*
+#* Overlay atoms from each pair of CIFs given on the command line.
+#*
+#* USAGE:
+#*    $0 input1.cif input1_alt.cif
+#**
+
+use strict;
+use warnings;
+use COD::CIF::Parser qw( parse_cif );
+use COD::AtomProperties;
+use COD::CIF::Data::AtomList qw( atom_array_from_cif );
+use COD::Spacegroups::Symop::Algebra qw( symop_vector_mul
+                                         symop_mul
+                                         symop_invert
+                                         symop_det );
+use COD::Overlays::Kabsch qw( overlay_atoms );
+use COD::SOptions qw( getOptions );
+use COD::SUsage qw( usage options );
+use COD::ErrorHandler qw( process_warnings
+                          process_errors
+                          process_parser_messages
+                          report_message );
+use COD::ToolsVersion qw( get_version_string );
+
+my $use_parser = 'c';
+
+my $die_on_error_level = {
+    ERROR   => 1,
+    WARNING => 0,
+    NOTE    => 0
+};
+
+#* OPTIONS:
+#*   --use-perl-parser
+#*                     Use Perl parser to parse CIF files.
+#*   --use-c-parser
+#*                     Use C parser to parse CIF files (default).
+#*
+#*   --help, --usage
+#*                     Output a short usage message (this message) and exit.
+#*   --version
+#*                     Output version information and exit.
+#**
+@ARGV = getOptions(
+    "--use-perl-parser" => sub { $use_parser = "perl" },
+    "--use-c-parser"    => sub { $use_parser = "c" },
+
+    '--options'      => sub { options; exit },
+    '--help,--usage' => sub { usage; exit },
+    '--version'      => sub { print get_version_string(), "\n"; exit }
+);
+
+my $exclude_zero_occupancies = 0;
+my $cif_atom_list_options = {
+    allow_unknown_chemical_types => 1,
+    homogenize_transform_matrices => 1,
+    exclude_zero_occupancies => $exclude_zero_occupancies,
+    atom_properties => \%COD::AtomProperties::atoms
+};
+
+binmode STDOUT, ':encoding(UTF-8)';
+binmode STDERR, ':encoding(UTF-8)';
+
+while( @ARGV > 0 ) {
+
+    my $filename1 = shift(@ARGV);
+    my $filename2 = shift(@ARGV);
+
+    if( !defined $filename2 ) {
+        report_message( {
+           'program'   => $0,
+           'err_level' => 'ERROR',
+           'message'   => 'even number of files required on the command line'
+        }, $die_on_error_level->{ERROR} );
+    }
+
+    my $parser_options = { 'parser' => $use_parser, 'no_print' => 1 };
+    my ( $data1, $data2, $err_count, $messages );
+
+    ( $data1, $err_count, $messages ) = parse_cif( $filename1, $parser_options );
+    process_parser_messages( $messages, $die_on_error_level );
+
+    ( $data2, $err_count, $messages ) = parse_cif( $filename2, $parser_options );
+    process_parser_messages( $messages, $die_on_error_level );
+
+    if( @$data1 < @$data2 ) {
+        report_message( {
+           'program'   => $0,
+           'err_level' => 'WARNING',
+           'message'   => "file '$filename2' has more data blocks than "
+                        . "'$filename1' some will stay unused"
+        }, $die_on_error_level->{WARNING} );
+    }
+
+    for my $dataset1 (@$data1) {
+        my $dataset2 = shift( @$data2 );
+        if( !defined $dataset2 ) {
+            report_message( {
+                'program'   => $0,
+                'err_level' => 'WARNING',
+                'message'   => "file '$filename1' has more data blocks than "
+                             . "'$filename2'"
+            }, $die_on_error_level->{WARNING} );
+            last;
+        }
+        print "FILE1\t", $filename1, "\n";
+        print "FILE2\t", $filename2, "\n";
+        print "DBLOCK1\t", $dataset1->{name}, "\n";
+        print "DBLOCK2\t", $dataset2->{name}, "\n";
+
+        my $dataname1 = 'data_' . $dataset1->{'name'};
+        my $dataname2 = 'data_' . $dataset2->{'name'};
+
+        my $atoms1;
+        eval {
+            local $SIG{__WARN__} = sub { process_warnings( {
+                               'message'       => @_,
+                               'program'       => $0,
+                               'filename'      => $filename1,
+                               'add_pos'       => $dataname1
+                              }, $die_on_error_level ) };
+
+            $atoms1 = atom_array_from_cif( $dataset1, $cif_atom_list_options );
+
+        };
+        if ( $@ ) {
+            process_errors( {
+              'message'       => $@,
+              'program'       => $0,
+              'filename'      => $filename1,
+              'add_pos'       => $dataname1
+            }, $die_on_error_level->{ERROR} )
+        };
+
+        my $atoms2;
+        eval {
+            local $SIG{__WARN__} = sub { process_warnings( {
+                               'message'       => @_,
+                               'program'       => $0,
+                               'filename'      => $filename2,
+                               'add_pos'       => $dataname2
+                              }, $die_on_error_level ) };
+
+            $atoms2 = atom_array_from_cif( $dataset2, $cif_atom_list_options );
+
+        };
+        if ( $@ ) {
+            process_errors( {
+              'message'       => $@,
+              'program'       => $0,
+              'filename'      => $filename2,
+              'add_pos'       => $dataname2
+            }, $die_on_error_level->{ERROR} )
+        };
+
+        print "ATMCNTS\t", int(@$atoms1), " ", int(@$atoms2), "\n";
+
+        my $overlay_symop;
+        eval {
+            $overlay_symop = overlay_atoms( $atoms1, $atoms2 );
+            printf "RDET\t%8.6f\n", symop_det( $overlay_symop );
+        };
+        if ( $@ ) {
+            process_errors( {
+              'message'       => $@,
+              'program'       => $0,
+            }, $die_on_error_level->{ERROR} )
+        };
+
+        ## use COD::Serialise qw( serialiseRef );
+        ## serialiseRef( $atoms1->[0]{f2o} );
+
+        my $fract_overlay = symop_mul( symop_invert($atoms1->[0]{f2o}),
+                                       symop_mul( $overlay_symop,
+                                                  $atoms1->[0]{f2o} ));
+
+        do {
+            local $, = "\t";
+            local $\ = "\n";
+            printf "SYMOP1\t%9.6f\t%9.6f\t%9.6f\t%9.6f\n", @{$fract_overlay->[0]};
+            printf "SYMOP2\t%9.6f\t%9.6f\t%9.6f\t%9.6f\n", @{$fract_overlay->[1]};
+            printf "SYMOP3\t%9.6f\t%9.6f\t%9.6f\t%9.6f\n", @{$fract_overlay->[2]};
+            print "SYMOP4", @{$fract_overlay->[3]};
+        };
+
+        my $atoms1_on_atoms2 = symop_apply_to_atoms( $atoms1, $fract_overlay );
+
+        ## use COD::Serialise qw( serialiseRef );
+        ## serialiseRef( $atoms1_on_atoms2 );
+
+        printf "RMS\t%8.6f\n", atom_rms( $atoms2, $atoms1_on_atoms2 );
+    }
+}
+
+#===============================================================#
+# Apply symmetry operator to all atoms in the list
+#
+# Accepts
+#     $atoms -- a reference to an atom array
+#     $symop -- a symmetry operator to be applied to all atoms
+# Returns
+#     a reference to an array with copies of atoms transformed
+#     by $symop.
+
+sub symop_apply_to_atoms
+{
+    my ($atoms, $symop) = @_;
+
+    my @applied;
+
+    for my $atom (@{$atoms}) {
+        my %new_atom = %$atom;
+
+        $new_atom{coordinates_fract} =
+            symop_vector_mul( $symop, $atom->{coordinates_fract} );
+
+        $new_atom{coordinates_ortho} =
+            symop_vector_mul( $atom->{f2o}, $new_atom{coordinates_fract} );
+
+        push( @applied, \%new_atom );
+    }
+
+    return \@applied;
+}
+
+#===============================================================#
+# Calculate root-mean-square deviation between two sets of atoms
+#
+# Accepts
+#     $atoms1, $atoms2 -- references to two atom arrays
+# Returns
+#     an RMS deviation between atoms
+sub atom_rms
+{
+    my ( $atoms1, $atoms2 ) = @_;
+
+    my $N = @$atoms1 < @$atoms2 ? @$atoms1 : @$atoms2;
+    my $sum = 0.0;
+
+    return 0.0 if $N == 0;
+
+    for( my $i = 0; $i < $N; $i++ ) {
+        my $a1 = $atoms1->[$i];
+        my $a2 = $atoms2->[$i];
+
+        $sum +=
+            ($a1->{coordinates_ortho}[0]-$a2->{coordinates_ortho}[0])**2 +
+            ($a1->{coordinates_ortho}[1]-$a2->{coordinates_ortho}[1])**2 +
+            ($a1->{coordinates_ortho}[2]-$a2->{coordinates_ortho}[2])**2;
+    }
+    return sqrt($sum/$N);
+}

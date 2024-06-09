@@ -1,0 +1,380 @@
+#! /bin/sh
+#!perl -w # --*- Perl -*--
+eval 'exec perl -x $0 ${1+"$@"}'
+    if 0;
+#------------------------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2020-09-29 10:54:47 +0300 (Tue, 29 Sep 2020) $
+#$Revision: 8533 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/scripts/dic2markdown $
+#------------------------------------------------------------------------------
+#*
+#* Generate textual descriptions for DDLm dictionaries.
+#*
+#* USAGE:
+#*    $0 --options input1.dic input*.dic
+#**
+
+use strict;
+use warnings;
+use COD::CIF::DDL qw( cif_to_ddlm ddl1_to_ddlm );
+use COD::CIF::DDL::DDLm qw( get_definition_class );
+use COD::CIF::Parser qw( parse_cif );
+use COD::CIF::Tags::Manage qw( cifversion );
+use COD::SOptions qw( getOptions get_value );
+use COD::SUsage qw( usage options );
+use COD::ErrorHandler qw( process_warnings
+                          process_errors
+                          process_parser_messages );
+use COD::UserMessage qw( sprint_message );
+use COD::ToolsVersion qw( get_version_string );
+use HTML::Entities qw( encode_entities );
+
+sub unprefix($);
+sub escape($);
+sub mark_hyperlinks($);
+
+my $use_parser = 'c';
+my $additional_head_text;
+my $add_anchors = 1;
+
+#* OPTIONS:
+#*   --use-perl-parser
+#*                     Use Perl parser for CIF parsing.
+#*   --use-c-parser
+#*                     Use Perl & C parser for CIF parsing (default).
+#*
+#*   --append-head-text
+#*                     Read Markdown text from a file and append it to
+#*                     the dictionary overview text, just before
+#*                     enumerating the categories in the dictionary.
+#*
+#*   --add-anchors
+#*                     Add HTML anchors for headings (default).
+#*   --no-add-anchors
+#*   --dont-add-anchors
+#*                     Do not add HTML anchors for headings.
+#*
+#*   --help, --usage
+#*                     Output a short usage message (this message) and exit.
+#*   --version
+#*                     Output version information and exit.
+#**
+@ARGV = getOptions(
+    "--use-perl-parser"  => sub { $use_parser = "perl" },
+    "--use-c-parser"     => sub { $use_parser = "c" },
+    "--append-head-text" => sub { open( my $inp, get_value() );
+                                  $additional_head_text =
+                                    join '', <$inp>;
+                                  close $inp },
+    "--add-anchors"      => sub { $add_anchors = 1 },
+    "--no-add-anchors"   => sub { $add_anchors = 0 },
+    "--dont-add-anchors" => sub { $add_anchors = 0 },
+
+    '--options'      => sub { options; exit },
+    '--help,--usage' => sub { usage; exit },
+    '--version'      => sub { print get_version_string(), "\n"; exit }
+);
+
+my $die_on_errors    = 1;
+my $die_on_warnings  = 0;
+my $die_on_notes     = 0;
+my $die_on_error_level = {
+    ERROR   => $die_on_errors,
+    WARNING => $die_on_warnings,
+    NOTE    => $die_on_notes
+};
+
+@ARGV = ('-') unless @ARGV;
+
+for my $filename (@ARGV) {
+    my $options = { 'parser' => $use_parser, 'no_print' => 1 };
+    my ( $data, $err_count, $messages ) = parse_cif( $filename, $options );
+    process_parser_messages( $messages, $die_on_error_level );
+
+    if ( !@{$data} ) {
+        warn sprint_message( {
+            'program'   => $0,
+            'filename'  => $filename,
+            'err_level' => 'WARNING',
+            'message'   => 'the file contains no data blocks'
+        } );
+        next;
+    }
+
+    if( !cifversion( $data->[0] ) || cifversion( $data->[0] ) !~ /^2\./ ) {
+        if( exists $data->[0]{values}{'_dictionary_name'} ||
+            exists $data->[0]{values}{'_dictionary.title'} ) {
+            local $SIG{__WARN__} = sub {
+                process_warnings( {
+                    'message'  => @_,
+                    'program'  => $0,
+                    'filename' => $filename,
+                }, $die_on_error_level );
+            };
+
+            $data = [ ddl1_to_ddlm( $data, { keep_original_date => 1 } ) ];
+            process_warnings( {
+                    message  => 'apparently DDL1 dictionary was encountered, ' .
+                                'converting it to DDLm; the conversion is ' .
+                                'experimental and may result in corruption ' .
+                                'or loss of dictionary data',
+                    program  => $0,
+                    filename => $filename,
+                }, $die_on_error_level );
+        } else { # plain CIF file
+            local $SIG{__WARN__} = sub {
+                process_warnings( {
+                    'message'  => @_,
+                    'program'  => $0,
+                    'filename' => $filename,
+                    'add_pos'  => 'data_' . $data->[0]{'name'},
+                }, $die_on_error_level );
+            };
+
+            $data = [ cif_to_ddlm( $data->[0] ) ];
+            process_warnings( {
+                    message  => 'apparently a plain CIF file was encountered, ' .
+                                'converting it to DDLm; the conversion is ' .
+                                'experimental',
+                    program  => $0,
+                    filename => $filename,
+                }, $die_on_error_level );
+        }
+    }
+
+    for my $datablock (@$data) {
+        my $dataname = 'data_' . $datablock->{'name'};
+
+        local $SIG{__WARN__} = sub {
+            process_warnings( {
+                'message'  => @_,
+                'program'  => $0,
+                'filename' => $filename,
+                'add_pos'  => $dataname
+            }, $die_on_error_level )
+        };
+
+        eval {
+            my $dict = build_dictionary_structure( $datablock );
+
+            printf "# %s\n\n",
+                   escape( $datablock->{values}{'_dictionary.title'}[0] );
+            printf "Version: %s (%s)\n\n",
+                   escape( $datablock->{values}{'_dictionary.version'}[0] ),
+                   escape( $datablock->{values}{'_dictionary.date'}[0] );
+
+            print "$additional_head_text\n\n" if $additional_head_text;
+
+            dic_block2markdown( $dict,
+                                { indent => 1,
+                                  add_anchors => $add_anchors,
+                                  save_blocks => $datablock->{save_blocks} } );
+        };
+        if( $@ ) {
+            process_errors( {
+              'message'       => $@,
+              'program'       => $0,
+              'filename'      => $filename,
+              'add_pos'       => $dataname
+            }, $die_on_errors )
+        }
+    }
+}
+
+# Constructs CIF DDLm dictionary relation tree for easier detection of
+# dependencies.
+sub build_dictionary_structure
+{
+    my( $dataset ) = @_;
+
+    my $parents = {};
+    for my $save_block (@{$dataset->{save_blocks}}) {
+
+        if( !exists $save_block->{values}{'_name.category_id'} ) {
+            if( get_definition_class($save_block) ne 'Head' ) {
+                warn "save block '$save_block->{name}' does not contain " .
+                     '\'_name.category_id\' data item -- unable to ' .
+                     'determine its ancestry, skipping' . "\n";
+            }
+            next;
+        }
+
+        my $parent = lc $save_block->{values}{'_name.category_id'}[0];
+        push @{$parents->{$parent}}, $save_block;
+    }
+
+    my @heads = grep { get_definition_class($_) eq 'Head' }
+                     @{$dataset->{save_blocks}};
+
+    my $dict = {};
+    $dict->{content} = $heads[0];
+    find_children( $dict, $parents );
+
+    return $dict;
+}
+
+sub find_children
+{
+    my( $node, $parents ) = @_;
+    my $children = $parents->{lc $node->{content}{values}{'_definition.id'}[0]};
+    return if !$children;
+
+    foreach (@$children) {
+        my $new_node = { content => $_ };
+        find_children( $new_node, $parents );
+        push @{$node->{children}}, $new_node;
+    }
+}
+
+sub dic_block2markdown
+{
+    my( $node, $options ) = @_;
+
+    $options = {} unless $options;
+    my $indent = $options->{indent};
+    $indent = 0 unless defined $indent;
+    my $add_anchors = $options->{add_anchors};
+
+    my $values = $node->{content}{values};
+
+    my $definition_class = get_definition_class($node->{content});
+    if( $definition_class eq 'Attribute' ||
+        $definition_class eq 'Datum' ) {
+        $indent++;
+    }
+
+    if( $definition_class ne 'Head' ) {
+
+        local $\ = "\n\n";
+
+        my $title = $values->{'_definition.id'}[0];
+        my $anchor = '';
+        if( $options->{add_anchors} ) {
+            $anchor = '<a name="' . encode_entities( $title ) . '"></a>';
+        }
+        print '#' x ($indent + 1) . ' ', $anchor, escape $title;
+
+        if( exists $values->{'_description.text'} ) {
+            my $description = mark_hyperlinks escape unprefix
+                                $values->{'_description.text'}[0];
+            if( $add_anchors ) {
+                $description = mark_internal_links( $description,
+                                                 $options->{save_blocks} );
+            }
+            print $description;
+        }
+
+        if( exists $values->{'_units.code'} ) {
+            print 'Units: ', escape $values->{'_units.code'}[0];
+        }
+
+        local $\ = "\n";
+
+        if( exists $values->{'_enumeration_set.state'} &&
+            exists $values->{'_enumeration_set.detail'} ) {
+            print "Values:\n\n",
+                  "<table>\n  <tr><th>Value</th><th>Description</th></tr>";
+            for my $i (0..$#{$values->{'_enumeration_set.state'}}) {
+                print '  <tr><td>' . encode_entities(
+                      unprefix( $values->{'_enumeration_set.state'}[$i] ) ) .
+                      '</td><td>' . encode_entities(
+                      mark_hyperlinks unprefix $values->{'_enumeration_set.detail'}[$i] ) .
+                      "</td></tr>";
+            }
+            print '</table>';
+        } elsif( exists $values->{'_enumeration_set.state'} ) {
+            print "Values:\n\n", map { '* ' . escape( $_ ). "\n" }
+                                     @{$values->{'_enumeration_set.state'}};
+        }
+        if( exists $values->{'_enumeration.default'} ) {
+            printf "Default value: '%s'\n\n", $values->{'_enumeration.default'}[0];
+        }
+
+        if( exists $values->{'_description_example.case'} &&
+            exists $values->{'_description_example.detail'} ) {
+            print "Examples:\n\n",
+                  "<table>\n  <tr><th>Value</th><th>Description</th></tr>";
+            for my $i (0..$#{$values->{'_description_example.case'}}) {
+                print '  <tr><td>';
+                my $example = encode_entities(
+                      unprefix $values->{'_description_example.case'}[$i] );
+                print '<pre><code>' if $example =~ /\n/;
+                print $example;
+                print '</code></pre>' if $example =~ /\n/;
+                print '  </td><td>', encode_entities(
+                      mark_hyperlinks unprefix $values->{'_description_example.detail'}[$i] );
+                print '  </td></tr>';
+            }
+            print '</table>';
+        }
+    }
+
+    foreach (@{$node->{children}}) {
+        dic_block2markdown( $_,
+                            { indent => $indent,
+                              add_anchors => $options->{add_anchors},
+                              save_blocks => $options->{save_blocks} } );
+    }
+}
+
+sub unprefix($)
+{
+    my( $text ) = @_;
+
+    $text =~ s/^\s*\n//;
+
+    my( $prefix ) = $text =~ /^( +)/;
+    return $text if !$prefix;
+
+    my $len = length $prefix;
+
+    $text =~ s/^ {$len}//gm;
+    return $text;
+}
+
+sub escape($)
+{
+    my( $text ) = @_;
+
+    # Escaping Markdown:
+    $text =~ s/([_*])/\\$1/g;
+
+    # Escaping HTML:
+    $text = encode_entities( $text );
+
+    return $text;
+}
+
+sub mark_hyperlinks($)
+{
+    my( $text ) = @_;
+
+    $text =~ s/(https?:\/\/[^\s\(\)]+)(\.?)/[$1]($1)$2/g;
+
+    return $text;
+}
+
+sub mark_tag_if_found
+{
+    my( $tag, $save_blocks ) = @_;
+    my $clean_tag = $tag;
+    $clean_tag =~ s/\\_/_/g;
+    my $search_tag = $clean_tag;
+    $search_tag =~ s/^_//;
+
+    if( grep { $_->{name} eq $search_tag } @$save_blocks ) {
+        return "[$tag](#$clean_tag)";
+    } else {
+        return $tag;
+    }
+}
+
+sub mark_internal_links
+{
+    my( $text, $save_blocks ) = @_;
+
+    $text =~ s/([A-Z]*((\\_|\.)[a-zA-Z\-]+)+)/"" . mark_tag_if_found( $1, $save_blocks )/egx;
+
+    return $text;
+}
