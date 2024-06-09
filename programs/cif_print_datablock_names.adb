@@ -25,24 +25,16 @@ begin
     if F /= "-" and not Exists (To_String (F)) then
       raise File_Does_Not_Exist_Error with Cif_Error_Messages.File_Not_Exists & To_String (F);
     end if;
-    
-    Put_Line ("Enabling Parsing...");
 
     Enable_Parsing;
     
-    Put_Line ("Parsing the file """ & To_String (F) & """...");
-    
     Parse_Cif_From_File (F);
 
-    Put_Line ("Starting the Dequeue loop...");
-    
     loop  
       exit when Is_Parsing_Stopped;
 
-      Put_Line ("About to Dequeue a data block...");
       Dequeue_Datablock (Cif_Datablock);
 
-      Put_Line ("Data block dequeued...");
       Put_Line (Get_Datablock_Name (Cif_Datablock));
 
       if Is_Queue_Empty and 

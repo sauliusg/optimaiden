@@ -53,12 +53,12 @@ package body Cif_Streaming_Parser is
 
   function Is_Queue_Empty return Boolean is
   begin
-    return Get_Queue_Item_Count (Cif_Queue) = 0;
+    return Get_Queue_Item_Count (Cif_Queue) = 0; 
   end Is_Queue_Empty;
 
   procedure Enqueue_Datablock (DA : in Datablock_Access) is
   begin
-     Enqueue_Datablock (Cif_Queue, DA);
+    Enqueue_Datablock (Cif_Queue, DA);
   end Enqueue_Datablock;
   
   procedure Dequeue_Datablock (CDA : out Controlled_Datablock_Access) is
@@ -83,20 +83,9 @@ package body Cif_Streaming_Parser is
   begin
     Log (Enqueue_Datablock, "Beginning. Block: " & Get_Datablock_Name (DA));
     
-    Put_Line ("About to enqueue a datablock:");
-    Put_Line ("Enqueing data block named """ & Get_Datablock_Name (DA) & """");
-
     Controlled_Datablock := Create_Controlled_Datablock (DA);
+     Q.Enqueue (Controlled_Datablock);
     
-    Put_Line ("Created the Controlled_Datablock;");
-    
-    Put_Line ("Q length: " & Get_Queue_Item_Count (Q)'Image);
-    
-    Q.Enqueue (Controlled_Datablock);
-    
-    Put_Line ("The datablock enqueued.");
-    Put_Line ("Q length: " & Get_Queue_Item_Count (Q)'Image);
-
     Log (Enqueue_Datablock,
       "Finished. Block " &
       Get_Datablock_Name (Controlled_Datablock.Access_Datablock.Ptr));
