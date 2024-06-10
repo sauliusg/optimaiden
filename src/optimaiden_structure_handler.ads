@@ -1,9 +1,13 @@
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with AWS.Dispatchers;
 with AWS.Status;
 with AWS.Response;
 
 package Optimaiden_Structure_Handler is
-
+   
+   CIF_File_Name : Unbounded_String :=
+     To_Unbounded_String ("tests/data/2000000.cif");
+   
    type Optimaiden_Structure_Handler_Type is new AWS.Dispatchers.Handler
      with null record;
 

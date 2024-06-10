@@ -1,5 +1,6 @@
 with Ada.Text_IO; use Ada.Text_IO;
-with Ada.Command_Line;
+with Ada.Command_Line; use Ada.Command_Line;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 with AWS.Server;
 with AWS.Config; use AWS.Config;
@@ -37,7 +38,12 @@ procedure Optimaiden is
    Structure_Handler : Optimaiden_Structure_Handler_Type;
 
 begin
-
+   
+   if Argument_Count > 0 then
+      Optimaiden_Structure_Handler.CIF_File_Name :=
+        To_Unbounded_String (Argument (1));
+   end if;
+   
    declare
       use AWS.Config.Set;
    begin
