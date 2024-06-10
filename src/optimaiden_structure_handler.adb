@@ -4,28 +4,40 @@ with Util.Streams.Texts;
 with Util.Serialize.IO.JSON;
 with Cif_Streaming_Parser; use Cif_Streaming_Parser;
 with Cif_Datablock; use Cif_Datablock;
+with Cif_Streaming_Parser; use Cif_Streaming_Parser;
 
 package body Optimaiden_Structure_Handler is
    
-   CIF_File_Name : String := "tests/data/2000000.cif";
+   CIF_File_Name : String := "tests/data/2000000-2000010.cif";
    
    procedure Write
      (
-      Stream : out Util.Serialize.IO.JSON.Output_Stream;
-      CIF_Datablock : Controlled_Datablock_Access
+      Stream : out Util.Serialize.IO.JSON.Output_Stream
      ) is
+      Cif_Datablock :  Controlled_Datablock_Access;
    begin
       Stream.Start_Document;
       Stream.Start_Array ("data");
       
-      Stream.Start_Entity ("");
-      Stream.Start_Entity ("attributes");
+      loop  
+         exit when Is_Parsing_Stopped;
+
+         Dequeue_Datablock (Cif_Datablock);
+
+         Stream.Start_Entity ("");
+         Stream.Start_Entity ("attributes");
       
-      Stream.Write_Entity ("id", Get_Datablock_Name (CIF_Datablock));
-      
-      Stream.End_Entity ("attributes");
-      Stream.Write_Entity ("type", "structures");
-      Stream.End_Entity ("");
+         Stream.Write_Entity ("id", Get_Datablock_Name (CIF_Datablock));
+         
+         Stream.End_Entity ("attributes");
+         Stream.Write_Entity ("type", "structures");
+         Stream.End_Entity ("");
+
+         if Is_Queue_Empty and 
+           Get_If_Last_Datablock_In_Stream (Cif_Datablock) then
+            Stop_Parsing;
+         end if;
+      end loop;
       
       Stream.End_Array ("data");
       Stream.End_Document;
@@ -37,16 +49,15 @@ package body Optimaiden_Structure_Handler is
       Handler : Optimaiden_Structure_Handler_Type;
       Request : AWS.Status.Data
      ) return AWS.Response.Data is
-      Cif_Datablock :  Controlled_Datablock_Access;
       Output : aliased Util.Streams.Texts.Print_Stream;
       Stream : Util.Serialize.IO.JSON.Output_Stream;
    begin
       Parse_Cif_From_File (To_Unbounded_String (CIF_File_Name));
-      Dequeue_Datablock (Cif_Datablock);
       
       Output.Initialize (Size => 10000);
       Stream.Initialize (Output => Output'Unchecked_Access);
-      Write (Stream, Cif_Datablock);
+      
+      Write (Stream);
 
       return AWS.Response.Build
         (
