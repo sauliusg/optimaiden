@@ -21,14 +21,27 @@ package body Optimaiden_Structure_Handler is
       loop  
          exit when Is_Parsing_Stopped;
 
-         Dequeue_Datablock (Cif_Datablock);
+         Dequeue_Datablock (CIF_Datablock);
 
          Stream.Start_Entity ("");
          Stream.Start_Entity ("attributes");
 
-         Stream.Write_Entity ("id", Get_Datablock_Name (CIF_Datablock));
+         Stream.Write_Entity ("_cod_a",
+                              Get_Tag_Value 
+                                (
+                                 CIF_Datablock,
+                                 Get_Tag_Index
+                                   (
+                                    CIF_Datablock,
+                                    "_cell_length_a"
+                                   ),
+                                 0
+                                )
+                             );
          
          Stream.End_Entity ("attributes");
+         
+         Stream.Write_Entity ("id", Get_Datablock_Name (CIF_Datablock));
          Stream.Write_Entity ("type", "structures");
          Stream.End_Entity ("");
 
