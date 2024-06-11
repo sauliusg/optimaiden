@@ -41,7 +41,7 @@ package body Optimaiden_Structure_Handler is
       Stream.Write_Entity (Name, Beans_Object);
    end;
    
-   procedure Write_Float_Entity_If_Exists
+   procedure Write_Float_If_Exists
      (
       Stream : in out Util.Serialize.IO.JSON.Output_Stream;
       JSON_Name : String;
@@ -64,7 +64,7 @@ package body Optimaiden_Structure_Handler is
       Stream : out Util.Serialize.IO.JSON.Output_Stream;
       CIF_File_Name : Unbounded_String
      ) is
-      Cif_Datablock : Controlled_Datablock_Access;
+      CDA : Controlled_Datablock_Access;
    begin
       Stream.Start_Document;
       Stream.Start_Array ("data");
@@ -74,27 +74,26 @@ package body Optimaiden_Structure_Handler is
       loop  
          exit when Is_Parsing_Stopped;
 
-         Dequeue_Datablock (CIF_Datablock);
+         Dequeue_Datablock (CDA);
 
          Stream.Start_Entity ("");
          Stream.Start_Entity ("attributes");
          
-         Write_Float_Entity_If_Exists
-           (
-            Stream,
-            "_cod_a",
-            "_cell_length_a",
-            CIF_Datablock
-           );
+         Write_Float_If_Exists (Stream, "_cod_a", "_cell_length_a", CDA);
+         Write_Float_If_Exists (Stream, "_cod_b", "_cell_length_b", CDA);
+         Write_Float_If_Exists (Stream, "_cod_c", "_cell_length_c", CDA);
+         
+         Write_Float_If_Exists (Stream, "_cod_alpha", "_cell_angle_alpha", CDA);
+         Write_Float_If_Exists (Stream, "_cod_beta", "_cell_angle_beta", CDA);
+         Write_Float_If_Exists (Stream, "_cod_gamma", "_cell_angle_gamma", CDA);
                          
          Stream.End_Entity ("attributes");
          
-         Stream.Write_Entity ("id", Get_Datablock_Name (CIF_Datablock));
+         Stream.Write_Entity ("id", Get_Datablock_Name (CDA));
          Stream.Write_Entity ("type", "structures");
          Stream.End_Entity ("");
 
-         if Is_Queue_Empty and 
-           Get_If_Last_Datablock_In_Stream (Cif_Datablock) then
+         if Is_Queue_Empty and then Get_If_Last_Datablock_In_Stream (CDA) then
             Stop_Parsing;
          end if;
       end loop;
