@@ -12,17 +12,12 @@ package body Optimaiden_Structure_Handler is
    function Get_Float_Value
      (
       CDA : Controlled_Datablock_Access;
-      Tag_Name : String;
+      Tag_Index : Integer;
       Value_Index : Integer
      ) return Float is
       
       Value_String : String :=
-        Get_Tag_Value 
-        (
-         CDA,
-         Get_Tag_Index (CDA, Tag_Name),
-         Value_Index
-        );
+        Get_Tag_Value (CDA, Tag_Index, Value_Index);
 
       Last_Index : Integer := Value_String'First;
         
@@ -46,12 +41,30 @@ package body Optimaiden_Structure_Handler is
       Stream.Write_Entity (Name, Beans_Object);
    end;
    
+   procedure Write_Float_Entity_If_Exists
+     (
+      Stream : in out Util.Serialize.IO.JSON.Output_Stream;
+      JSON_Name : String;
+      CIF_Tag_Name : String;
+      CDA : Controlled_Datablock_Access
+     ) is
+      Tag_Index : Integer := Get_Tag_Index (CDA, CIF_Tag_Name);
+   begin
+      if Tag_Index >= 0 then
+         Write_Entity
+           (
+            Stream, JSON_Name,
+            Get_Float_Value (CDA, Tag_Index, 0)
+           );
+      end if;
+   end;
+
    procedure Write
      (
       Stream : out Util.Serialize.IO.JSON.Output_Stream;
       CIF_File_Name : Unbounded_String
      ) is
-      Cif_Datablock :  Controlled_Datablock_Access;
+      Cif_Datablock : Controlled_Datablock_Access;
    begin
       Stream.Start_Document;
       Stream.Start_Array ("data");
@@ -65,12 +78,15 @@ package body Optimaiden_Structure_Handler is
 
          Stream.Start_Entity ("");
          Stream.Start_Entity ("attributes");
-
-         Write_Entity (Stream, "_cod_a",
-                       Get_Float_Value
-                         (CIF_Datablock, "_cell_length_a", 0)
-                      );
          
+         Write_Float_Entity_If_Exists
+           (
+            Stream,
+            "_cod_a",
+            "_cell_length_a",
+            CIF_Datablock
+           );
+                         
          Stream.End_Entity ("attributes");
          
          Stream.Write_Entity ("id", Get_Datablock_Name (CIF_Datablock));
