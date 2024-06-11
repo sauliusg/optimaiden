@@ -59,12 +59,51 @@ package body Optimaiden_Structure_Handler is
       end if;
    end;
 
+   procedure Write_Float_If_Exists
+     (
+      Stream : in out Util.Serialize.IO.JSON.Output_Stream;
+      JSON_Name : Unbounded_String;
+      CIF_Tag_Name : Unbounded_String;
+      CDA : Controlled_Datablock_Access
+     ) is
+   begin
+      Write_Float_If_Exists
+        (
+         Stream,
+         To_String (JSON_Name),
+         To_String (CIF_Tag_Name),
+         CDA
+        );
+   end;
+
    procedure Write
      (
       Stream : out Util.Serialize.IO.JSON.Output_Stream;
       CIF_File_Name : Unbounded_String
      ) is
       CDA : Controlled_Datablock_Access;
+      
+      type Access_All_String is access all String;
+      
+      type CIF_JSON_Mapping is record
+         JSON_Name : Unbounded_String;
+         CIF_Tag : Unbounded_String;
+      end record;
+      
+      function Make_Mapping (J, C : String) return CIF_JSON_Mapping is
+      begin
+         return (To_Unbounded_String (J), To_Unbounded_String (C));
+      end;
+      
+      CIF_Tags : constant array (Integer range <>) of CIF_JSON_Mapping :=
+        (
+         Make_Mapping ("_cod_a", "_cell_length_a"),
+         Make_Mapping ("_cod_b", "_cell_length_b"),
+         Make_Mapping ("_cod_c", "_cell_length_c"),
+         Make_Mapping ("_cod_alpha", "_cell_angle_alpha"),
+         Make_Mapping ("_cod_beta",  "_cell_angle_beta"),
+         Make_Mapping ("_cod_gamma", "_cell_angle_gamma")
+        );
    begin
       Stream.Start_Document;
       Stream.Start_Array ("data");
@@ -79,13 +118,9 @@ package body Optimaiden_Structure_Handler is
          Stream.Start_Entity ("");
          Stream.Start_Entity ("attributes");
          
-         Write_Float_If_Exists (Stream, "_cod_a", "_cell_length_a", CDA);
-         Write_Float_If_Exists (Stream, "_cod_b", "_cell_length_b", CDA);
-         Write_Float_If_Exists (Stream, "_cod_c", "_cell_length_c", CDA);
-         
-         Write_Float_If_Exists (Stream, "_cod_alpha", "_cell_angle_alpha", CDA);
-         Write_Float_If_Exists (Stream, "_cod_beta", "_cell_angle_beta", CDA);
-         Write_Float_If_Exists (Stream, "_cod_gamma", "_cell_angle_gamma", CDA);
+         for M of CIF_Tags loop
+            Write_Float_If_Exists (Stream, M.JSON_Name, M.CIF_Tag, CDA);
+         end loop;
                          
          Stream.End_Entity ("attributes");
          
