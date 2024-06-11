@@ -1,10 +1,50 @@
+with Ada.Text_IO; use Ada.Text_IO;
 with AWS.MIME; use AWS.MIME;
+with Util.Beans;
+with Util.Beans.Objects;
 with Util.Streams.Texts;
 with Util.Serialize.IO.JSON;
 with Cif_Datablock; use Cif_Datablock;
 with Cif_Streaming_Parser; use Cif_Streaming_Parser;
 
 package body Optimaiden_Structure_Handler is
+   
+   function Get_Float_Value
+     (
+      CDA : Controlled_Datablock_Access;
+      Tag_Name : String;
+      Value_Index : Integer
+     ) return Float is
+      
+      Value_String : String :=
+        Get_Tag_Value 
+        (
+         CDA,
+         Get_Tag_Index (CDA, Tag_Name),
+         Value_Index
+        );
+
+      Last_Index : Integer := Value_String'First;
+        
+   begin
+      while Last_Index <= Value_String'Last and then
+        Value_String (Last_Index) /= '(' loop
+        Last_Index := Last_Index + 1;
+      end loop;
+      return Float'Value (Value_String (Value_String'First .. Last_Index - 1));
+   end;
+   
+   procedure Write_Entity
+     (
+      Stream : in out Util.Serialize.IO.JSON.Output_Stream;
+      Name   : in String;
+      Value  : in Float
+     ) is
+      Beans_Object : Util.Beans.Objects.Object :=
+        Util.Beans.Objects.To_Object (Value);
+   begin
+      Stream.Write_Entity (Name, Beans_Object);
+   end;
    
    procedure Write
      (
@@ -26,18 +66,10 @@ package body Optimaiden_Structure_Handler is
          Stream.Start_Entity ("");
          Stream.Start_Entity ("attributes");
 
-         Stream.Write_Entity ("_cod_a",
-                              Get_Tag_Value 
-                                (
-                                 CIF_Datablock,
-                                 Get_Tag_Index
-                                   (
-                                    CIF_Datablock,
-                                    "_cell_length_a"
-                                   ),
-                                 0
-                                )
-                             );
+         Write_Entity (Stream, "_cod_a",
+                       Get_Float_Value
+                         (CIF_Datablock, "_cell_length_a", 0)
+                      );
          
          Stream.End_Entity ("attributes");
          
