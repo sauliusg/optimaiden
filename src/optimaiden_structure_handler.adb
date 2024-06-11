@@ -8,12 +8,15 @@ package body Optimaiden_Structure_Handler is
    
    procedure Write
      (
-      Stream : out Util.Serialize.IO.JSON.Output_Stream
+      Stream : out Util.Serialize.IO.JSON.Output_Stream;
+      CIF_File_Name : Unbounded_String
      ) is
       Cif_Datablock :  Controlled_Datablock_Access;
    begin
       Stream.Start_Document;
       Stream.Start_Array ("data");
+      
+      Parse_Cif_From_File (CIF_File_Name);
       
       loop  
          exit when Is_Parsing_Stopped;
@@ -48,12 +51,10 @@ package body Optimaiden_Structure_Handler is
       Output : aliased Util.Streams.Texts.Print_Stream;
       Stream : Util.Serialize.IO.JSON.Output_Stream;
    begin
-      Parse_Cif_From_File (CIF_File_Name);
-      
       Output.Initialize (Size => 10000);
       Stream.Initialize (Output => Output'Unchecked_Access);
       
-      Write (Stream);
+      Write (Stream, CIF_File_Name);
 
       return AWS.Response.Build
         (
