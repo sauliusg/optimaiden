@@ -71,7 +71,8 @@ package body Optimaiden_Structure_Handler is
       return (To_Unbounded_String (J), To_Unbounded_String (C));
    end;
    
-   CIF_Tags : constant array (Integer range <>) of CIF_JSON_Mapping :=
+   CIF_Real_Value_Tags : constant array (Integer range <>) 
+     of CIF_JSON_Mapping :=
      (
       Make_Mapping ("_cod_a", "_cell_length_a"),
       Make_Mapping ("_cod_b", "_cell_length_b"),
@@ -119,7 +120,7 @@ package body Optimaiden_Structure_Handler is
          Stream.Start_Entity ("");
          Stream.Start_Entity ("attributes");
          
-         for M of CIF_Tags loop
+         for M of CIF_Real_Value_Tags loop
             Write_Float_If_Exists (Stream, M.JSON_Name, M.CIF_Tag, CDA);
          end loop;
                          
