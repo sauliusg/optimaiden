@@ -35,8 +35,14 @@ begin
 
       Dequeue_Datablock (Cif_Datablock);
 
-      Put_Line (Get_Datablock_Name (Cif_Datablock));
+      Put (Get_Datablock_Name (Cif_Datablock));
+      Put (ASCII.HT);
+      Put (Get_Tag_Value (Cif_Datablock,
+                          Get_Tag_Index (Cif_Datablock, 
+                                         "_chemical_formula_sum"), 0));
 
+      New_Line;
+      
       if Is_Queue_Empty and 
         Get_If_Last_Datablock_In_Stream (Cif_Datablock) then
         Stop_Parsing;
