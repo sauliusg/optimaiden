@@ -59,6 +59,28 @@ package body Optimaiden_Structure_Handler is
       end if;
    end;
 
+   type Access_All_String is access all String;
+   
+   type CIF_JSON_Mapping is record
+      JSON_Name : Unbounded_String;
+      CIF_Tag : Unbounded_String;
+   end record;
+   
+   function Make_Mapping (J, C : String) return CIF_JSON_Mapping is
+   begin
+      return (To_Unbounded_String (J), To_Unbounded_String (C));
+   end;
+   
+   CIF_Tags : constant array (Integer range <>) of CIF_JSON_Mapping :=
+     (
+      Make_Mapping ("_cod_a", "_cell_length_a"),
+      Make_Mapping ("_cod_b", "_cell_length_b"),
+      Make_Mapping ("_cod_c", "_cell_length_c"),
+      Make_Mapping ("_cod_alpha", "_cell_angle_alpha"),
+      Make_Mapping ("_cod_beta",  "_cell_angle_beta"),
+      Make_Mapping ("_cod_gamma", "_cell_angle_gamma")
+     );
+      
    procedure Write_Float_If_Exists
      (
       Stream : in out Util.Serialize.IO.JSON.Output_Stream;
@@ -83,27 +105,6 @@ package body Optimaiden_Structure_Handler is
      ) is
       CDA : Controlled_Datablock_Access;
       
-      type Access_All_String is access all String;
-      
-      type CIF_JSON_Mapping is record
-         JSON_Name : Unbounded_String;
-         CIF_Tag : Unbounded_String;
-      end record;
-      
-      function Make_Mapping (J, C : String) return CIF_JSON_Mapping is
-      begin
-         return (To_Unbounded_String (J), To_Unbounded_String (C));
-      end;
-      
-      CIF_Tags : constant array (Integer range <>) of CIF_JSON_Mapping :=
-        (
-         Make_Mapping ("_cod_a", "_cell_length_a"),
-         Make_Mapping ("_cod_b", "_cell_length_b"),
-         Make_Mapping ("_cod_c", "_cell_length_c"),
-         Make_Mapping ("_cod_alpha", "_cell_angle_alpha"),
-         Make_Mapping ("_cod_beta",  "_cell_angle_beta"),
-         Make_Mapping ("_cod_gamma", "_cell_angle_gamma")
-        );
    begin
       Stream.Start_Document;
       Stream.Start_Array ("data");
