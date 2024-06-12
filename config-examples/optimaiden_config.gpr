@@ -19,8 +19,10 @@ abstract project Optimaiden_Config is
    Ada_Compiler_Switches := External_As_List ("ADAFLAGS", " ");
    Ada_Compiler_Switches := Ada_Compiler_Switches &
           (
-            "-Og" -- Optimize for debug
-            ,"-ffunction-sections" -- Separate ELF section for each function
+            -- Commenting out the "-Og" option since it causes STORAGE_ERROR
+            -- exception:
+            -- "-Og", -- Optimize for debug
+            "-ffunction-sections" -- Separate ELF section for each function
             -- The following configuration section prevents the CIF Streaming Parser
             -- from correctly enqueing/dequeing the data blocks, the parser seems
             -- to "hang":
