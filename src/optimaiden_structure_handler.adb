@@ -29,11 +29,37 @@ package body Optimaiden_Structure_Handler is
       return Float'Value (Value_String (Value_String'First .. Last_Index - 1));
    end;
    
+   function Get_Integer_Value
+     (
+      CDA : Controlled_Datablock_Access;
+      Tag_Index : Integer;
+      Value_Index : Integer
+     ) return Integer is
+      
+      Value_String : String :=
+        Get_Tag_Value (CDA, Tag_Index, Value_Index);
+
+   begin
+      return Integer'Value (Value_String);
+   end;
+   
    procedure Write_Entity
      (
       Stream : in out Util.Serialize.IO.JSON.Output_Stream;
       Name   : in String;
       Value  : in Float
+     ) is
+      Beans_Object : Util.Beans.Objects.Object :=
+        Util.Beans.Objects.To_Object (Value);
+   begin
+      Stream.Write_Entity (Name, Beans_Object);
+   end;
+   
+   procedure Write_Entity
+     (
+      Stream : in out Util.Serialize.IO.JSON.Output_Stream;
+      Name   : in String;
+      Value  : in Integer
      ) is
       Beans_Object : Util.Beans.Objects.Object :=
         Util.Beans.Objects.To_Object (Value);
@@ -59,6 +85,58 @@ package body Optimaiden_Structure_Handler is
       end if;
    end;
 
+   procedure Write_Float_If_Exists
+     (
+      Stream : in out Util.Serialize.IO.JSON.Output_Stream;
+      JSON_Name : Unbounded_String;
+      CIF_Tag_Name : Unbounded_String;
+      CDA : Controlled_Datablock_Access
+     ) is
+   begin
+      Write_Float_If_Exists
+        (
+         Stream,
+         To_String (JSON_Name),
+         To_String (CIF_Tag_Name),
+         CDA
+        );
+   end;
+
+   procedure Write_Integer_If_Exists
+     (
+      Stream : in out Util.Serialize.IO.JSON.Output_Stream;
+      JSON_Name : String;
+      CIF_Tag_Name : String;
+      CDA : Controlled_Datablock_Access
+     ) is
+      Tag_Index : Integer := Get_Tag_Index (CDA, CIF_Tag_Name);
+   begin
+      if Tag_Index >= 0 then
+         Write_Entity
+           (
+            Stream, JSON_Name,
+            Get_Integer_Value (CDA, Tag_Index, 0)
+           );
+      end if;
+   end;
+
+   procedure Write_Integer_If_Exists
+     (
+      Stream : in out Util.Serialize.IO.JSON.Output_Stream;
+      JSON_Name : Unbounded_String;
+      CIF_Tag_Name : Unbounded_String;
+      CDA : Controlled_Datablock_Access
+     ) is
+   begin
+      Write_Integer_If_Exists
+        (
+         Stream,
+         To_String (JSON_Name),
+         To_String (CIF_Tag_Name),
+         CDA
+        );
+   end;
+
    type Access_All_String is access all String;
    
    type CIF_JSON_Mapping is record
@@ -82,23 +160,12 @@ package body Optimaiden_Structure_Handler is
       Make_Mapping ("_cod_gamma", "_cell_angle_gamma")
      );
       
-   procedure Write_Float_If_Exists
+   CIF_Integer_Value_Tags : constant array (Integer range <>) 
+     of CIF_JSON_Mapping :=
      (
-      Stream : in out Util.Serialize.IO.JSON.Output_Stream;
-      JSON_Name : Unbounded_String;
-      CIF_Tag_Name : Unbounded_String;
-      CDA : Controlled_Datablock_Access
-     ) is
-   begin
-      Write_Float_If_Exists
-        (
-         Stream,
-         To_String (JSON_Name),
-         To_String (CIF_Tag_Name),
-         CDA
-        );
-   end;
-
+      1 => Make_Mapping ("_cod_Z", "_cell_formula_units_Z")
+     );
+      
    procedure Write
      (
       Stream : out Util.Serialize.IO.JSON.Output_Stream;
@@ -122,6 +189,10 @@ package body Optimaiden_Structure_Handler is
          
          for M of CIF_Real_Value_Tags loop
             Write_Float_If_Exists (Stream, M.JSON_Name, M.CIF_Tag, CDA);
+         end loop;
+                         
+         for M of CIF_Integer_Value_Tags loop
+            Write_Integer_If_Exists (Stream, M.JSON_Name, M.CIF_Tag, CDA);
          end loop;
                          
          Stream.End_Entity ("attributes");
