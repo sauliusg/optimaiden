@@ -1,0 +1,24 @@
+project Cif_Print_Datablock_Names is
+
+    for Languages use ("Ada", "C");
+    for Create_Missing_Dirs use "True";
+    for Source_Dirs use (
+        "../externals/cif-streaming-parser/r137/trunk/src",
+        "../externals/cif-streaming-parser/r137/trunk/programs",
+        "../externals/cif-streaming-parser/r137/trunk/src/externals/cexceptions",
+        "../externals/cif-streaming-parser/r137/trunk/src/externals/codcif"
+    );
+    for Object_Dir use "../obj";
+    for Exec_Dir use "../bin";
+    for Main use ("cif_print_datablock_names.adb");
+
+    package Compiler is
+        for Default_Switches ("C")
+          use ("-fPIE", "-DHAS_VSNPRINTF");
+    end Compiler;
+
+    package Linker is
+        for Default_Switches ("Ada") use ("-lm");
+    end Linker;
+
+end Cif_Print_Datablock_Names;
