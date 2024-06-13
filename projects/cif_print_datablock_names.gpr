@@ -19,7 +19,7 @@ project Cif_Print_Datablock_Names is
           (
             -- Commenting out the "-Og" option since it causes STORAGE_ERROR
             -- exception:
-            "-Og", -- Optimize for debug
+            -- "-Og", -- Optimize for debug
             "-ffunction-sections" -- Separate ELF section for each function
             -- The following configuration section prevents the CIF Streaming Parser
             -- from correctly enqueing/dequeing the data blocks, the parser seems
