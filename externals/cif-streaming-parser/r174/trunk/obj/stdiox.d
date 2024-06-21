@@ -1,4 +1,0 @@
-stdiox.o: /home/saulius/src/cif-streaming-parser/trunk/src/externals/cexceptions/stdiox.c 20221228144759 \
-/home/saulius/src/cif-streaming-parser/trunk/src/externals/cexceptions/stdiox.h 20221228144759 \
-/home/saulius/src/cif-streaming-parser/trunk/src/externals/cexceptions/cexceptions.h 20221228144759 \
-/home/saulius/src/cif-streaming-parser/trunk/src/externals/cexceptions/cxprintf.h 20221228144759
