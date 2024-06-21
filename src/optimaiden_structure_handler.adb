@@ -67,6 +67,16 @@ package body Optimaiden_Structure_Handler is
       Stream.Write_Entity (Name, Beans_Object);
    end;
    
+   procedure Write_Entity
+     (
+      Stream : in out Util.Serialize.IO.JSON.Output_Stream;
+      Name   : in String;
+      Value  : in String
+     ) is
+   begin
+      Stream.Write_Entity (Name, Value);
+   end;
+   
    procedure Write_Float_If_Exists
      (
       Stream : in out Util.Serialize.IO.JSON.Output_Stream;
@@ -137,6 +147,41 @@ package body Optimaiden_Structure_Handler is
         );
    end;
 
+   procedure Write_String_If_Exists
+     (
+      Stream : in out Util.Serialize.IO.JSON.Output_Stream;
+      JSON_Name : String;
+      CIF_Tag_Name : String;
+      CDA : Controlled_Datablock
+     ) is
+      Tag_Index : Integer := Get_Tag_Index (CDA, CIF_Tag_Name);
+   begin
+      if Tag_Index >= 0 then
+         Write_Entity
+           (
+            Stream, JSON_Name,
+            Get_Tag_Value (CDA, Tag_Index, 0)
+           );
+      end if;
+   end;
+
+   procedure Write_String_If_Exists
+     (
+      Stream : in out Util.Serialize.IO.JSON.Output_Stream;
+      JSON_Name : Unbounded_String;
+      CIF_Tag_Name : Unbounded_String;
+      CDA : Controlled_Datablock
+     ) is
+   begin
+      Write_String_If_Exists
+        (
+         Stream,
+         To_String (JSON_Name),
+         To_String (CIF_Tag_Name),
+         CDA
+        );
+   end;
+
    type Access_All_String is access all String;
    
    type CIF_JSON_Mapping is record
@@ -165,6 +210,14 @@ package body Optimaiden_Structure_Handler is
      (
       -- all CIF tags, beeing case-insensitive, are coverted to lowercase:
       1 => Make_Mapping ("_cod_Z", "_cell_formula_units_z")
+     );
+      
+   CIF_String_Value_Tags : constant array (Integer range <>) 
+     of CIF_JSON_Mapping :=
+     (
+      Make_Mapping ("_cod_formula",        "_chemical_formula_sum"),
+      Make_Mapping ("_cod_formula_moiety", "_chemical_formula_moiety"),
+      Make_Mapping ("_cod_formula_iupac",  "_chemical_formula_iupac")
      );
       
    procedure Write
@@ -196,6 +249,10 @@ package body Optimaiden_Structure_Handler is
                          
          for M of CIF_Integer_Value_Tags loop
             Write_Integer_If_Exists (Stream, M.JSON_Name, M.CIF_Tag, CDA);
+         end loop;
+                         
+         for M of CIF_String_Value_Tags loop
+            Write_String_If_Exists (Stream, M.JSON_Name, M.CIF_Tag, CDA);
          end loop;
                          
          Stream.End_Entity ("attributes");
