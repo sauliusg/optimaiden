@@ -1,0 +1,169 @@
+#!/bin/sh
+#!perl -w # --*- Perl -*--
+eval 'exec perl -x $0 ${1+"$@"}'
+    if 0;
+#-----------------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2021-04-28 19:35:53 +0300 (Wed, 28 Apr 2021) $
+#$Revision: 8738 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/scripts/cif_split_primitive $
+#------------------------------------------------------------------------
+#*
+#* Split CIF files into separate files with one data_ section each.
+#*
+#* This is a very naive and primitive version of the splitter, which
+#* expects each data_... section to start on a new line. It may fail on
+#* some CIF files that do not follow such convention. For splitting of
+#* any correctly formatted CIF files, one must do full CIF parsing
+#* using CIF grammar and tokenisation of the file.
+#*
+#* USAGE:
+#*    $0 --options input1.cif input*.cif
+#**
+
+use strict;
+use warnings;
+use File::Basename qw( basename );
+use COD::SOptions qw( getOptions );
+use COD::SUsage qw( usage options );
+use COD::ErrorHandler qw( report_message );
+use COD::ToolsVersion qw( get_version_string );
+
+my $die_on_error_level = {
+    ERROR   => 1,
+    WARNING => 0,
+    NOTE    => 0
+};
+
+my $verbose = 1;
+my $output_dir = '';
+
+#* OPTIONS:
+#*   -o, --output-dir out/
+#*                     Put all split files into the directory out/
+#*                     (default: './').
+#*   -v, --verbose
+#*                     Print names of the generated files to STDERR.
+#*   -q, --quiet
+#*                     Do not print file names to STDERR.
+#*   --help, --usage
+#*                     Output a short usage message (this message) and exit.
+#*   --version
+#*                     Output version information and exit.
+#**
+@ARGV = getOptions(
+    '-o,--output-dir' => \$output_dir,
+    '-v,--verbose'    => sub { $verbose = 1 },
+    '-q,--quiet'      => sub { $verbose = 0 },
+
+    '--options'      => sub { options; exit },
+    '--help,--usage' => sub { usage; exit },
+    '--version'      => sub { print get_version_string(), "\n"; exit }
+);
+
+$output_dir =~ s./+$..;
+
+my $output_file;
+my $output_handle;
+my @initial_comments = ();
+my @data_global = ();
+my %files = ();
+my %has_end = ();
+my $global = 0;
+my $skip = 1;
+my $initial_comments = 1;
+my $data_id;
+
+while(<>) {
+
+    if( /^\s*\#|^\s*$/ && $initial_comments ) {
+        push @initial_comments, $_;
+        next;
+    }
+
+    $initial_comments = 0;
+
+    if( /^\s*data_global\s*$/ || /^\s*data_global\s+/ ) {
+        if( int(@data_global) == 0 ) {
+            push @data_global, $_;
+            $global = 1;
+            $skip = 0;
+        } else {
+            report_message( {
+                'program'   => $0,
+                'err_level' => 'WARNING',
+                'message'   => 'second data_global encountered -- skipping'
+            }, $die_on_error_level->{'WARNING'} );
+            $global = 1;
+            $skip = 1;
+        }
+        next;
+    }
+
+    if( /^\s*data_([^\s]+)/ ) {
+        $data_id = $1;
+        $data_id =~ s/^data_//;
+
+        $global = 0;
+        $skip = 0;
+
+        close $output_handle if $output_handle;
+
+        my $suffix = $data_id;
+        $suffix =~ s/[^-+._a-zA-Z0-9]/_/g;
+
+        my $basename = basename( $ARGV, '.cif' );
+        if( $basename ne '-' ) {
+            $output_file = basename( $ARGV, '.cif' ) . "_${suffix}" . '.cif';
+        } else {
+            $output_file = $suffix . '.cif';
+        }
+        if( $output_dir ne '' ) {
+            $output_file = $output_dir . '/' . $output_file;
+        }
+
+        if( !exists $files{$output_file} ) {
+            open $output_handle, '>', $output_file or
+                die "$0: $output_file: ERROR, could not open file for "
+                  . 'writing -- ' . lcfirst($!) . "\n";
+
+            $files{$output_file} = $output_file;
+
+            print "$output_file\n" if $verbose;
+            for ( @initial_comments, @data_global ) {
+                print $output_handle $_;
+            }
+        } else {
+            open $output_handle, '>>', $output_file or
+                die "$0: $output_file: ERROR, could not open file for"
+                  . 'appending -- ' . lcfirst($!) . "\n";
+
+            print "$output_file (appending)\n" if $verbose;
+        }
+    }
+
+    if( /^\s*\#=+END/ ) {
+        $has_end{$output_file} = 1;
+    }
+
+    if( $global == 1 && $skip == 0 ) {
+        push @data_global, $_;
+        next;
+    }
+
+    next if $skip;
+
+    print $output_handle $_;
+
+    if( eof ARGV ) {
+        $output_file = undef;
+        close $output_file if $output_file;
+        @data_global = ();
+        @initial_comments = ();
+        $global = 0;
+        $skip = 1;
+        $initial_comments = 1;
+    }
+}
+
+close $output_file if $output_file;

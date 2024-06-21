@@ -1,0 +1,764 @@
+Grammar
+
+    0 $accept: cif_file $end
+
+    1 cif_file: %empty
+    2         | data_block_list
+    3         | headerless_data_block
+    4         | headerless_data_block data_block_list
+    5         | stray_cif_value_list
+    6         | stray_cif_value_list data_block_list
+
+    7 stray_cif_value_list: cif_value
+    8                     | stray_cif_value_list cif_value
+
+    9 data_block_list: data_block_list data_block
+   10                | data_block
+
+   11 headerless_data_block: data_item
+
+   12 $@1: %empty
+
+   13 headerless_data_block: data_item $@1 data_item_list
+
+   14 data_block: data_block_head data_item_list
+   15           | data_block_head
+
+   16 data_item_list: data_item_list data_item
+   17               | data_item
+
+   18 data_block_head: _DATA_
+   19                | _DATA_ cif_value_list
+
+   20 data_item: save_item
+   21          | save_block
+
+   22 save_item_list: save_item_list save_item
+   23               | save_item
+
+   24 save_item: cif_entry
+   25          | loop
+
+   26 cif_entry: _TAG cif_value
+   27          | _TAG cif_value cif_value_list
+
+   28 cif_value_list: cif_value
+   29               | cif_value_list cif_value
+
+   30 $@2: %empty
+
+   31 loop: _LOOP_ $@2 loop_tags loop_values
+
+   32 loop_tags: loop_tags _TAG
+   33          | _TAG
+
+   34 loop_values: loop_values cif_value
+   35            | cif_value
+
+   36 $@3: %empty
+
+   37 save_block: _SAVE_HEAD $@3 save_item_list _SAVE_FOOT
+
+   38 cif_value: string
+   39          | number
+   40          | textfield
+
+   41 string: _SQSTRING
+   42       | _DQSTRING
+   43       | _UQSTRING
+
+   44 textfield: _TEXT_FIELD
+
+   45 number: _REAL_CONST
+   46       | _INTEGER_CONST
+
+
+Terminals, with rules where they appear
+
+    $end (0) 0
+    error (256)
+    _DATA_ <s> (258) 18 19
+    _SAVE_HEAD <s> (259) 37
+    _SAVE_FOOT (260) 37
+    _TAG <s> (261) 26 27 32 33
+    _LOOP_ <s> (262) 31
+    _DQSTRING <s> (263) 42
+    _SQSTRING <s> (264) 41
+    _UQSTRING <s> (265) 43
+    _TEXT_FIELD <s> (266) 44
+    _INTEGER_CONST <s> (267) 46
+    _REAL_CONST <s> (268) 45
+
+
+Nonterminals, with rules where they appear
+
+    $accept (14)
+        on left: 0
+    cif_file (15)
+        on left: 1 2 3 4 5 6
+        on right: 0
+    stray_cif_value_list (16)
+        on left: 7 8
+        on right: 5 6 8
+    data_block_list (17)
+        on left: 9 10
+        on right: 2 4 6 9
+    headerless_data_block (18)
+        on left: 11 13
+        on right: 3 4
+    $@1 (19)
+        on left: 12
+        on right: 13
+    data_block (20)
+        on left: 14 15
+        on right: 9 10
+    data_item_list (21)
+        on left: 16 17
+        on right: 13 14 16
+    data_block_head <s> (22)
+        on left: 18 19
+        on right: 14 15
+    data_item (23)
+        on left: 20 21
+        on right: 11 13 16 17
+    save_item_list (24)
+        on left: 22 23
+        on right: 22 37
+    save_item (25)
+        on left: 24 25
+        on right: 20 22 23
+    cif_entry (26)
+        on left: 26 27
+        on right: 24
+    cif_value_list <typed_value> (27)
+        on left: 28 29
+        on right: 19 27 29
+    loop (28)
+        on left: 31
+        on right: 25
+    $@2 (29)
+        on left: 30
+        on right: 31
+    loop_tags (30)
+        on left: 32 33
+        on right: 31 32
+    loop_values (31)
+        on left: 34 35
+        on right: 31 34
+    save_block (32)
+        on left: 37
+        on right: 21
+    $@3 (33)
+        on left: 36
+        on right: 37
+    cif_value <typed_value> (34)
+        on left: 38 39 40
+        on right: 7 8 26 27 28 29 34 35
+    string <typed_value> (35)
+        on left: 41 42 43
+        on right: 38
+    textfield <typed_value> (36)
+        on left: 44
+        on right: 40
+    number <typed_value> (37)
+        on left: 45 46
+        on right: 39
+
+
+State 0
+
+    0 $accept: . cif_file $end
+
+    _DATA_          shift, and go to state 1
+    _SAVE_HEAD      shift, and go to state 2
+    _TAG            shift, and go to state 3
+    _LOOP_          shift, and go to state 4
+    _DQSTRING       shift, and go to state 5
+    _SQSTRING       shift, and go to state 6
+    _UQSTRING       shift, and go to state 7
+    _TEXT_FIELD     shift, and go to state 8
+    _INTEGER_CONST  shift, and go to state 9
+    _REAL_CONST     shift, and go to state 10
+
+    $default  reduce using rule 1 (cif_file)
+
+    cif_file               go to state 11
+    stray_cif_value_list   go to state 12
+    data_block_list        go to state 13
+    headerless_data_block  go to state 14
+    data_block             go to state 15
+    data_block_head        go to state 16
+    data_item              go to state 17
+    save_item              go to state 18
+    cif_entry              go to state 19
+    loop                   go to state 20
+    save_block             go to state 21
+    cif_value              go to state 22
+    string                 go to state 23
+    textfield              go to state 24
+    number                 go to state 25
+
+
+State 1
+
+   18 data_block_head: _DATA_ .
+   19                | _DATA_ . cif_value_list
+
+    _DQSTRING       shift, and go to state 5
+    _SQSTRING       shift, and go to state 6
+    _UQSTRING       shift, and go to state 7
+    _TEXT_FIELD     shift, and go to state 8
+    _INTEGER_CONST  shift, and go to state 9
+    _REAL_CONST     shift, and go to state 10
+
+    $default  reduce using rule 18 (data_block_head)
+
+    cif_value_list  go to state 26
+    cif_value       go to state 27
+    string          go to state 23
+    textfield       go to state 24
+    number          go to state 25
+
+
+State 2
+
+   37 save_block: _SAVE_HEAD . $@3 save_item_list _SAVE_FOOT
+
+    $default  reduce using rule 36 ($@3)
+
+    $@3  go to state 28
+
+
+State 3
+
+   26 cif_entry: _TAG . cif_value
+   27          | _TAG . cif_value cif_value_list
+
+    _DQSTRING       shift, and go to state 5
+    _SQSTRING       shift, and go to state 6
+    _UQSTRING       shift, and go to state 7
+    _TEXT_FIELD     shift, and go to state 8
+    _INTEGER_CONST  shift, and go to state 9
+    _REAL_CONST     shift, and go to state 10
+
+    cif_value  go to state 29
+    string     go to state 23
+    textfield  go to state 24
+    number     go to state 25
+
+
+State 4
+
+   31 loop: _LOOP_ . $@2 loop_tags loop_values
+
+    $default  reduce using rule 30 ($@2)
+
+    $@2  go to state 30
+
+
+State 5
+
+   42 string: _DQSTRING .
+
+    $default  reduce using rule 42 (string)
+
+
+State 6
+
+   41 string: _SQSTRING .
+
+    $default  reduce using rule 41 (string)
+
+
+State 7
+
+   43 string: _UQSTRING .
+
+    $default  reduce using rule 43 (string)
+
+
+State 8
+
+   44 textfield: _TEXT_FIELD .
+
+    $default  reduce using rule 44 (textfield)
+
+
+State 9
+
+   46 number: _INTEGER_CONST .
+
+    $default  reduce using rule 46 (number)
+
+
+State 10
+
+   45 number: _REAL_CONST .
+
+    $default  reduce using rule 45 (number)
+
+
+State 11
+
+    0 $accept: cif_file . $end
+
+    $end  shift, and go to state 31
+
+
+State 12
+
+    5 cif_file: stray_cif_value_list .
+    6         | stray_cif_value_list . data_block_list
+    8 stray_cif_value_list: stray_cif_value_list . cif_value
+
+    _DATA_          shift, and go to state 1
+    _DQSTRING       shift, and go to state 5
+    _SQSTRING       shift, and go to state 6
+    _UQSTRING       shift, and go to state 7
+    _TEXT_FIELD     shift, and go to state 8
+    _INTEGER_CONST  shift, and go to state 9
+    _REAL_CONST     shift, and go to state 10
+
+    $default  reduce using rule 5 (cif_file)
+
+    data_block_list  go to state 32
+    data_block       go to state 15
+    data_block_head  go to state 16
+    cif_value        go to state 33
+    string           go to state 23
+    textfield        go to state 24
+    number           go to state 25
+
+
+State 13
+
+    2 cif_file: data_block_list .
+    9 data_block_list: data_block_list . data_block
+
+    _DATA_  shift, and go to state 1
+
+    $default  reduce using rule 2 (cif_file)
+
+    data_block       go to state 34
+    data_block_head  go to state 16
+
+
+State 14
+
+    3 cif_file: headerless_data_block .
+    4         | headerless_data_block . data_block_list
+
+    _DATA_  shift, and go to state 1
+
+    $default  reduce using rule 3 (cif_file)
+
+    data_block_list  go to state 35
+    data_block       go to state 15
+    data_block_head  go to state 16
+
+
+State 15
+
+   10 data_block_list: data_block .
+
+    $default  reduce using rule 10 (data_block_list)
+
+
+State 16
+
+   14 data_block: data_block_head . data_item_list
+   15           | data_block_head .
+
+    _SAVE_HEAD  shift, and go to state 2
+    _TAG        shift, and go to state 3
+    _LOOP_      shift, and go to state 4
+
+    $default  reduce using rule 15 (data_block)
+
+    data_item_list  go to state 36
+    data_item       go to state 37
+    save_item       go to state 18
+    cif_entry       go to state 19
+    loop            go to state 20
+    save_block      go to state 21
+
+
+State 17
+
+   11 headerless_data_block: data_item .
+   13                      | data_item . $@1 data_item_list
+
+    $end      reduce using rule 11 (headerless_data_block)
+    _DATA_    reduce using rule 11 (headerless_data_block)
+    $default  reduce using rule 12 ($@1)
+
+    $@1  go to state 38
+
+
+State 18
+
+   20 data_item: save_item .
+
+    $default  reduce using rule 20 (data_item)
+
+
+State 19
+
+   24 save_item: cif_entry .
+
+    $default  reduce using rule 24 (save_item)
+
+
+State 20
+
+   25 save_item: loop .
+
+    $default  reduce using rule 25 (save_item)
+
+
+State 21
+
+   21 data_item: save_block .
+
+    $default  reduce using rule 21 (data_item)
+
+
+State 22
+
+    7 stray_cif_value_list: cif_value .
+
+    $default  reduce using rule 7 (stray_cif_value_list)
+
+
+State 23
+
+   38 cif_value: string .
+
+    $default  reduce using rule 38 (cif_value)
+
+
+State 24
+
+   40 cif_value: textfield .
+
+    $default  reduce using rule 40 (cif_value)
+
+
+State 25
+
+   39 cif_value: number .
+
+    $default  reduce using rule 39 (cif_value)
+
+
+State 26
+
+   19 data_block_head: _DATA_ cif_value_list .
+   29 cif_value_list: cif_value_list . cif_value
+
+    _DQSTRING       shift, and go to state 5
+    _SQSTRING       shift, and go to state 6
+    _UQSTRING       shift, and go to state 7
+    _TEXT_FIELD     shift, and go to state 8
+    _INTEGER_CONST  shift, and go to state 9
+    _REAL_CONST     shift, and go to state 10
+
+    $default  reduce using rule 19 (data_block_head)
+
+    cif_value  go to state 39
+    string     go to state 23
+    textfield  go to state 24
+    number     go to state 25
+
+
+State 27
+
+   28 cif_value_list: cif_value .
+
+    $default  reduce using rule 28 (cif_value_list)
+
+
+State 28
+
+   37 save_block: _SAVE_HEAD $@3 . save_item_list _SAVE_FOOT
+
+    _TAG    shift, and go to state 3
+    _LOOP_  shift, and go to state 4
+
+    save_item_list  go to state 40
+    save_item       go to state 41
+    cif_entry       go to state 19
+    loop            go to state 20
+
+
+State 29
+
+   26 cif_entry: _TAG cif_value .
+   27          | _TAG cif_value . cif_value_list
+
+    _DQSTRING       shift, and go to state 5
+    _SQSTRING       shift, and go to state 6
+    _UQSTRING       shift, and go to state 7
+    _TEXT_FIELD     shift, and go to state 8
+    _INTEGER_CONST  shift, and go to state 9
+    _REAL_CONST     shift, and go to state 10
+
+    $default  reduce using rule 26 (cif_entry)
+
+    cif_value_list  go to state 42
+    cif_value       go to state 27
+    string          go to state 23
+    textfield       go to state 24
+    number          go to state 25
+
+
+State 30
+
+   31 loop: _LOOP_ $@2 . loop_tags loop_values
+
+    _TAG  shift, and go to state 43
+
+    loop_tags  go to state 44
+
+
+State 31
+
+    0 $accept: cif_file $end .
+
+    $default  accept
+
+
+State 32
+
+    6 cif_file: stray_cif_value_list data_block_list .
+    9 data_block_list: data_block_list . data_block
+
+    _DATA_  shift, and go to state 1
+
+    $default  reduce using rule 6 (cif_file)
+
+    data_block       go to state 34
+    data_block_head  go to state 16
+
+
+State 33
+
+    8 stray_cif_value_list: stray_cif_value_list cif_value .
+
+    $default  reduce using rule 8 (stray_cif_value_list)
+
+
+State 34
+
+    9 data_block_list: data_block_list data_block .
+
+    $default  reduce using rule 9 (data_block_list)
+
+
+State 35
+
+    4 cif_file: headerless_data_block data_block_list .
+    9 data_block_list: data_block_list . data_block
+
+    _DATA_  shift, and go to state 1
+
+    $default  reduce using rule 4 (cif_file)
+
+    data_block       go to state 34
+    data_block_head  go to state 16
+
+
+State 36
+
+   14 data_block: data_block_head data_item_list .
+   16 data_item_list: data_item_list . data_item
+
+    _SAVE_HEAD  shift, and go to state 2
+    _TAG        shift, and go to state 3
+    _LOOP_      shift, and go to state 4
+
+    $default  reduce using rule 14 (data_block)
+
+    data_item   go to state 45
+    save_item   go to state 18
+    cif_entry   go to state 19
+    loop        go to state 20
+    save_block  go to state 21
+
+
+State 37
+
+   17 data_item_list: data_item .
+
+    $default  reduce using rule 17 (data_item_list)
+
+
+State 38
+
+   13 headerless_data_block: data_item $@1 . data_item_list
+
+    _SAVE_HEAD  shift, and go to state 2
+    _TAG        shift, and go to state 3
+    _LOOP_      shift, and go to state 4
+
+    data_item_list  go to state 46
+    data_item       go to state 37
+    save_item       go to state 18
+    cif_entry       go to state 19
+    loop            go to state 20
+    save_block      go to state 21
+
+
+State 39
+
+   29 cif_value_list: cif_value_list cif_value .
+
+    $default  reduce using rule 29 (cif_value_list)
+
+
+State 40
+
+   22 save_item_list: save_item_list . save_item
+   37 save_block: _SAVE_HEAD $@3 save_item_list . _SAVE_FOOT
+
+    _SAVE_FOOT  shift, and go to state 47
+    _TAG        shift, and go to state 3
+    _LOOP_      shift, and go to state 4
+
+    save_item  go to state 48
+    cif_entry  go to state 19
+    loop       go to state 20
+
+
+State 41
+
+   23 save_item_list: save_item .
+
+    $default  reduce using rule 23 (save_item_list)
+
+
+State 42
+
+   27 cif_entry: _TAG cif_value cif_value_list .
+   29 cif_value_list: cif_value_list . cif_value
+
+    _DQSTRING       shift, and go to state 5
+    _SQSTRING       shift, and go to state 6
+    _UQSTRING       shift, and go to state 7
+    _TEXT_FIELD     shift, and go to state 8
+    _INTEGER_CONST  shift, and go to state 9
+    _REAL_CONST     shift, and go to state 10
+
+    $default  reduce using rule 27 (cif_entry)
+
+    cif_value  go to state 39
+    string     go to state 23
+    textfield  go to state 24
+    number     go to state 25
+
+
+State 43
+
+   33 loop_tags: _TAG .
+
+    $default  reduce using rule 33 (loop_tags)
+
+
+State 44
+
+   31 loop: _LOOP_ $@2 loop_tags . loop_values
+   32 loop_tags: loop_tags . _TAG
+
+    _TAG            shift, and go to state 49
+    _DQSTRING       shift, and go to state 5
+    _SQSTRING       shift, and go to state 6
+    _UQSTRING       shift, and go to state 7
+    _TEXT_FIELD     shift, and go to state 8
+    _INTEGER_CONST  shift, and go to state 9
+    _REAL_CONST     shift, and go to state 10
+
+    loop_values  go to state 50
+    cif_value    go to state 51
+    string       go to state 23
+    textfield    go to state 24
+    number       go to state 25
+
+
+State 45
+
+   16 data_item_list: data_item_list data_item .
+
+    $default  reduce using rule 16 (data_item_list)
+
+
+State 46
+
+   13 headerless_data_block: data_item $@1 data_item_list .
+   16 data_item_list: data_item_list . data_item
+
+    _SAVE_HEAD  shift, and go to state 2
+    _TAG        shift, and go to state 3
+    _LOOP_      shift, and go to state 4
+
+    $default  reduce using rule 13 (headerless_data_block)
+
+    data_item   go to state 45
+    save_item   go to state 18
+    cif_entry   go to state 19
+    loop        go to state 20
+    save_block  go to state 21
+
+
+State 47
+
+   37 save_block: _SAVE_HEAD $@3 save_item_list _SAVE_FOOT .
+
+    $default  reduce using rule 37 (save_block)
+
+
+State 48
+
+   22 save_item_list: save_item_list save_item .
+
+    $default  reduce using rule 22 (save_item_list)
+
+
+State 49
+
+   32 loop_tags: loop_tags _TAG .
+
+    $default  reduce using rule 32 (loop_tags)
+
+
+State 50
+
+   31 loop: _LOOP_ $@2 loop_tags loop_values .
+   34 loop_values: loop_values . cif_value
+
+    _DQSTRING       shift, and go to state 5
+    _SQSTRING       shift, and go to state 6
+    _UQSTRING       shift, and go to state 7
+    _TEXT_FIELD     shift, and go to state 8
+    _INTEGER_CONST  shift, and go to state 9
+    _REAL_CONST     shift, and go to state 10
+
+    $default  reduce using rule 31 (loop)
+
+    cif_value  go to state 52
+    string     go to state 23
+    textfield  go to state 24
+    number     go to state 25
+
+
+State 51
+
+   35 loop_values: cif_value .
+
+    $default  reduce using rule 35 (loop_values)
+
+
+State 52
+
+   34 loop_values: loop_values cif_value .
+
+    $default  reduce using rule 34 (loop_values)

@@ -1,0 +1,150 @@
+cif_streaming_parser.adb:1:06: warning: redundant with clause in body [-gnatwr]
+cif_streaming_parser.adb:1:22: warning: "Containers" is already use-visible through previous use_clause at cif_streaming_parser.ads:1 [-gnatwr]
+cif_streaming_parser.adb:1:22: warning: use clause for package "Containers" has no effect [-gnatwu]
+cif_streaming_parser.adb:2:06: warning: redundant with clause in body [-gnatwr]
+cif_streaming_parser.adb:2:29: warning: "Unbounded" is already use-visible through previous use_clause at cif_streaming_parser.ads:2 [-gnatwr]
+cif_streaming_parser.adb:2:29: warning: use clause for package "Unbounded" has no effect [-gnatwu]
+cif_streaming_parser.adb:3:09: warning: no entities of "Ada.Text_IO" are referenced [-gnatwu]
+cif_streaming_parser.adb:3:19: warning: use clause for package "Text_IO" has no effect [-gnatwu]
+cif_streaming_parser.adb:4:06: warning: redundant with clause in body [-gnatwr]
+cif_streaming_parser.adb:4:23: warning: "CExceptions_Ada" is already use-visible through previous use_clause at cif_streaming_parser.ads:3 [-gnatwr]
+cif_streaming_parser.adb:4:23: warning: use clause for package "CExceptions_Ada" has no effect [-gnatwu]
+cif_streaming_parser.adb:5:06: warning: redundant with clause in body [-gnatwr]
+cif_streaming_parser.adb:5:23: warning: "Cif_Options_Ada" is already use-visible through previous use_clause at cif_streaming_parser.ads:4 [-gnatwr]
+cif_streaming_parser.adb:5:23: warning: use clause for package "Cif_Options_Ada" has no effect [-gnatwu]
+cif_streaming_parser.adb:7:06: warning: redundant with clause in body [-gnatwr]
+cif_streaming_parser.adb:7:20: warning: "C" is already use-visible through previous use_clause at cif_streaming_parser.ads:7 [-gnatwr]
+cif_streaming_parser.adb:7:20: warning: use clause for package "C" has no effect [-gnatwu]
+cif_streaming_parser.adb:8:06: warning: redundant with clause in body [-gnatwr]
+cif_streaming_parser.adb:8:18: warning: no entities of "Interfaces.C.Strings" are referenced [-gnatwu]
+cif_streaming_parser.adb:8:28: warning: "Strings" is already use-visible through previous use_clause at cif_streaming_parser.ads:8 [-gnatwr]
+cif_streaming_parser.adb:8:28: warning: use clause for package "Strings" has no effect [-gnatwu]
+cif_streaming_parser.adb:12:03: (style) bad indentation
+cif_streaming_parser.adb:14:03: (style) bad indentation
+cif_streaming_parser.adb:19:03: (style) bad indentation
+cif_streaming_parser.adb:20:06: (style) bad indentation
+cif_streaming_parser.adb:21:06: (style) bad indentation
+cif_streaming_parser.adb:22:06: (style) bad indentation
+cif_streaming_parser.adb:22:06: warning: variable "Task_Error_Code_Access" is assigned but never read [-gnatwm]
+cif_streaming_parser.adb:23:03: (style) bad indentation
+cif_streaming_parser.adb:30:06: (style) bad indentation
+cif_streaming_parser.adb:31:06: (style) bad indentation
+cif_streaming_parser.adb:32:06: (style) bad indentation
+cif_streaming_parser.adb:33:09: (style) bad indentation
+cif_streaming_parser.adb:34:49: (style) "in" should be omitted
+cif_streaming_parser.adb:35:48: (style) "in" should be omitted
+cif_streaming_parser.adb:36:15: (style) bad indentation
+cif_streaming_parser.adb:37:15: (style) bad indentation
+cif_streaming_parser.adb:38:15: (style) bad indentation
+cif_streaming_parser.adb:39:12: (style) bad indentation
+cif_streaming_parser.adb:40:12: (style) bad indentation
+cif_streaming_parser.adb:41:15: (style) bad indentation
+cif_streaming_parser.adb:41:15: warning: "Filename_Char_Array" is not modified, could be declared constant [-gnatwk]
+cif_streaming_parser.adb:41:103: (style) bad casing of "True" declared in Standard
+cif_streaming_parser.adb:42:12: (style) bad indentation
+cif_streaming_parser.adb:43:15: (style) bad indentation
+cif_streaming_parser.adb:44:12: (style) bad indentation
+cif_streaming_parser.adb:45:09: (style) bad indentation
+cif_streaming_parser.adb:48:06: (style) bad indentation
+cif_streaming_parser.adb:49:03: (style) bad indentation
+cif_streaming_parser.adb:51:03: (style) bad indentation
+cif_streaming_parser.adb:52:03: (style) bad indentation
+cif_streaming_parser.adb:53:05: (style) bad indentation
+cif_streaming_parser.adb:54:03: (style) bad indentation
+cif_streaming_parser.adb:56:03: (style) bad indentation
+cif_streaming_parser.adb:57:03: (style) bad indentation
+cif_streaming_parser.adb:58:05: (style) bad indentation
+cif_streaming_parser.adb:59:03: (style) bad indentation
+cif_streaming_parser.adb:60:01: (style) trailing spaces not permitted
+cif_streaming_parser.adb:61:03: (style) bad indentation
+cif_streaming_parser.adb:62:03: (style) bad indentation
+cif_streaming_parser.adb:63:05: (style) bad indentation
+cif_streaming_parser.adb:64:03: (style) bad indentation
+cif_streaming_parser.adb:66:03: (style) bad indentation
+cif_streaming_parser.adb:66:03: warning: variable "Error_Code" is not referenced [-gnatwu]
+cif_streaming_parser.adb:67:01: (style) trailing spaces not permitted
+cif_streaming_parser.adb:68:03: (style) bad indentation
+cif_streaming_parser.adb:69:06: (style) bad indentation
+cif_streaming_parser.adb:70:03: (style) bad indentation
+cif_streaming_parser.adb:71:06: (style) bad indentation
+cif_streaming_parser.adb:72:06: (style) bad indentation
+cif_streaming_parser.adb:73:03: (style) bad indentation
+cif_streaming_parser.adb:75:03: (style) bad indentation
+cif_streaming_parser.adb:76:37: (style) "in" should be omitted
+cif_streaming_parser.adb:77:06: (style) bad indentation
+cif_streaming_parser.adb:78:03: (style) bad indentation
+cif_streaming_parser.adb:79:06: (style) bad indentation
+cif_streaming_parser.adb:80:01: (style) trailing spaces not permitted
+cif_streaming_parser.adb:81:06: (style) bad indentation
+cif_streaming_parser.adb:82:06: (style) bad indentation
+cif_streaming_parser.adb:83:01: (style) trailing spaces not permitted
+cif_streaming_parser.adb:84:05: (style) bad indentation
+cif_streaming_parser.adb:87:03: (style) bad indentation
+cif_streaming_parser.adb:89:03: (style) bad indentation
+cif_streaming_parser.adb:91:03: (style) bad indentation
+cif_streaming_parser.adb:92:05: (style) bad indentation
+cif_streaming_parser.adb:93:01: (style) trailing spaces not permitted
+cif_streaming_parser.adb:94:05: (style) bad indentation
+cif_streaming_parser.adb:95:01: (style) trailing spaces not permitted
+cif_streaming_parser.adb:96:05: (style) bad indentation
+cif_streaming_parser.adb:99:03: (style) bad indentation
+cif_streaming_parser.adb:101:03: (style) bad indentation
+cif_streaming_parser.adb:103:03: (style) bad indentation
+cif_streaming_parser.adb:104:05: (style) bad indentation
+cif_streaming_parser.adb:105:03: (style) bad indentation
+cif_streaming_parser.adb:107:03: (style) bad indentation
+cif_streaming_parser.adb:108:03: (style) bad indentation
+cif_streaming_parser.adb:109:05: (style) bad indentation
+cif_streaming_parser.adb:110:03: (style) bad indentation
+cif_streaming_parser.adb:112:03: (style) bad indentation
+cif_streaming_parser.adb:113:03: (style) bad indentation
+cif_streaming_parser.adb:114:05: (style) bad indentation
+cif_streaming_parser.adb:115:05: (style) bad indentation
+cif_streaming_parser.adb:116:03: (style) bad indentation
+cif_streaming_parser.adb:118:03: (style) bad indentation
+cif_streaming_parser.adb:119:03: (style) bad indentation
+cif_streaming_parser.adb:120:05: (style) bad indentation
+cif_streaming_parser.adb:121:03: (style) bad indentation
+cif_streaming_parser.adb:123:03: (style) bad indentation
+cif_streaming_parser.adb:124:05: (style) bad indentation
+cif_streaming_parser.adb:125:03: (style) bad indentation
+cif_streaming_parser.adb:126:05: (style) bad indentation
+cif_streaming_parser.adb:128:05: (style) bad indentation
+cif_streaming_parser.adb:129:03: (style) bad indentation
+cif_streaming_parser.adb:131:03: (style) bad indentation
+cif_streaming_parser.adb:132:05: (style) bad indentation
+cif_streaming_parser.adb:133:03: (style) bad indentation
+cif_streaming_parser.adb:134:05: (style) bad indentation
+cif_streaming_parser.adb:136:05: (style) bad indentation
+cif_streaming_parser.adb:137:03: (style) bad indentation
+cif_streaming_parser.ads:6:23: warning: use clause for package "Datablock_Queue" has no effect [-gnatwu]
+cif_streaming_parser.ads:8:18: warning: no entities of "Interfaces.C.Strings" are referenced [-gnatwu]
+cif_streaming_parser.ads:8:28: warning: use clause for package "Strings" has no effect [-gnatwu]
+cif_streaming_parser.ads:12:03: (style) bad indentation
+cif_streaming_parser.ads:14:03: (style) bad indentation
+cif_streaming_parser.ads:16:03: (style) bad indentation
+cif_streaming_parser.ads:19:03: (style) bad indentation
+cif_streaming_parser.ads:22:03: (style) bad indentation
+cif_streaming_parser.ads:23:01: (style) trailing spaces not permitted
+cif_streaming_parser.ads:24:03: (style) bad indentation
+cif_streaming_parser.ads:25:37: (style) "in" should be omitted
+cif_streaming_parser.ads:26:03: (style) bad indentation
+cif_streaming_parser.ads:29:03: (style) bad indentation
+cif_streaming_parser.ads:32:03: (style) bad indentation
+cif_streaming_parser.ads:34:03: (style) bad indentation
+cif_streaming_parser.ads:36:03: (style) bad indentation
+cif_streaming_parser.ads:39:03: (style) bad indentation
+cif_streaming_parser.ads:41:03: (style) bad indentation
+cif_streaming_parser.ads:44:01: (style) trailing spaces not permitted
+cif_streaming_parser.ads:45:03: (style) bad indentation
+cif_streaming_parser.ads:46:68: (style) trailing spaces not permitted
+cif_streaming_parser.ads:51:03: (style) bad indentation
+cif_streaming_parser.ads:56:03: (style) bad indentation
+cif_streaming_parser.ads:60:01: (style) trailing spaces not permitted
+cif_streaming_parser.ads:61:03: (style) bad indentation
+cif_streaming_parser.ads:65:01: (style) trailing spaces not permitted
+cif_streaming_parser.ads:66:03: (style) bad indentation
+cif_streaming_parser.ads:70:01: (style) trailing spaces not permitted
+cif_streaming_parser.ads:71:03: (style) bad indentation
+cif_streaming_parser.ads:75:01: (style) trailing spaces not permitted
+cif_streaming_parser.ads:76:03: (style) bad indentation

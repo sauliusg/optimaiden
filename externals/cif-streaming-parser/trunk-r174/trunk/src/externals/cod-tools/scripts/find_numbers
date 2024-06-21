@@ -1,0 +1,212 @@
+#! /bin/sh
+#!perl -w # --*- Perl -*--
+eval 'exec perl -x $0 ${1+"$@"}'
+    if 0;
+#------------------------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2020-09-29 10:54:47 +0300 (Tue, 29 Sep 2020) $
+#$Revision: 8533 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/scripts/find_numbers $
+#------------------------------------------------------------------------------
+#*
+#* Find COD numbers for the .cif files in given directories of file lists.
+#*
+#* USAGE:
+#*    $0 my-cif-dir1/ my-cif-dir2/files*.cif COD-cif-dir/
+#* USAGE:
+#*    $0 input1.cif input1_alt.cif
+#**
+
+use strict;
+use warnings;
+use COD::CIF::Data::CODNumbers qw( cif_fill_data
+                                   entries_are_the_same );
+use COD::CIF::Parser qw( parse_cif );
+use COD::CIF::Tags::CanonicalNames qw( canonicalize_all_names );
+use COD::ErrorHandler qw( process_warnings
+                          process_errors
+                          process_parser_messages
+                          report_message );
+use COD::SOptions qw( getOptions );
+use COD::SUsage qw( usage );
+use COD::ToolsVersion qw( get_version_string );
+
+my $die_on_error_level = {
+    'ERROR'   => 1,
+    'WARNING' => 0,
+    'NOTE'    => 0
+};
+
+#* OPTIONS:
+#*   --help, --usage
+#*                     Output a short usage message (this message) and exit.
+#*   --version
+#*                     Output version information and exit.
+#**
+@ARGV = getOptions(
+    '--help,--usage' => sub { usage; exit },
+    '--version'      => sub { print get_version_string(), "\n"; exit }
+);
+
+my $check_bibliography = 1;
+
+my $max_cell_length_diff = 0.5; # Angstroems
+my $max_cell_angle_diff  = 1.2; # degrees
+
+my %has_numeric_value = (
+    '_journal_year'   => 1,
+    '_journal_volume' => 1,
+    '_journal_issue'  => 1,
+);
+
+my %skip_tag = (
+    '_journal_name_full' => 0,
+);
+
+my %COD = ();
+
+if( @ARGV < 2 ) {
+    report_message( {
+        'program'   => $0,
+        'err_level' => 'ERROR',
+        'message'   => 'please supply at least two directory names on the '
+                     . 'command line -- names of directories with the '
+                     . 'analysed CIF files come first and the name of the '
+                     . 'directory with COD CIF files comes last'
+    }, 1 );
+}
+
+my $COD_cif_dir = pop @ARGV;
+my @COD_cif_files = `find $COD_cif_dir -name "*.cif" -o -name "*.CIF"`;
+
+do {
+    print int @COD_cif_files . "\n";
+    print "@COD_cif_files";
+} if 0;
+
+for my $file (sort @COD_cif_files) {
+
+    local $SIG{__WARN__} = sub {
+        process_warnings( {
+            'message'  => @_,
+            'program'  => $0,
+            'filename' => $file,
+        }, $die_on_error_level )
+    };
+
+    chomp $file;
+    my %structures = ();
+    eval {
+        my $structures = structures_from_cif_file( $file );
+        %structures = %$structures;
+    }; # end of eval
+    if ($@) {
+        process_errors( {
+          'program'       => $0,
+          'filename'      => $file,
+          'message'       => $@,
+        }, $die_on_error_level->{'ERROR'} )
+    };
+
+    for my $id (sort keys %structures) {
+        my $formula = $structures{$id}{chemical_formula_sum};
+
+        $formula = '?' unless defined $formula;
+
+        push( @{$COD{$formula}}, $structures{$id} );
+    }
+}
+
+do {
+    use COD::Serialise qw( serialiseRef );
+    serialiseRef( \%COD );
+} if 0;
+
+#------------------------------------------------------------------------------
+
+my @cif_files = `find @ARGV -name "*.cif" -o -name "*.CIF"`;
+
+for my $file (sort @cif_files) {
+
+    local $SIG{__WARN__} = sub {
+        process_warnings( {
+            'message'  => @_,
+            'program'  => $0,
+            'filename' => $file,
+        }, $die_on_error_level )
+    };
+
+    chomp $file;
+    my %structures = ();
+    eval {
+        my $structures = structures_from_cif_file( $file );
+        %structures = %$structures;
+    }; # end of eval
+    if ($@) {
+        process_errors( {
+          'program'       => $0,
+          'filename'      => $file,
+          'message'       => $@,
+        }, $die_on_error_level->{'ERROR'} )
+    };
+
+    for my $id (sort keys %structures) {
+        my $formula = $structures{$id}{chemical_formula_sum};
+
+        $formula = '?' unless defined $formula;
+
+        my $final_formula = $formula;
+        $final_formula =~ s/\s/_/g;
+
+        my $n = 0;
+        if( defined $COD{$formula} ) {
+            for my $COD_entry (@{$COD{$formula}}) {
+                if( entries_are_the_same( $structures{$id},
+                                          $COD_entry,
+                                          {  check_bibliography =>
+                                            $check_bibliography } ) ) {
+                    $n++;
+                }
+            }
+        }
+        if( $n > 0 ) {
+            for my $COD_entry (@{$COD{$formula}}) {
+                if( entries_are_the_same( $structures{$id},
+                                          $COD_entry,
+                                          {  check_bibliography =>
+                                            $check_bibliography } ) ) {
+                    printf
+                        "%-35s %15s %3d %s\n",
+                        $final_formula,
+                        $COD_entry->{filename}, $n, $file;
+                }
+            }
+        } else {
+            printf "%-35s %15s %3d %s\n", $final_formula, '?', 0, $file;
+        }
+    }
+
+}
+
+#------------------------------------------------------------------------------
+
+sub structures_from_cif_file
+{
+    my( $filename ) = @_;
+
+    my $options = { 'no_print' => 1 };
+    my ( $data, $err_count, $messages ) = parse_cif( $filename, $options );
+    process_parser_messages( $messages, $die_on_error_level );
+
+    return {} if $err_count > 0;
+
+    canonicalize_all_names( $data );
+
+    my %structures;
+    for my $datablock (@$data) {
+        my $structure = cif_fill_data( $datablock, $filename );
+        $structures{$datablock->{name}} = $structure;
+    }
+
+    return \%structures;
+}

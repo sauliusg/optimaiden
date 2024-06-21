@@ -1,0 +1,45 @@
+data_1011060_cif_fillcell
+_space_group_IT_number           1
+_space_group_name_Hall           'P 1'
+_space_group_name_H-M_alt        'P 1'
+_cell_angle_alpha                90
+_cell_angle_beta                 90
+_cell_angle_gamma                120
+_cell_length_a                   2.47
+_cell_length_b                   2.47
+_cell_length_c                   6.79
+loop_
+_space_group_symop_id
+_space_group_symop_operation_xyz
+1 'x, y, z'
+loop_
+_atom_site_label
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_calc_flag
+C1 0 0 0 1. d
+C2 0.3333 0.6667 0.005 1. d
+C1_2_555 0 0 0 1. d
+C2_2_555 0.3333 0.6666 0.005 1. d
+C1_3_555 0 0 0 1. d
+C2_3_555 0.3334 0.6667 0.005 1. d
+C1_4_555 0 0 0 1. d
+C2_4_555 0.3333 0.6667 0.005 1. d
+C1_5_555 0 0 0 1. d
+C2_5_555 0.3334 0.6667 0.005 1. d
+C1_6_555 0 0 0 1. d
+C2_6_555 0.3333 0.6666 0.005 1. d
+C1_7_555 0 0 0.5 1. d
+C2_7_555 0.6667 0.3333 0.505 1. d
+C1_8_555 0 0 0.5 1. d
+C2_8_555 0.6667 0.3334 0.505 1. d
+C1_9_555 0 0 0.5 1. d
+C2_9_555 0.6666 0.3333 0.505 1. d
+C1_10_555 0 0 0.5 1. d
+C2_10_555 0.6667 0.3333 0.505 1. d
+C1_11_555 0 0 0.5 1. d
+C2_11_555 0.6666 0.3333 0.505 1. d
+C1_12_555 0 0 0.5 1. d
+C2_12_555 0.6667 0.3334 0.505 1. d

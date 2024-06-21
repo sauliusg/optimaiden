@@ -1,0 +1,1340 @@
+#! /bin/sh
+#!perl -w # --*- Perl -*--
+eval 'exec perl -x $0 ${1+"$@"}'
+    if 0;
+#------------------------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2022-07-31 23:49:09 +0300 (Sun, 31 Jul 2022) $
+#$Revision: 9356 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/scripts/cif_cod_check $
+#------------------------------------------------------------------------------
+#*
+#* Parse a CIF file, check if certain data values match COD
+#* requirements and IUCr data validation criteria (Version: 2000.06.09,
+#* ftp://ftp.iucr.ac.uk/pub/dvntests or ftp://ftp.iucr.org/pub/dvntests)
+#*
+#* USAGE:
+#*    $0 --options input1.cif input*.cif
+#**
+
+use strict;
+use warnings;
+
+use File::Basename qw( dirname );
+
+use COD::AuthorNames qw( get_name_syntax_description );
+use COD::CIF::Data::Check qw( check_adp_presence
+                              check_author_names
+                              check_bibliography
+                              check_chemical_formula_sum
+                              check_disorder
+                              check_embedded_file_integrity
+                              check_limits
+                              check_mandatory_presence
+                              check_pdcif_relations
+                              check_shelx_checksums
+                              check_simultaneous_presence
+                              check_su_eligibility
+                              check_z );
+use COD::CIF::Data qw( get_cell
+                       get_sg_data );
+use COD::CIF::Parser qw( parse_cif );
+use COD::CIF::Tags::CanonicalNames qw( canonicalize_all_names );
+use COD::ErrorHandler qw( process_warnings
+                          process_errors
+                          process_parser_messages
+                          report_message );
+use COD::Precision qw( eqsig );
+use COD::Spacegroups::Lookup::COD;
+use COD::Spacegroups::Names;
+use COD::Spacegroups::Symop::Parse qw( symop_string_canonical_form
+                                       is_symop_parsable );
+use COD::SOptions qw( getOptions get_value );
+use COD::SUsage qw( usage options );
+use COD::UserMessage qw( sprint_message );
+use COD::ToolsVersion qw( get_version_string );
+
+my %check = (
+    'adp_presence'          => 1,
+    'author_names'          => 1,
+    'bibliography'          => 1,
+    'chemical_formula_sum'  => 1,
+    'disorder'              => 0,
+    'embd_file_integrity'   => 1,
+    'limits'                => 1,
+    'pd_relations'          => 1,
+    'sg_constraints'        => 1,
+    'sg_info'               => 1,
+    'shelx_checksums'       => 1,
+    'symops'                => 1,
+    'simultaneous_presence' => 1,
+    'z_value'               => 0,
+);
+
+sub check_all {
+    $check{$_} = 1 for keys %check;
+    return;
+}
+
+sub check_none {
+    $check{$_} = 0 for keys %check;
+    return;
+}
+
+my @simultaneous_data_items = (
+    [ qw( _atom_site_fract_x _atom_site_fract_y _atom_site_fract_z ) ],
+    [ qw( _atom_site_Cartn_x _atom_site_Cartn_y _atom_site_Cartn_z ) ],
+    [ qw(
+          _atom_site_aniso_U_11
+          _atom_site_aniso_U_12
+          _atom_site_aniso_U_13
+          _atom_site_aniso_U_22
+          _atom_site_aniso_U_23
+          _atom_site_aniso_U_33
+        )
+    ],
+    [ qw(
+          _atom_site_aniso_B_11
+          _atom_site_aniso_B_12
+          _atom_site_aniso_B_13
+          _atom_site_aniso_B_22
+          _atom_site_aniso_B_23
+          _atom_site_aniso_B_33
+        )
+    ],
+    [ qw(
+          _tcod_atom_sites_sim_cell_tran_matrix_11
+          _tcod_atom_sites_sim_cell_tran_matrix_12
+          _tcod_atom_sites_sim_cell_tran_matrix_13
+          _tcod_atom_sites_sim_cell_tran_matrix_21
+          _tcod_atom_sites_sim_cell_tran_matrix_22
+          _tcod_atom_sites_sim_cell_tran_matrix_23
+          _tcod_atom_sites_sim_cell_tran_matrix_31
+          _tcod_atom_sites_sim_cell_tran_matrix_32
+          _tcod_atom_sites_sim_cell_tran_matrix_33
+        )
+    ],
+    [ qw(
+          _tcod_atom_sites_sim_cell_tran_vector_1
+          _tcod_atom_sites_sim_cell_tran_vector_2
+          _tcod_atom_sites_sim_cell_tran_vector_3
+        )
+    ],
+    [ qw(
+          _tcod_atom_site_initial_fract_x
+          _tcod_atom_site_initial_fract_y
+          _tcod_atom_site_initial_fract_z
+        )
+        ],
+    [ qw(
+          _tcod_atom_site_initial_Cartn_x
+          _tcod_atom_site_initial_Cartn_y
+          _tcod_atom_site_initial_Cartn_z
+        )
+    ],
+    [ qw(
+          _tcod_atom_site_resid_force_Cartn_x
+          _tcod_atom_site_resid_force_Cartn_y
+          _tcod_atom_site_resid_force_Cartn_z
+        )
+    ],
+    [ qw(
+          _tcod_atom_site_resid_force_fract_x
+          _tcod_atom_site_resid_force_fract_y
+          _tcod_atom_site_resid_force_fract_z
+        )
+    ],
+    [ qw(
+          _tcod_atom_site_resid_force_dir_cos_x
+          _tcod_atom_site_resid_force_dir_cos_y
+          _tcod_atom_site_resid_force_dir_cos_z
+        )
+    ],
+    [ qw(
+          _dft_BZ_integration_grid_X
+          _dft_BZ_integration_grid_Y
+          _dft_BZ_integration_grid_Z
+        )
+    ],
+    [ qw(
+          _dft_BZ_integration_grid_dens_X
+          _dft_BZ_integration_grid_dens_Y
+          _dft_BZ_integration_grid_dens_Z
+        )
+    ],
+    [ qw(
+          _dft_BZ_integration_grid_shift_X
+          _dft_BZ_integration_grid_shift_Y
+          _dft_BZ_integration_grid_shift_Z
+        )
+    ],
+    [ qw(
+          _dft_BZ_integration_grid_IBZ_point_X
+          _dft_BZ_integration_grid_IBZ_point_Y
+          _dft_BZ_integration_grid_IBZ_point_Z
+        )
+    ],
+    [ qw(
+          _dft_cell_periodic_BC_X
+          _dft_cell_periodic_BC_Y
+          _dft_cell_periodic_BC_Z
+        )
+    ],
+);
+
+my $die_on_errors   = 1;
+my $die_on_warnings = 0;
+my $die_on_notes    = 0;
+
+my @forbidden_su = qw(
+    _refine_ls_R_factor_gt
+    _refine_ls_R_factor_obs
+    _refine_ls_wR_factor_ref
+    _refine_ls_wR_factor_obs
+);
+
+# Default limits table. A verbose description of this data structure is
+# provided in the description of the COD::CIF::Data::Check::check_limits()
+# subroutine
+my %default_limits_table = (
+    '_refine_ls_R_factor_gt' =>   [ [0.2], [0.15], [0.10] ],
+    '_refine_ls_R_factor_obs' =>  [ [0.2], [0.15], [0.10] ],
+    '_refine_ls_wR_factor_ref' => [ [0.45], [0.35], [0.25] ],
+    '_refine_ls_wR_factor_obs' => [ [0.45], [0.35], [0.25] ],
+    '_refine_ls_goodness_of_fit_ref' => [ [0.4,6], [0.6,4], [0.8,2] ],
+    '_refine_ls_goodness_of_fit_obs' => [ [0.4,6], [0.6,4], [0.8,2] ],
+    '_refine_ls_shift/su_max' =>  [ [0.20], [0.10], [0.05] ],
+    '_refine_ls_shift/esd_max' => [ [0.20], [0.10], [0.05] ],
+);
+
+my %limits_table = %default_limits_table;
+my $limits_table = \%limits_table;
+
+# Subroutine that gets limits values from the file that is given under
+# the option '--limits-file'
+
+sub get_limits_table($) {
+    my( $flimits ) = @_;
+    my %ltable;
+
+    eval {
+        open my $list, '<', $flimits or die 'ERROR, '
+           . 'could not open limits file for input -- ' . lcfirst($!) . "\n";
+
+        my $number_regex = '[0-9]*[.]?[0-9]+';
+        while ( <$list> ) {
+            if( /^#/ ) { next; }
+            my @constraints;
+            my @data = split /\s+/, $_, 4;
+            my $tag = shift @data;
+            foreach( @data ) {
+                s/\s+//g;
+                if( /($number_regex)-($number_regex)/ ) {
+                    push @constraints, [$1,$2];
+                } else {
+                    push @constraints, [$_];
+                }
+            }
+            $ltable{$tag} = \@constraints;
+        }
+        close $list or die 'ERROR, '
+           . 'error while closing limits file after reading -- '
+           . lcfirst($!) . "\n";
+    };
+    if ($@) {
+        process_errors ( {
+          'message'       => $@,
+          'program'       => $0,
+          'filename'      => $flimits,
+        }, $die_on_errors )
+    };
+    return \%ltable;
+}
+
+# Subroutine that merges tables of limits
+
+sub merge_limits_tables($$) {
+   my( $new_limits, $old_limits ) = @_;
+   my $merged_limits = $old_limits;
+
+   foreach my $tag( keys %{$new_limits} ) {
+        if( exists $merged_limits->{$tag} ) {
+            $merged_limits->{$tag} = $new_limits->{$tag};
+            next;
+        } else {
+            $merged_limits->{$tag} = $new_limits->{$tag};
+        }
+   }
+   return $merged_limits;
+}
+
+my $max_year_adp_optional = 1969;
+my $use_parser = 'c';
+my $input_format = 'cif';
+my $require_only_doi = 0;
+my $use_precisions = 1;
+my $use_reporter = 0;
+my $report_file = '-';
+
+#* OPTIONS:
+#*   -c, --always-continue
+#*                     Continue processing and return successful return status
+#*                     even if errors are diagnosed.
+#*   -c-, --always-die
+#*                     Stop and return error status if errors are diagnosed.
+#*   --continue-on-errors
+#*                     Do not terminate script if errors are raised.
+#*   --die-on-errors
+#*                     Terminate script immediately if errors are raised
+#*                     (default).
+#*   --continue-on-warnings
+#*                     Do not terminate script if warnings are raised (default).
+#*   --die-on-warnings
+#*                     Terminate script immediately if warnings are raised.
+#*   --continue-on-notes
+#*                     Do not terminate script if notes are raised (default).
+#*   --die-on-notes
+#*                     Terminate script immediately if notes are raised.
+#*   --use-perl-parser
+#*                     Use Perl parser for CIF parsing.
+#*   --use-c-parser
+#*                     Use Perl & C parser for CIF parsing (default).
+#*   --cif-input
+#*                     Use CIF format for input (default).
+#*   --json-input
+#*                     Use JSON format for input.
+#*
+#* For every --check-xyz option, there are the following corresponding
+#* related options:
+#*   --check-only-xyz
+#*                     Switch off any other checks and check ONLY xyz
+#*                     (the last option on the command line wins).
+#*
+#*   --no-check-xyz, --do-not-check-xyz, --dont-check-xyz
+#*                     Switch off checks of xyz condition.
+#*
+#* The check options are:
+#*
+#*   --check-authors
+#*                     Check if the author names comply with the COD name
+#*                     syntax requirements. Default.
+#*
+#*   --check-bibliography
+#*                     Check if the bibliographical information referring to
+#*                     the original source is present in the file. Default.
+#*
+#*   --require-only-doi
+#*                     Treat the presence of the DOI as sufficient bibliographic
+#*                     information.
+#*   --require-full-bibliography
+#*                     Require a more detailed set of bibliographic information
+#*                     containing items such as publication journal, year,
+#*                     volume, page numbers, etc. Default.
+#*
+#*   --check-chemical-formula-sum
+#*                     Check if the summary chemical formula complies with
+#*                     the chemical formula syntax requirements. This check
+#*                     uses a simple syntax that does not take into account
+#*                     things such as chemical element types, chemical element
+#*                     order, etc. Default.
+#*
+#*   --check-pd-block-relations
+#*                     Check if the relations between powder diffractogram
+#*                     and phase data blocks are properly described. Default.
+#*
+#*   --check-spacegroup-info
+#*
+#*   --check-operators, --check-symmetry-operators
+#*
+#*   --check-unit-cell
+#*
+#*   --check-symmetry
+#*
+#*   --check-simultaneous-presence
+#*                     Check if data items from a certain data item grouping
+#*                     (e.g. atomic coordinates, anisotropic displacement
+#*                     parameters, etc.) are all simultaneously present in
+#*                     a data block. Missing data items are reported only
+#*                     if at least one data item from the grouping is already
+#*                     present in the data block. Default.
+#*
+#*   --check-limits
+#*
+#*   --print-limits
+#*
+#*   --add-limits  limits.lst
+#*
+#*   --limits-file limits.lst
+#*
+#*   --reset-limits
+#*
+#*   --check-adp-presence
+#*                     Check if each data block contains the atomic
+#*                     displacement parameters. The check may optionally
+#*                     be applied only to data files that were published after
+#*                     a certain year (see --max-year-adp-presence-is-optional).
+#*                     Default.
+#*   --max-year-adp-presence-is-optional 1969
+#*                     Check the presence of atomic displacement parameters
+#*                     only in data files published after the specified year.
+#*                     Modifies the behaviour of --check-adp-presence.
+#*                     Use --no-max-year-adp-presence-is-optional to
+#*                     override this option. Default: 1969.
+#*   --no-max-year-adp-presence-is-optional
+#*                     Check the presence of atomic displacement parameters
+#*                     in all data files regardless of the publication year.
+#*                     Modifies the behaviour of --check-adp-presence.
+#*
+#*   --check-temperature-factors
+#*                     Alias of the --check-adp-presence option.
+#*                     Deprecated.
+#*   --max-year-temperature-factors-optional 1969
+#*                     Alias of the --max-year-adp-presence-is-optional option.
+#*                     Deprecated.
+#*   --no-max-year-temperature-factors-optional
+#*                     Alias of the --no-max-year-adp-presence-is-optional option.
+#*                     Deprecated.
+#*
+#*   --check-shelx-checksums
+#*                     Validate the checksums of embedded SHELX files.
+#*                     Default.
+#*
+#*   --check-embedded-file-integrity
+#*
+#*   --check-z
+#*
+#*   --check-disorder
+#*
+#*   --check-all
+#*                     Enable all available checks.
+#*   --check-none, --dont-check-any,
+#*   --do-not-check-any, --no-check-any
+#*                     Disable all available checks.
+#*
+#*   --help, --usage
+#*                     Output a short usage message (this message) and exit.
+#*   --version
+#*                     Output version information and exit.
+#**
+@ARGV = getOptions(
+    '--check-bibliography'
+        => sub{ $check{'bibliography'} = 1 },
+    '--check-only-bibliography'
+        => sub{ check_none(); $check{'bibliography'} = 1 },
+    '--dont-check-bibliography,' .
+    '--no-check-bibliography,' .
+    '--do-not-check-bibliography'
+        => sub{ $check{'bibliography'} = 0 },
+
+    '--require-only-doi'
+        => sub{ $require_only_doi = 1 },
+    '--require-full-bibliography'
+        => sub{ $require_only_doi = 0 },
+
+    '--check-authors'
+        => sub{ $check{'author_names'} = 1 },
+    '--check-only-authors'
+        => sub{ check_none(); $check{'author_names'} = 1 },
+    '--dont-check-authors,' .
+    '--no-check-authors,' .
+    '--do-not-check-authors'
+        => sub{ $check{'author_names'} = 0 },
+
+    '--check-chemical-formula-sum'
+        => sub{ $check{'chemical_formula_sum'} = 1 },
+    '--check-only-chemical-formula-sum'
+        => sub{ check_none(); $check{'chemical_formula_sum'} = 1 },
+    '--dont-check-chemical-formula-sum,' .
+    '--no-check-chemical-formula-sum,' .
+    '--do-not-check-chemical-formula-sum'
+        => sub{ $check{'chemical_formula_sum'} = 0 },
+
+    '--check-spacegroup-info'
+        => sub{ $check{'sg_info'} = 1 },
+    '--check-only-spacegroup-info'
+        => sub{ check_none(); $check{'sg_info'} = 1 },
+    '--dont-check-spacegroup-info,' .
+    '--no-check-spacegroup-info,' .
+    '--do-not-check-spacegroup-info'
+        => sub{ $check{'sg_info'} = 0 },
+
+    '--check-symmetry-operators,' .
+    '--check-operators'
+        => sub{ $check{'symops'} = 1 },
+    '--check-only-symmetry-operators,' .
+    '--check-only-operators'
+        => sub{ check_none(); $check{'symops'} = 1 },
+    '--dont-check-symmetry-operators,' .
+    '--no-check-symmetry-operators,' .
+    '--do-not-check-symmetry-operators,' .
+    '--dont-check-operators,' .
+    '--no-check-operators,' .
+    '--do-not-check-operators'
+        => sub{ $check{'symops'} = 0 },
+
+    '--check-constraints-on-unit-cell,' .
+    '--check-unit-cell'
+        => sub{ $check{'sg_constraints'} = 1 },
+    '--check-only-constraints-on-unit-cell,' .
+    '--check-only-unit-cell'
+        => sub{ check_none(); $check{'sg_constraints'} = 1 },
+    '--dont-check-constraints-on-unit-cell,' .
+    '--do-not-check-constraints-on-unit-cell,' .
+    '--no-check-constraints-on-unit-cell,' .
+    '--dont-check-unit-cell,' .
+    '--do-not-check-unit-cell,' .
+    '--no-check-unit-cell'
+        => sub{ $check{'sg_constraints'} = 0 },
+
+    '--check-symmetry' => sub{
+        $check{'sg_info'} = 1;
+        $check{'symops'} = 1;
+        $check{'sg_constraints'} = 1;
+    },
+
+    '--check-only-symmetry' => sub{
+        check_none();
+        $check{'sg_info'} = 1;
+        $check{'symops'} = 1;
+        $check{'sg_constraints'} = 1;
+    },
+
+    '--check-simultaneous-presence' =>
+        sub{ $check{'simultaneous_presence'} = 1 },
+    '--check-only-simultaneous-presence' =>
+        sub{ check_none(); $check{'simultaneous_presence'} = 1 },
+    '--dont-check-simultaneous-presence' =>
+        sub{ $check{'simultaneous_presence'} = 0 },
+
+    '--check-limits'        => sub{ $check{'limits'} = 1 },
+    '--check-only-limits'   => sub{ check_none(); $check{'limits'} = 1 },
+    '--dont-check-limits'   => sub{ $check{'limits'} = 0 },
+    '--no-check-limits'     => sub{ $check{'limits'} = 0 },
+    '--do-not-check-limits' => sub{ $check{'limits'} = 0 },
+
+    '--limits-file' => sub{ $limits_table = get_limits_table( get_value() ) },
+
+    '--add-limits' => sub{ $limits_table = merge_limits_tables(
+                               get_limits_table( get_value() ),
+                               $limits_table )
+    },
+
+    '--reset-limits' => sub{ $limits_table = \%default_limits_table },
+
+    '--print-limits' => sub{ print_limits() },
+
+    '--check-adp-presence' =>
+        sub { $check{'adp_presence'} = 1 },
+    '--check-only-adp-presence' =>
+        sub { check_none(); $check{'adp_presence'} = 1 },
+    '--no-check-adp-presence,' .
+    '--do-not-check-adp-presence,' .
+    '--dont-check-adp-presence' =>
+        sub { $check{'adp_presence'} = 0 },
+    '--max-year-adp-presence-is-optional' =>
+        \$max_year_adp_optional,
+    '--no-max-year-adp-presence-is-optional' =>
+        sub{ $max_year_adp_optional = undef },
+
+    '--check-temperature-factors' =>
+        sub {
+            warn
+              "$0:: NOTE, the \'--check-temperature-factors\' option " .
+              'has been deprecated and was replaced by the ' .
+              '\'--check-adp-presence\' option -- the deprecated option ' .
+              'will be removed in the next major version release.' . "\n";
+            $check{'adp_presence'} = 1
+        },
+    '--check-only-temperature-factors' =>
+        sub {
+            warn
+              "$0:: NOTE, the \'--check-only-temperature-factors\' option " .
+              'has been deprecated and was replaced by the ' .
+              '\'--check-only-adp-presence\' option -- the deprecated option ' .
+              'will be removed in the next major version release.' . "\n";
+            check_none(); $check{'adp_presence'} = 1
+        },
+    '--dont-check-temperature-factors' =>
+        sub {
+            warn
+              "$0:: NOTE, the \'--dont-check-temperature-factors\' option " .
+              'has been deprecated and was replaced by the ' .
+              '\'--no-check-adp-presence\' option -- the deprecated option ' .
+              'will be removed in the next major version release.' . "\n";
+            $check{'adp_presence'} = 0
+        },
+    '--no-check-temperature-factors' =>
+        sub {
+            warn
+              "$0:: NOTE, the \'--no-check-temperature-factors\' option " .
+              'has been deprecated and was replaced by the ' .
+              '\'--no-check-adp-presence\' option -- the deprecated option ' .
+              'will be removed in the next major version release.' . "\n";
+            $check{'adp_presence'} = 0
+        },
+    '--do-not-check-temperature-factors' =>
+        sub {
+            warn
+              "$0:: NOTE, the \'--do-not-check-temperature-factors\' option " .
+              'has been deprecated and was replaced by the ' .
+              '\'--no-check-adp-presence\' option -- the deprecated option ' .
+              'will be removed in the next major version release.' . "\n";
+            $check{'adp_presence'} = 0
+        },
+    '--max-year-temperature-factors-optional' =>
+        sub {
+            warn
+              "$0:: NOTE, the \'--max-year-temperature-factors-optional\' " .
+              'option has been deprecated and was replaced by the ' .
+              '\'--max-year-adp-presence-is-optional\' option -- ' .
+              'the deprecated option will be removed in the next major ' .
+              'version release.' . "\n";
+            $max_year_adp_optional = get_value();
+        },
+    '--no-max-year-temperature-factors-optional' =>
+        sub {
+            warn
+              "$0:: NOTE, the \'--no-max-year-temperature-factors-optional\' " .
+              'option has been deprecated and was replaced by the ' .
+              '\'--no-max-year-adp-presence-is-optional\' option -- ' .
+              'the deprecated option will be removed in the next major ' .
+              'version release.' . "\n";
+            $max_year_adp_optional = undef;
+        },
+
+    '--check-shelx-checksums' =>
+        sub { $check{'shelx_checksums'} = 1 },
+    '--dont-check-shelx-checksums' =>
+        sub { $check{'shelx_checksums'} = 0 },
+    '--do-not-check-shelx-checksums' =>
+        sub { $check{'shelx_checksums'} = 0 },
+    '--no-check-shelx-checksums' =>
+        sub { $check{'shelx_checksums'} = 0 },
+    '--check-only-shelx-checksums' =>
+        sub { check_none(); $check{'shelx_checksums'} = 1 },
+
+    '--check-embedded-file-integrity' =>
+        sub { $check{'embd_file_integrity'} = 1; },
+    '--dont-check-embedded-file-integrity' =>
+        sub { $check{'embd_file_integrity'} = 0; },
+    '--do-not-check-embedded-file-integrity' =>
+        sub { $check{'embd_file_integrity'} = 0; },
+    '--no-check-embedded-file-integrity' =>
+        sub { $check{'embd_file_integrity'} = 0; },
+    '--check-only-embedded-file-integrity' =>
+        sub { check_none(); $check{'embd_file_integrity'} = 1; },
+
+    '--check-z'        => sub { $check{'z_value'} = 1; },
+    '--check-only-z'   => sub { check_none(); $check{'z_value'} = 1; },
+    '--no-check-z'     => sub { $check{'z_value'} = 0; },
+    '--dont-check-z'   => sub { $check{'z_value'} = 0; },
+    '--do-not-check-z' => sub { $check{'z_value'} = 0; },
+
+    '--check-disorder'        => sub { $check{'disorder'} = 1; },
+    '--check-only-disorder'   => sub { check_none(); $check{'disorder'} = 1; },
+    '--no-check-disorder'     => sub { $check{'disorder'} = 0; },
+    '--dont-check-disorder'   => sub { $check{'disorder'} = 0; },
+    '--do-not-check-disorder' => sub { $check{'disorder'} = 0; },
+
+    '--check-pd-block-relations'        => sub { $check{'pd_relations'} = 1 },
+    '--check-only-pd-block-relations'   => sub { check_none();
+                                                  $check{'pd_relations'} = 1 },
+    '--no-check-pd-block-relations'     => sub { $check{'pd_relations'} = 0 },
+    '--dont-check-pd-block-relations'   => sub { $check{'pd_relations'} = 0 },
+    '--do-not-check-pd-block-relations' => sub { $check{'pd_relations'} = 0 },
+
+    '--check-all'        => sub { check_all() },
+    '--check-none'       => sub { check_none() },
+    '--dont-check-any'   => sub { check_none() },
+    '--do-not-check-any' => sub { check_none() },
+    '--no-check-any'     => sub { check_none() },
+
+    '--use-precisions'        => sub { $use_precisions = 1 },
+    '--dont-use-precisions'   => sub { $use_precisions = 0 },
+    '--do-not-use-precisions' => sub { $use_precisions = 0 },
+    '--ignore-precisions'     => sub { $use_precisions = 0 },
+
+    '--use-reporter' => sub{ $use_reporter = 1; $report_file = get_value() },
+
+    '-c,--always-continue'              => sub { $die_on_errors   = 0;
+                                                 $die_on_warnings = 0;
+                                                 $die_on_notes    = 0 },
+    '-c-,--always-die'                  => sub { $die_on_errors   = 1;
+                                                 $die_on_warnings = 1;
+                                                 $die_on_notes    = 1 },
+
+    '--continue-on-errors'          => sub { $die_on_errors = 0 },
+    '--die-on-errors'               => sub { $die_on_errors = 1 },
+
+    '--continue-on-warnings' => sub { $die_on_warnings = 0 },
+    '--die-on-warnings'      => sub { $die_on_warnings = 1 },
+
+    '--continue-on-notes'    => sub { $die_on_notes = 0 },
+    '--die-on-notes'         => sub { $die_on_notes = 1 },
+
+    '--use-perl-parser' => sub{ $use_parser = 'perl' },
+    '--use-c-parser'    => sub{ $use_parser = 'c' },
+
+    '--cif-input'   => sub { $input_format = 'cif' },
+    '--json-input'  => sub { $input_format = 'json' },
+
+    '--options'      => sub { options; exit },
+    '--help,--usage' => sub { usage; exit },
+    '--version'      => sub { print get_version_string(), "\n"; exit }
+);
+
+my $die_on_error_level = {
+    ERROR   => $die_on_errors,
+    WARNING => $die_on_warnings,
+    NOTE    => $die_on_notes
+};
+
+if( $input_format eq 'json' ) {
+    $use_parser = 'json';
+}
+
+# The subroutine that prints out the table of limits
+sub print_limits {
+    print '#' . '-'x70  . "\n" .
+          "# The table of data value limits that 'cif_cod_check' script \n" .
+          "# uses under the option '--check-limits'.\n" .
+          '#' . '-'x70  . "\n";
+    foreach my $tag ( sort keys %{$limits_table} ) {
+        printf '%-32s', $tag;
+        for my $i( 0..$#{ $limits_table->{$tag} } ) {
+            print "\t" , join '-', @{ $limits_table->{$tag}[$i]};
+        }
+        print "\n";
+    }
+    exit 0;
+}
+
+my $report_file_fh;
+if( $report_file =~ m/^\s*-\s*$/ || !-w dirname($report_file) ) {
+    open $report_file_fh, '>&', \*STDOUT or
+         report_message( {
+            'program'   => $0,
+            'err_level' => 'ERROR',
+            'message'   => 'cannot dup STDOUT -- ' . ( lcfirst $! )
+         }, $die_on_errors );
+
+} else {
+    open $report_file_fh, '>', $report_file;
+}
+binmode $report_file_fh, ':encoding(UTF-8)';
+binmode STDERR, ':encoding(UTF-8)';
+
+my %space_groups = map {
+    my $key1 = $_->[1];
+    my $key2 = $_->[2];
+    $key1 =~ s/\s//g;
+    $key2 =~ s/\s//g;
+    ($_->[2], $_->[2], $_->[1], $_->[2], $key1, $_->[2], $key2, $_->[2] )
+} @COD::Spacegroups::Names::names,
+  map { [ $_->{'number'}, $_->{'hermann_mauguin'}, $_->{'universal_h_m'} ] }
+      @COD::Spacegroups::Lookup::COD::table,
+      @COD::Spacegroups::Lookup::COD::extra_settings;
+
+# Flush buffers immediately, to avoid mixing lines of STDOUT and STDERR.
+local $| = 1;
+
+my $name_syntax_explained = 0;
+
+# Generate a list of mandatory data items based on the checks
+my %mandatory_items;
+
+if ( $check{'chemical_formula_sum'} ) {
+    $mandatory_items{'_chemical_formula_sum'} = 0;
+}
+
+if ( $check{'author_names'} ) {
+    $mandatory_items{'_publ_author_name'} = 0;
+}
+
+@ARGV = ('-') unless @ARGV;
+
+for my $filename (@ARGV) {
+
+    my $options = { 'parser' => $use_parser, 'no_print' => 1 };
+    if ( $use_parser eq 'perl' && $use_reporter ) {
+        $options->{reporter} = \&parser_reporter;
+    };
+
+    my ( $data, $err_count, $parser_messages ) = parse_cif( $filename, $options );
+    process_parser_messages( $parser_messages, $die_on_error_level );
+
+    canonicalize_all_names( $data );
+
+    my $notes    = 0;
+    my $warnings = 0;
+    my $errors   = 0;
+
+    if ( !@{$data} ) {
+        $warnings++;
+        warn sprint_message( {
+            'program'   => $0,
+            'filename'  => $filename,
+            'err_level' => 'WARNING',
+            'message'   => 'the file contains no data blocks'
+        } );
+    }
+
+    for my $dataset (@{$data}) {
+        # Disabling exiting upon warnings, since error messages of all levels
+        # must be reported.
+        local $SIG{__WARN__} = sub {
+            process_warnings( {
+                'message'  => @_,
+                'program'  => $0,
+                'filename' => $filename,
+                'add_pos'  => 'data_' . $dataset->{'name'}
+             }, {
+                'ERROR'    => 0,
+                'WARNING'  => 0,
+                'NOTE'     => 0,
+            } )
+        };
+
+        my @messages;
+
+        push @messages,
+             @{check_mandatory_presence( $dataset, \%mandatory_items )};
+
+        if ( $check{'bibliography'} ) {
+            push @messages,
+                 @{check_bibliography( $dataset, {
+                    'require_only_doi' => $require_only_doi
+                 } ) }
+        }
+
+        if ( $check{'author_names'} ) {
+            my $author_name_messages = check_author_names($dataset);
+            if ( !$name_syntax_explained && @{$author_name_messages} ) {
+                    splice @{$author_name_messages}, 1, 0,
+                           'NOTE, ' . get_name_syntax_description();
+                    $name_syntax_explained = 1;
+            }
+            push @messages, @{$author_name_messages};
+        }
+
+        push @messages, @{check_chemical_formula_sum( $dataset )}
+            if $check{'chemical_formula_sum'};
+        push @messages, @{check_space_group_info( $dataset )}
+            if $check{'sg_info'};
+        push @messages, @{check_symmetry_operations( $dataset )}
+            if $check{'symops'};
+        push @messages, @{check_space_group_constraints( $dataset )}
+            if $check{'sg_constraints'};
+        if ( $check{'limits'} ) {
+            # FIXME: the SU checking functionality should be fully
+            # delegated to the CIF validator
+            push @messages, @{check_su_eligibility( $dataset, \@forbidden_su )};
+            push @messages, @{check_limits( $dataset, $limits_table )}
+        }
+        push @messages, @{check_adp_presence(
+                            $dataset, {
+                              'mandatory_year_cutoff' => $max_year_adp_optional
+                            } )}
+            if $check{'adp_presence'};
+        push @messages, @{check_simultaneous_presence(
+                            $dataset,
+                            \@simultaneous_data_items )}
+            if $check{'simultaneous_presence'};
+        push @messages, @{check_shelx_checksums( $dataset )}
+            if $check{'shelx_checksums'};
+        push @messages, @{check_embedded_file_integrity( $dataset )}
+            if $check{'embd_file_integrity'};
+        push @messages, @{check_z( $dataset )}
+            if $check{'z_value'};
+        push @messages, @{check_disorder( $dataset )}
+            if $check{'disorder'};
+
+        foreach (@messages) { warn $_ . "\n"; };
+        $notes    += scalar(grep {/^NOTE,/}    @messages);
+        $warnings += scalar(grep {/^WARNING,/} @messages);
+        $errors   += scalar(grep {/^ERROR,/}   @messages);
+    }
+
+    if ( $check{'pd_relations'} ) {
+        eval {
+            local $SIG{__WARN__} = sub { process_warnings( {
+                                           'message'       => @_,
+                                           'program'       => $0,
+                                           'filename'      => $filename,
+                                         }, {
+                                           'ERROR'   => 0,
+                                           'WARNING' => 0,
+                                           'NOTE'    => 0
+                                         } ) };
+
+            my @messages = @{check_pdcif_relations( $data )};
+            foreach (@messages) { warn $_ . "\n"; };
+            $notes    += scalar(grep {/^NOTE,/}    @messages);
+            $warnings += scalar(grep {/^WARNING,/} @messages);
+            $errors   += scalar(grep {/^ERROR,/}   @messages);
+        };
+    };
+
+    my %message_count = (
+        'NOTE'    => $notes,
+        'WARNING' => $warnings,
+        'ERROR'   => $errors
+    );
+
+    if ( $notes + $warnings + $errors + @{$parser_messages} ) {
+        foreach ( 'NOTE', 'WARNING', 'ERROR' ) {
+            if ( $message_count{$_} > 0 ) {
+                my $message = sprint_message( {
+                    'program'   => $0,
+                    'filename'  => $filename,
+                    'err_level' => $die_on_error_level->{$_} ? 'ERROR' : 'NOTE',
+                    'message'   => "$message_count{$_} $_(s) encountered" .
+                            ( $die_on_error_level->{$_} ?
+                            " -- die on $_(s) requested" : '' )
+                } );
+                $die_on_error_level->{$_} ? die $message : warn $message;
+            }
+        };
+    } else {
+        printf "%-30s: OK\n", $filename;
+    };
+}
+
+##
+# Checks for any inconsistencies in the provided space group information.
+#
+# @param $dataset
+#       Reference to a data block as returned by the COD::CIF::Parser.
+# @return
+#       Reference to an array of audit messages.
+##
+sub check_space_group_info
+{
+    my ($dataset) = @_;
+    my @messages;
+
+    my $sg_info = get_sg_data($dataset);
+
+    my $resolved_sg_name;
+    for my $sg_name_type ( qw( hermann_mauguin ) ) {
+        if( defined $sg_info->{$sg_name_type} && !defined $resolved_sg_name ) {
+            my $declared_sg_name = $sg_info->{$sg_name_type};
+            my $cleaned_sg_name = $declared_sg_name;
+            $cleaned_sg_name =~ s/\s//g;
+            $cleaned_sg_name =~ s/[()~]//g;
+
+            if( exists $space_groups{$declared_sg_name} ) {
+                $resolved_sg_name = $space_groups{$declared_sg_name};
+            } elsif( exists $space_groups{$cleaned_sg_name} ) {
+                $resolved_sg_name = $space_groups{$cleaned_sg_name};
+            } else {
+                push @messages,
+                     "WARNING, data item '$sg_info->{'tags'}{$sg_name_type}' " .
+                     "value '$declared_sg_name' was not recognised as a " .
+                     'space group name';
+            }
+        }
+    }
+
+    if( !defined $sg_info->{'hall'} &&
+        !defined $sg_info->{'hermann_mauguin'} &&
+        !defined $sg_info->{'number'} &&
+        !defined $sg_info->{'ssg_name'} &&
+        !defined $sg_info->{'ssg_name_IT'} &&
+        !defined $sg_info->{'ssg_name_WJJ'} ) {
+        if( defined $sg_info->{'symops'} ||
+            defined $sg_info->{'ssg_symops'} ) {
+            push @messages, 'WARNING, no space group symbol found';
+        } else {
+            push @messages, 'WARNING, no symmetry information found';
+        }
+    }
+
+    my $symops = $sg_info->{'symops'};
+    if( defined $symops ) {
+        push @messages, @{check_symop_uniqueness($symops)};
+        if ( defined $resolved_sg_name ) {
+            my $sg_info = lookup_space_group( 'hermann_mauguin',
+                                               $resolved_sg_name );
+            if ( defined $sg_info ) {
+                push @messages,
+                     @{ check_symop_list( $symops, $sg_info ) };
+            }
+        }
+    }
+
+    return \@messages;
+}
+
+##
+# Checks the provided symmetry operation list for repetitions of the same
+# symmetry operations in different form.
+# @param $symops
+#       Reference to an array of symmetry operations.
+# @return $messages
+#       Reference to an array of audit messages.
+##
+sub check_symop_uniqueness
+{
+    my ( $symops ) = @_;
+
+    my @messages;
+
+    my %duplicate_symops;
+    for my $symop (@{$symops}) {
+        my $canonical_symop =
+            symop_string_canonical_form( $symop );
+        push @{$duplicate_symops{$canonical_symop}}, $symop;
+    }
+    for my $canonical_symop (sort keys %duplicate_symops) {
+        if( @{ $duplicate_symops{$canonical_symop} } > 1 ) {
+            push @messages,
+                 "NOTE, symmetry operation '$canonical_symop' is repeated "
+                . scalar( @{ $duplicate_symops{$canonical_symop} } )
+                . ' times as ['
+                . join( ', ', map { "'$_'" }
+                    @{ $duplicate_symops{$canonical_symop} } )
+                . '] in the symmetry operation list';
+            }
+    }
+
+    return \@messages;
+}
+
+##
+# Checks if the provided symmetry operation list matches the one extrapolated
+# from the provided space group information.
+# @param $symops
+#       Reference to an array of symmetry operations.
+# @param $sg_info
+#       Reference to a hash containing the information of a single space
+#       group as returned by the get_sg_descriptions() subroutine.
+# @return $messages
+#       Reference to an array of audit messages.
+##
+sub check_symop_list
+{
+    my ( $symops, $sg_info ) = @_;
+
+    my @messages;
+
+    my $sg_name = $sg_info->{'hermann_mauguin'};
+
+    my %declared_symops =
+            map { symop_string_canonical_form( $_ ) => $_ } @{$symops};
+    my %expected_symops =
+            map { symop_string_canonical_form( $_ ) => $_ }
+                @{$sg_info->{'symops'}};
+
+    my @missing_symops = grep { !exists $declared_symops{$_} }
+                            sort keys %expected_symops;
+    if( @missing_symops ) {
+        push @messages,
+                'NOTE, symmetry operation set is not compatible with the ' .
+                'declared space group -- additional symmetry operations [' .
+                    join( ', ', map { "'$_'" } @missing_symops ) .
+                "] are required by the '$sg_name' space group";
+    }
+
+    my @excess_symops = grep { !exists $expected_symops{$_} }
+                            sort keys %declared_symops;
+    if( @excess_symops ) {
+        push @messages,
+                'NOTE, symmetry operation set is not compatible with the ' .
+                'declared space group -- symmetry operations [' .
+                    join( ', ', map { "'$_'" } @excess_symops ) .
+                "] do not belong to the '$sg_name' space group";
+    }
+
+    return \@messages;
+}
+
+#===============================================================#
+# Gets symmetry operations if they are not directly represented in the CIF file.
+
+# Accepts
+#     option - an option, for example, 'hall'
+#     param  - according to an option a value given in the CIF file
+
+# Uses @COD::Spacegroups::Lookup::COD::table =
+# (
+# {
+#     number          => 1,
+#     hall            => ' P 1',
+#     schoenflies     => 'C1^1',
+#     hermann_mauguin => 'P 1',
+#     universal_h_m   => 'P 1',
+#     crystal_class   => 'monoclinic',
+#     constraints     => '1',
+#     symops => [
+#         'x,y,z',
+#     ],
+#     ncsym => [
+#         'x,y,z',
+#     ]
+# },
+# );
+
+# Returns a reference to the space group descriptor
+# (a @COD::Spacegroups::Lookup::COD::table element).
+
+sub lookup_space_group
+{
+    my ($option, $param) = @_;
+
+    $param =~ s/ //g;
+    $param =~ s/_//g;
+
+    foreach my $hash (@COD::Spacegroups::Lookup::COD::table,
+                      @COD::Spacegroups::Lookup::COD::extra_settings) {
+        my $value = $hash->{$option};
+        $value =~ s/ //g;
+        $value =~ s/_//g;
+
+        if( $value eq $param ) {
+            return $hash;
+        }
+    }
+    return;
+}
+
+sub get_sg_descriptions
+{
+    my ($dataset) = @_;
+    my @messages;
+
+    my $values = $dataset->{values};
+    my $sg_data = get_sg_data($dataset);
+
+    my $sym_data;
+
+    if ( defined $sg_data->{'hall'} ) {
+        $sym_data = lookup_space_group('hall', $sg_data->{'hall'});
+        if( !defined $sym_data ) {
+            push @messages,
+                 "WARNING, data item '$sg_data->{'tags'}{'hall'}' value " .
+                 "'$sg_data->{'hall'}' was not recognised as a space group name"
+        }
+    }
+
+    if ( !defined $sym_data && defined $sg_data->{'hermann_mauguin'} ) {
+        $sym_data = lookup_space_group('hermann_mauguin',
+                                        $sg_data->{'hermann_mauguin'});
+        $sym_data = lookup_space_group('universal_h_m',
+                                        $sg_data->{'hermann_mauguin'})
+            unless defined $sym_data;
+        if( !defined $sym_data ) {
+            push @messages,
+                 "WARNING, data item '$sg_data->{'tags'}{'hermann_mauguin'}' " .
+                 "value '$sg_data->{'hermann_mauguin'}' was not recognised as a " .
+                 'space group name';
+        }
+    }
+
+    if(not defined $sym_data) {
+        if( scalar(@messages) == 0 ) {
+            my @space_group_tags = qw (
+                _space_group_symop_ssg_id
+                _space_group_symop_ssg_operation_algebraic
+                _space_group_ssg_name
+                _space_group_ssg_name_IT
+                _space_group_ssg_name_WJJ
+            );
+            for my $sg_tag (@space_group_tags) {
+                if( exists $dataset->{values}{$sg_tag} ) {
+                    return ( undef, \@messages );
+                }
+            }
+            push @messages, 'WARNING, no space group symbol to check cell constraints';
+        }
+    }
+
+    return ( $sym_data, \@messages );
+}
+
+sub get_unit_cell_sigmas($)
+{
+    my ($dataset) = @_;
+    my $values = $dataset->{precisions};
+
+    return map { $values->{$_}[0] }
+               qw( _cell_length_a
+                   _cell_length_b
+                   _cell_length_c
+                   _cell_angle_alpha
+                   _cell_angle_beta
+                   _cell_angle_gamma
+               );
+}
+
+sub regularize_cell($$$$)
+{
+    my ( $cell, $cellsig, $crystal_class, $h_m_symbol ) = @_;
+
+    my @regcell = @{$cell};
+
+    my @cellsig = map { defined $_ ? $_ : 0 } @{$cellsig};
+
+    # snap cell lengths:
+    if( $crystal_class ne 'triclinic' && $crystal_class ne 'monoclinic' ) {
+        if( eqsig( $cell->[0], $cellsig[0], $cell->[1], $cellsig[1] )) {
+            if( ( $crystal_class eq 'rhombohedral' ||
+                  $crystal_class eq 'cubic' ) &&
+                eqsig( $cell->[0], $cellsig[0], $cell->[2], $cellsig[2] ) &&
+                eqsig( $cell->[1], $cellsig[1], $cell->[2], $cellsig[2] )) {
+                $regcell[1] = $regcell[2] = $regcell[0];
+            } else {
+                $regcell[0] = $regcell[1];
+            }
+        } elsif( eqsig( $cell->[0], $cellsig[0], $cell->[2], $cellsig[2] )) {
+                $regcell[0] = $regcell[2];
+        } elsif( eqsig( $cell->[1], $cellsig[1], $cell->[2], $cellsig[2] )) {
+                $regcell[1] = $regcell[2];
+        }
+    }
+
+    # snap unit cell angles:
+    for my $i (( 3, 4, 5 )) {
+        my $angle = $cell->[$i];
+        my $sigma = $cellsig[$i];
+        if( eqsig( $angle, $sigma, 90, 0 ) &&
+            $crystal_class ne 'triclinic' &&
+            ( $crystal_class ne 'rhombohedral' ||
+              $h_m_symbol =~ /^H|:H$/ )) {
+            $regcell[$i] = 90;
+        } elsif( eqsig( $angle, $sigma, 120, 0 ) &&
+                 (( $crystal_class eq 'rhombohedral' &&
+                    $h_m_symbol =~ /^H|:H$/ ) ||
+                  $crystal_class eq 'trigonal' ||
+                  $crystal_class eq 'hexagonal' )) {
+            $regcell[$i] = 120;
+        }
+    }
+
+    if( $crystal_class eq 'rhombohedral' && $h_m_symbol !~ /^H|:H$/ ) {
+        if( eqsig( $cell->[3], $cellsig[3], $cell->[4], $cellsig[4] ) &&
+            eqsig( $cell->[3], $cellsig[3], $cell->[5], $cellsig[5] ) &&
+            eqsig( $cell->[4], $cellsig[4], $cell->[5], $cellsig[5] )) {
+            $regcell[4] = $regcell[5] = $regcell[3];
+        }
+    }
+
+    return @regcell;
+}
+
+##
+# Checks if the cell constants satisfy constraints imposed by the declared
+# space group.
+#
+# @param $dataset
+#       Reference to a data block as returned by the COD::CIF::Parser.
+# @return
+#       Reference to an array of audit messages.
+##
+sub check_space_group_constraints
+{
+    my ( $dataset ) = @_;
+    my @messages;
+
+    my ( $space_group_descr, $sg_messages ) =
+        get_sg_descriptions( $dataset );
+    push @messages, @{$sg_messages};
+
+    if( !defined $space_group_descr ) {
+        return \@messages;
+    }
+
+    if( !exists $space_group_descr->{constraints} ) {
+        push @messages, 'WARNING, could not find constraints for space group '.
+                        "'$space_group_descr->{universal_h_m}'";
+        return \@messages;
+    }
+
+    my $constraints = $space_group_descr->{'constraints'};
+    my $cryst_class = $space_group_descr->{'crystal_class'};
+    my $h_m_symbol = $space_group_descr->{'universal_h_m'};
+    my @cell = get_cell( $dataset->{values} );
+    my @cellsig = get_unit_cell_sigmas( $dataset );
+
+    do {
+        my ( $a, $b, $c, $alpha, $beta, $gamma );
+
+        if( $use_precisions ) {
+            ( $a, $b, $c, $alpha, $beta, $gamma ) =
+                regularize_cell( \@cell, \@cellsig,
+                                 $cryst_class, $h_m_symbol );
+        } else {
+            ( $a, $b, $c, $alpha, $beta, $gamma ) = @cell;
+        }
+
+        do {
+            local $" = ', ';
+            print ">>> CELL: @cell\n";
+            print ">>> REGULARISED: $a, $b, $c, $alpha, $beta, $gamma\n";
+        } if 0;
+
+        if( !eval $constraints ) {
+            local $" = ' ';
+            push @messages, "WARNING, unit cell '@cell' does not satisfy " .
+                            "constraints '$constraints'";
+            return \@messages;
+        }
+
+        do {
+            local $" = ' ';
+            warn "NOTE, unit cell '$a $b $c $alpha $beta $gamma' "
+               . "IS FINE with constraints '$constraints'!" . "\n";
+        } if 0;
+    };
+    return \@messages;
+}
+
+##
+# Checks if the provided symmetry operations are syntactically correct.
+#
+# @param $dataset
+#       Reference to a data block as returned by the COD::CIF::Parser.
+# @return
+#       Reference to an array of audit messages.
+##
+sub check_symmetry_operations
+{
+    my ($dataset) = @_;
+    my @messages;
+
+    my $sg_data = get_sg_data($dataset);
+
+    my $symops;
+    if ( defined $sg_data->{'symops'} ) {
+        $symops = $sg_data->{'symops'};
+    } else {
+        push @messages, 'WARNING, the space group symmetry operation list was not provided';
+    }
+
+    return \@messages if !defined $symops;
+
+    foreach (@{$symops}) {
+        if ( !is_symop_parsable($_) ) {
+            push @messages, "WARNING, symmetry operation '$_' could not be parsed";
+            return \@messages;
+        }
+    }
+
+    return \@messages;
+}
+
+sub parser_reporter
+{
+    my ($file, $line, $data) = @_;
+
+    $file = 'perl -e \'...\'' if ( $file eq '-' );
+    $data = ( defined $data ) ? ' data_' . $data : '';
+
+    my $report = "$0: $file($line)" . $data . ': ';
+    $report .= "number of the currently processed line -- $line.\n";
+
+    print {$report_file_fh} $report;
+    flush $report_file_fh;
+
+    return 0;
+}

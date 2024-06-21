@@ -1,0 +1,321 @@
+#! /bin/sh
+#!perl -w # --*- Perl -*--
+eval 'exec perl -x $0 ${1+"$@"}'
+    if 0;
+#------------------------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2021-04-29 14:18:03 +0300 (Thu, 29 Apr 2021) $
+#$Revision: 8752 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/scripts/cif_select $
+#------------------------------------------------------------------------------
+#*
+#* Read CIFs and print out selected tags with their values.
+#*
+#* USAGE:
+#*    $0 --options input1.cif input*.cif
+#**
+
+use strict;
+use warnings;
+use COD::CIF::Parser qw( parse_cif );
+use COD::CIF::Tags::CanonicalNames qw( canonical_tag_name canonicalize_names );
+use COD::CIF::Tags::Manage qw( exclude_tag rename_tag );
+use COD::CIF::Tags::Print qw( print_cif );
+use COD::SOptions qw( getOptions get_value );
+use COD::SUsage qw( usage options );
+use COD::ErrorHandler qw( process_errors
+                          process_parser_messages
+                          process_warnings
+                          report_message );
+use COD::ToolsVersion qw( get_version_string );
+
+my $use_parser = 'c';
+
+my $die_on_error_level = {
+    ERROR   => 1,
+    WARNING => 0,
+    NOTE    => 0
+};
+
+my @selected_tags;
+my $treat_dots_as_underscores = 0;
+my $canonicalize_tag_names = 0;
+my $output_tabular = 0;
+my $one_data_item_per_row = 1;
+my $invert = 0;
+
+binmode STDOUT, ':encoding(UTF-8)';
+binmode STDERR, ':encoding(UTF-8)';
+
+#* OPTIONS:
+#*   -t, --tags _tag1,_tag2,_tag3
+#*   --tags "_tag1 _tag2 _tag3"
+#*                     Print out values of tags _tag1, _tag2, and _tag3;
+#*                     the specified tag list becomes a new list of printed tags.
+#*
+#*   -a, --add-tag _tag4
+#*                     Add tag _tag4 to the list of printed tags.
+#*
+#*   -f, --file-with-tags tag.lst
+#*                     Read tags to be extracted from the file 'tag.lst'.
+#*                     Comments (lines starting with '#') in 'tag.lst' are
+#*                     ignored.
+#*
+#*   -c, --clear-tags
+#*                     Clear the list of printed data items accumulated so far.
+#*
+#*   --invert
+#*                     Invert the sense of selection. Exclude values of
+#*                     the data items from the supplied list.
+#*
+#*   --treat-dots-as-underscores
+#*                     Convert all dots in data names into underscores.
+#*
+#*   --dont-treat-dots-as-underscores, --no-treat-dots-as-underscores
+#*                     Leave original data names as they are (default).
+#*
+#*   --tabular, --output-tabular
+#*                     Output selected data names and their values in tabular
+#*                     format.
+#*   --cif, --output-cif
+#*                     Output selected data names and their values in CIF
+#*                     format (default).
+#*
+#*   --one-data-item-per-row
+#*                     Print values of each data item in its own line (row)
+#*                     in tabular format:
+#*
+#*                     <data block name> <data name> <value> <value> ... <value>
+#*
+#*                     Default with --output-tabular.
+#*   --one-data-item-per-column
+#*                     Print values of each data item in its own column
+#*                     in tabular format:
+#*
+#*                     <data block name> <data block name> ...
+#*                     <data name>       <data name>       ...
+#*                     <value>           <value>           ...
+#*
+#*                     Requires --output-tabular. Only available if all
+#*                     of the selected data items have the same number
+#*                     of values.
+#*
+#*   --canonicalize-tag-names
+#*                     Output data names in the canonical form.
+#*   --dont-canonicalize-tag-names, --no-canonicalize-tag-names
+#*                     Output data names as they are given in original file(s)
+#*                     (default).
+#*
+#*   --use-c-parser
+#*                     Use Perl & C parser for CIF parsing (default).
+#*   --use-perl-parser
+#*                     Use Perl parser for CIF parsing.
+#*
+#*   --help, --usage
+#*                     Output a short usage message (this message) and exit.
+#*   --version
+#*                     Output version information and exit.
+#**
+@ARGV = getOptions(
+    "-t,--tags" => sub { @selected_tags = split( /\s|,/, get_value()) },
+    "-a,--add-tag"    => \@selected_tags,
+    "-c,--clear-tags" => sub { @selected_tags = () },
+    "-f,--file-with-tags" => sub {
+        my $filename = get_value();
+        eval {
+            open( my $tags, '<', $filename ) or die 'ERROR, '
+                  . 'could not open file for reading -- '
+                  . lcfirst($!) . "\n";
+            @selected_tags = ( @selected_tags,
+                              map { s/^\s*|\s*$//g; $_ }
+                              grep { !/^\#/ } <$tags> );
+            close( $tags ) or die 'ERROR, '
+                  .'could not close file after reading -- '
+                  . lcfirst($!) . "\n";
+        };
+        if ($@) {
+            process_errors( {
+              'message'  => $@,
+              'program'  => $0,
+              'filename' => $filename
+            }, $die_on_error_level->{ERROR} );
+        };
+    },
+
+    "--invert" => sub { $invert = 1 },
+
+    "--treat-dots-as-underscores"
+        => sub { $treat_dots_as_underscores = 1 },
+    "--dont-treat-dots-as-underscores"
+        => sub { $treat_dots_as_underscores = 0 },
+    "--no-treat-dots-as-underscores"
+        => sub { $treat_dots_as_underscores = 0 },
+
+    "--tabular,--output-tabular" => sub { $output_tabular = 1 },
+    "--cif,--output-cif" => sub { $output_tabular = 0 },
+
+    "--one-data-item-per-row"    => sub { $one_data_item_per_row = 1 },
+    "--one-data-item-per-column" => sub { $one_data_item_per_row = 0 },
+
+    "--canonicalize-tag-names"
+        => sub { $canonicalize_tag_names = 1 },
+    "--dont-canonicalize-tag-names"
+        => sub { $canonicalize_tag_names = 0 },
+    "--no-canonicalize-tag-names"
+        => sub { $canonicalize_tag_names = 0 },
+
+    "--use-perl-parser" => sub { $use_parser = "perl" },
+    "--use-c-parser"    => sub { $use_parser = "c" },
+
+    '--options'      => sub { options; exit },
+    '--help,--usage' => sub { usage; exit },
+    '--version'      => sub { print get_version_string(), "\n"; exit }
+);
+
+sub unique(@);
+
+if( $treat_dots_as_underscores ) {
+    @selected_tags = map { s/\./_/g; $_ } @selected_tags;
+}
+
+@selected_tags = unique map { lc($_) } @selected_tags;
+
+my %selected_tags = map { ($_, $_) } @selected_tags;
+
+@ARGV = ( "-" ) unless @ARGV;
+
+for my $filename (@ARGV) {
+    my $options = { 'parser' => $use_parser, 'no_print' => 1 };
+    my ( $data, $err_count, $messages ) = parse_cif( $filename, $options );
+    process_parser_messages( $messages, $die_on_error_level );
+    next if ( $err_count > 0 );
+
+    if( !@{$data} || !defined $data->[0] || !defined $data->[0]{name} ) {
+        report_message( {
+            'program'   => $0,
+            'filename'  => $filename,
+            'err_level' => 'WARNING',
+            'message'   => 'file seems to be empty'
+        }, $die_on_error_level->{'WARNING'} );
+        next;
+    }
+
+    for my $dataset (@$data) {
+        my @values   = ();
+        my $values   = $dataset->{values};
+        my $dataname = 'data_' . $dataset->{name};
+
+        local $SIG{__WARN__} = sub {
+            process_warnings( {
+                'message'  => @_,
+                'program'  => $0,
+                'add_pos'  => $dataname,
+                'filename' => $filename
+            }, $die_on_error_level )
+        };
+
+        if( $treat_dots_as_underscores ) {
+            for my $tag (sort keys %{$values}) {
+                my $new_tag = $tag;
+                $new_tag =~ s/\./_/g;
+                next if $new_tag eq $tag;
+                if( exists $values->{$new_tag} ) {
+                    warn "WARNING, will not rename data item '$tag' " .
+                         "to '$new_tag' -- data item '$new_tag' already " .
+                         "exists\n";
+                    next;
+                }
+                rename_tag( $dataset, $tag, $new_tag );
+            }
+        }
+
+        if( $invert ) {
+            for my $tag (@selected_tags) {
+                exclude_tag( $dataset, $tag );
+            }
+        }
+
+        my @printed_tags;
+        if( !$invert ) {
+            @printed_tags = @selected_tags;
+        } else {
+            @printed_tags = @{ $dataset->{tags} };
+        }
+        my %printed_tags = map { ($_, $_) } @printed_tags;
+
+        eval {
+            if( $output_tabular ) {
+                local $, = "\t";
+                local $\ = "\n";
+                if( $one_data_item_per_row ) {
+                    for my $tag (@printed_tags) {
+                        print $dataset->{name},
+                              ( $canonicalize_tag_names
+                                    ? canonical_tag_name( $tag )
+                                    : $tag ),
+                              ( exists $dataset->{values}{$tag}
+                                    ? join( $,, map { s/[\n\t]/ /g; $_ }
+                                            @{$dataset->{values}{$tag}} )
+                                    : '?' );
+                    }
+                } else {
+                    my %tag_lengths = map { (exists $dataset->{values}{$_}
+                                                ? scalar @{$dataset->{values}{$_}}
+                                                : 0) => 1 } @printed_tags;
+                    if( scalar keys %tag_lengths > 1 ) {
+                        die 'cannot output results in tabular format with ' .
+                            'data items as columns -- not all of the selected ' .
+                            'data items have the same number of values' .
+                            "\n";
+                    }
+
+                    print join $,, ( $dataset->{name} ) x @printed_tags;
+                    print map { $canonicalize_tag_names
+                                    ? canonical_tag_name( $_ ) : $_ }
+                              @printed_tags;
+
+                    my( $length ) = keys %tag_lengths;
+                    for my $i (0..$length-1) {
+                        print map { s/[\n\t]/ /g; $_ }
+                              map { $dataset->{values}{$_}[$i] } @printed_tags;
+                    }
+                }
+            } else {
+                if( $canonicalize_tag_names ) {
+                    canonicalize_names( $dataset );
+                    @printed_tags = map{ canonical_tag_name( $_ ) }
+                                         @printed_tags;
+                    %printed_tags = map{ ($_, $_) }
+                                         @printed_tags;
+                }
+                print_cif( $dataset,
+                   {
+                       dictionary_tags => \%printed_tags,
+                       dictionary_tag_list => \@printed_tags,
+                       exclude_misspelled_tags => 1,
+                   } );
+            }
+        };
+        if ( $@ ) {
+            process_errors( {
+              'message'       => $@,
+              'program'       => $0,
+              'filename'      => $filename,
+              'add_pos'       => $dataname
+            }, $die_on_error_level )
+        }
+    }
+}
+
+sub unique(@)
+{
+    my %count;
+    my @unique;
+
+    for (@_) {
+        next if $count{$_};
+        $count{$_}++;
+        push @unique, $_;
+    }
+    return @unique;
+}

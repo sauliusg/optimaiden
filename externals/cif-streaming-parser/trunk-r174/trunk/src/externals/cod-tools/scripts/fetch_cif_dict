@@ -1,0 +1,309 @@
+#! /bin/sh
+#!perl -w # --*- Perl -*--
+eval 'exec perl -x $0 ${1+"$@"}'
+    if 0;
+#------------------------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2021-08-01 23:10:01 +0300 (Sun, 01 Aug 2021) $
+#$Revision: 8845 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/scripts/fetch_cif_dict $
+#------------------------------------------------------------------------------
+#*
+#* Fetch cif_core.dic from the IUCr FTP site if non-expired local copy
+#* does not exist.
+#*
+#* USAGE:
+#*    $0 --options
+#**
+
+use strict;
+use warnings;
+use Net::FTP;
+use File::Compare qw( compare );
+use File::Copy qw( move );
+use COD::SOptions qw( getOptions );
+use COD::SUsage qw( usage options );
+use COD::UserMessage qw( note
+                         warning
+                         error
+                         sprint_message );
+use COD::ToolsVersion qw( get_version_string );
+
+my $version = '1.0';
+my $cache_duration = 432000; # 60 * 60 * 24 * 5 = 432000 -> for 5 days
+my $from_mail = undef;       # e-mail of user using script
+my $force_overwrite = 0;     # force overwrite of local file or cache clearance
+my $verbose = 0;
+my $dict_file_uri = 'ftp://ftp.iucr.org/pub/cif_core.dic';
+
+#* OPTIONS:
+#*   --cache-duration 432000
+#*                     Time in seconds, for which the file will remain
+#*                     untouched unless forced to do otherwise
+#*                     (see --force-overwrite) (default: 432000).
+#*   --mail-address fetcher@mail.com
+#*                     The e-mail address that will be used passed to the FTP
+#*                     server as an identifier of the client using the service.
+#*                     It is not mandatory and there is no default, but we
+#*                     insist you to declare it.
+#*   --force-overwrite
+#*                     Disregard local file modification time and cache duration
+#*                     values while fetching the requested file.
+#*   --no-force-overwrite
+#*                     Respect local file modification time and cache duration
+#*                     values while fetching the requested file (default).
+#*   --silent, --quiet
+#*                     Suppress additional messages about the progress of the
+#*                     script. Only fatal errors will be printed.
+#*   --verbose, --no-quiet
+#*                     Print additional messages about the progress of the
+#*                     script.
+#*   --help, --usage
+#*                     Output a short usage message (this message) and exit.
+#*   --version
+#*                     Output version information and exit.
+#**
+@ARGV = getOptions(
+    '--cache-duration'   => \$cache_duration,
+    '--mail-address'     => \$from_mail,
+
+    '--force-overwrite'    => sub { $force_overwrite = 1 },
+    '--no-force-overwrite' => sub { $force_overwrite = 0 },
+
+    '--silent'       => sub { $verbose = 0 },
+    '--quiet'        => sub { $verbose = 0 },
+    '--verbose'      => sub { $verbose = 1 },
+    '--no-quiet'     => sub { $verbose = 1 },
+
+    '--options'      => sub { options; exit },
+    '--help,--usage' => sub { usage; exit },
+    '--version'      => sub { print get_version_string(), "\n"; exit }
+);
+
+fetch_dictionary($dict_file_uri, $cache_duration, $from_mail, $force_overwrite);
+
+# This subroutine is used before fetching new dictionary from FTP.
+# It creates local directory and returns path to it.
+# Parameters:
+#     NONE
+# Example:
+#     prepare_local();
+sub prepare_local
+{
+    my $my_cod_dir = '';
+    if( defined $ENV{HOME} ) {
+        $my_cod_dir = $ENV{HOME} . '/';
+    }
+    $my_cod_dir .= '.cod/';
+
+    if( ! -d $my_cod_dir ) {
+        if( ! mkdir $my_cod_dir, 0775 ) {
+            error( {
+                'program'  => $0,
+                'filename' => $my_cod_dir,
+                'message'  =>
+                    'unable to create COD directory -- ' . lcfirst($!)
+            } );
+            return 0;
+        }
+        note( {
+            'program'  => $0,
+            'filename' => $my_cod_dir,
+            'message'  =>
+                'created directory to store Crystallography Open Database ' .
+                '(COD) persistent files'
+        } );
+    }
+
+    return $my_cod_dir;
+}
+
+# Subroutine used to create a copy of local dictionary file appending
+# date to file name.
+# Parameters:
+#     1) string -- path to local dictionary file
+# Example:
+#     create_copy_of_local_file( '/home/user/.cod/cif_core.dic' );
+sub create_copy_of_local_file
+{
+    my ($local_dict_file) = @_;
+
+    my @local_time = localtime(time);
+    my $moved_dist_file = $local_dict_file . '_';
+    $moved_dist_file .= ($local_time[5]+1900) . '-';
+    $moved_dist_file .= ($local_time[4] < 10) ? '0' . $local_time[4] : $local_time[4];
+    $moved_dist_file .= '-' . $local_time[3];
+
+    if( -e $moved_dist_file ) {
+        warning( {
+            'program' => $0,
+            'message' =>
+                'back-up of your current dictionary file already exists as ' .
+                "'$moved_dist_file' -- operation stopped"
+        } );
+        return 0;
+    }
+
+    if( ! move $local_dict_file, $moved_dist_file ) {
+        error( {
+            'program' => $0,
+            'message' =>
+                "unable to create copy '$moved_dist_file' of your dictionary " .
+                "file '$local_dict_file' -- " . lcfirst($!)
+        } );
+        return 0;
+    }
+
+    note( {
+        'program' => $0,
+        'message' =>
+            'created a copy of your dictionary file ' .
+            "'$local_dict_file' as '$moved_dist_file'"
+    } );
+    return 1;
+}
+
+# Subroutine to replace fetched dictionary file by new one.
+# This subroutine uses 'File::Compare' to check, if files are equal.
+# There is no need, to replace old file by new if they are equal.
+# If files are not equal and old file exists - create_copy_of_local_file is
+# called.
+# Parameters:
+#     1) string -- path to local dictionary file;
+#     2) string -- path to temporary folder where downloaded file resides.
+# Example:
+#     move_fetched_file_if_diff( '/home/user/.cod/cif_core.dic',
+#                                '/tmp/fetch_cif_dict_17531_cif_core.dic' )
+sub move_fetched_file_if_diff
+{
+    my ($dict_file_path, $new_file_path) = @_;
+
+    if( -e $dict_file_path ) {
+        if( compare($dict_file_path, $new_file_path) == 0 ) {
+            note( {
+                'program' => $0,
+                'message' =>
+                    'new file does not differ from its previous version -- ' .
+                    'only its mtime will be changed for further processes'
+            } );
+            utime undef, undef, $dict_file_path;
+            unlink $new_file_path;
+            return 0;
+        }
+
+        return unless create_copy_of_local_file( $dict_file_path );
+    }
+
+    if( ! move $new_file_path, $dict_file_path ) {
+        error( {
+            'program' => $0,
+            'message' =>
+                'unable to create new dictionary file ' .
+                "'$dict_file_path' moving '$new_file_path' -- " . lcfirst($!)
+        } );
+        unlink $new_file_path;
+        return 0;
+    }
+
+    note( {
+        'program'  => $0,
+        'filename' => $dict_file_path,
+        'message'  => 'new dictionary file was successfully downloaded'
+    } );
+
+    return 1;
+}
+
+# Subroutine to fetch dictionary.
+# Parameters:
+#     1) string -- full FTP address of dictionary to be fetched;
+#     2) int -- time in seconds to cache file (will be checked against
+#         mtime of local file);
+#     3) string -- e-mail of user using script (will be used to
+#         authenticate against FTP server);
+#     4) int -- this flag forces download if set to higher than 0 (zero)
+#         value;
+# Example:
+#     fetch_dictionary( 'ftp://ftp.iucr.org/pub/cif_core.dic', 432000,
+#                       'name@example.com', 0 );
+sub fetch_dictionary
+{
+    my ($dict_file_uri, $cache_duration, $user_mail, $force_download) = @_;
+
+    $dict_file_uri =~ m/^([a-z]+):\/\/([^\/]+)(\/.*\/)([^\/]+)$/s;
+    my %ftp = ( 'protocol' => $1,
+                'host' => $2,
+                'path' => $3,
+                'file' => $4
+        );
+
+    my $local_path  = prepare_local();
+    my $local_dict_path = $local_path  . $ftp{file};
+
+    return unless $local_path ;
+
+    my $temporary_store = '/tmp';
+    if( defined $ENV{TMP}
+        && -d $ENV{TMP} ) {
+        $ENV{TMP} =~ m/^(.*)\/?$/;
+        $temporary_store = $1;
+    }
+    $0 =~ m/\/?([^\/]+)$/;
+    $temporary_store .= '/' . $1 . '_' . $$ . '_' . $ftp{file};
+
+    # if dictionary does not exist in local cache, or has expired
+    if( $force_download == 0
+        && -e $local_dict_path
+        && (stat($local_dict_path))[9] < (time() + $cache_duration) ) {
+        warning( {
+            'program'  => $0,
+            'filename' => $ftp{file},
+            'message'  =>
+                'dictionary file already exists in local folder as ' .
+                "'$local_dict_path' -- operation canceled"
+        } );
+        return 0;
+    }
+
+    # download file
+    my $ftp_agent = Net::FTP->new($ftp{host}, Debug => 0, Passive => 1) or die
+                  sprint_message( {
+                      'program'   => $0,
+                      'err_level' => 'ERROR',
+                      'message'   => "unable to connect to ftp '$ftp{host}'" .
+                                      ' -- ' . lcfirst($@)
+                  } );
+    $ftp_agent->login('anonymous', $user_mail) or die
+                  sprint_message( {
+                      'program'   => $0,
+                      'err_level' => 'ERROR',
+                      'message'   => 'unable to authenticate' .
+                                      ' -- ' . lcfirst($ftp_agent->message)
+                  } );
+    $ftp_agent->cwd($ftp{path}) or die
+                  sprint_message( {
+                      'program'   => $0,
+                      'err_level' => 'ERROR',
+                      'message'   => 'unable to change working directory to ' .
+                                     "'$ftp{path}'" . ' -- ' .
+                                     lcfirst($ftp_agent->message)
+                  } );
+    $ftp_agent->get($ftp{file}, $temporary_store) or die
+                  sprint_message( {
+                      'program'   => $0,
+                      'err_level' => 'ERROR',
+                      'message'   => "unable to fetch file '$ftp{file}' -- " .
+                                      lcfirst($ftp_agent->message)
+                  } );
+    note( {
+        'program'  => $0,
+        'filename' => $dict_file_uri,
+        'message'  =>
+            'successfully downloaded the dictionary and stored it as ' .
+            "'$temporary_store' for further processing"
+    } );
+    $ftp_agent->quit;
+
+    # attempt to replace file
+    return move_fetched_file_if_diff( $local_dict_path, $temporary_store );
+}

@@ -1,0 +1,62 @@
+
+EXTERNAL_LIB_DIRS ?= src/externals/codcif
+
+GNATMAKE_PRG_DIR ?= programs
+GNATMAKE_SRC_DIR ?= src
+GNATMAKE_BIN_DIR ?= bin
+GNATMAKE_OBJ_DIR ?= obj
+GNATMAKE_PRJ_DIR ?= projects
+
+GNATMAKE_ADA_PROGRAMS ?= \
+   $(wildcard ${GNATMAKE_PRG_DIR}/*.adb)
+
+GNATMAKE_ADA_DEPEND ?= \
+   ${GNATMAKE_ADA_PROGRAMS:${GNATMAKE_PRG_DIR}/%.adb=${GNATMAKE_PRG_DIR}/.%.d}
+
+#GNATMAKE_ADA_EXE ?= \
+#   ${GNATMAKE_ADA_PROGRAMS:${GNATMAKE_PRG_DIR}/%.adb=${GNATMAKE_BIN_DIR}/%}
+
+BISON_GRAMMAR_FILES ?= $(wildcard $(EXTERNAL_LIB_DIRS)/*.y)
+BISON_C_FILES       ?= $(BISON_GRAMMAR_FILES:%.y=%.tab.c)
+
+GPR_FILES ?= $(wildcard ${GNATMAKE_PRJ_DIR}/*.gpr)
+
+GNATMAKE_ADA_EXE ?= \
+   ${GPR_FILES:${GNATMAKE_PRJ_DIR}/%.gpr=${GNATMAKE_BIN_DIR}/%}
+
+.PHONY: all clean distclean grammar build
+
+all: build
+
+#------------------------------------------------------------------------------
+
+include ${GNATMAKE_ADA_DEPEND}
+
+${GNATMAKE_PRG_DIR}/.%.d: ${GNATMAKE_PRG_DIR}/%.adb
+	gnatmake -I${GNATMAKE_SRC_DIR} -D ${GNATMAKE_OBJ_DIR} -M $< \
+	| sed 's/^\(.*\.o\) :/${GNATMAKE_BIN_DIR}\/$* :/' \
+	> $@
+
+#------------------------------------------------------------------------------
+
+grammar: $(BISON_C_FILES)
+
+$(EXTERNAL_LIB_DIRS)/%.tab.c: $(EXTERNAL_LIB_DIRS)/%.y
+	bison -v -d -p $(*:%_grammar=%) --file-prefix $* $< -o $@
+
+${GNATMAKE_ADA_EXE}: ${BISON_C_FILES}
+
+build: ${GNATMAKE_ADA_EXE}
+
+${GNATMAKE_BIN_DIR}/%: ${GNATMAKE_PRJ_DIR}/%.gpr
+	gprbuild $<
+	${MAKE} --no-print-directory ${GNATMAKE_ADA_PROGRAMS:%=-W %} ${GNATMAKE_ADA_DEPEND}
+
+clean:
+	for FILE in ${GPR_FILES}; do \
+    	gprclean $$FILE; \
+  	done
+	rm -f ${GNATMAKE_ADA_DEPEND}
+
+distclean: clean
+	rm -f $(BISON_C_FILES)

@@ -1,0 +1,31 @@
+#--*- Makefile -*--------------------------------------------------------------
+#$Author: antanas $
+#$Revision: 8840 $
+#$Date: 2021-07-30 19:52:52 +0300 (Fri, 30 Jul 2021) $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/Makelocal-install $
+#------------------------------------------------------------------------------
+
+# Collecting Perl binaries and libraries:
+
+CODTOOLS_LIBS = $(shell find src/lib/perl5 -name .svn -prune -o \
+                                           -name lib -prune -o \
+                                           -name AdHoc.pm -prune -o \
+                                           -name Bison.pm -prune -o \
+                                           -name IUCr.pm -prune -o \
+                                           -name SPGLib.pm -prune -o \
+                                           -name Yapp.pm -prune -o \
+                                           -name \*.pm -print)
+
+build:
+	$(MAKE) -C src
+
+install: build src/lib/perl5/COD/ToolsVersion.pm
+	$(MAKE) install -C src PREFIX=${PREFIX}
+	test -d ${BIN_INSTALL_DIR} || mkdir -p ${BIN_INSTALL_DIR}
+	install ${CODTOOLS_SCRIPTS} ${BIN_INSTALL_DIR}
+	for i in ${CODTOOLS_LIBS:src/lib/%=%}; \
+	do \
+		test -d ${PREFIX}/lib/$$(dirname $$i) \
+			|| mkdir -p ${PREFIX}/lib/$$(dirname $$i); \
+		install --mode 644 src/lib/$$i ${PREFIX}/lib/$$i; \
+	done

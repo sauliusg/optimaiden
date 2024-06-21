@@ -1,0 +1,45 @@
+data_104812
+_cell_length_a                   9.98999999999
+_cell_length_b                   16.5228
+_cell_length_c                   9.47450027743
+_cell_angle_alpha                89.9999999998
+_cell_angle_beta                 115.004998907
+_cell_angle_gamma                90
+_chemical_formula_sum            'Cl9 K2 Ta3'
+_cod_original_sg_symbol_H-M      'P 1'
+_cod_original_sg_symbol_Hall     ' P 1'
+_cell_formula_units_Z            2
+_oqmd_space_group_name_h-m       C2/m
+_oqmd_space_group_name_hall      '-C 2y'
+_oqmd_space_group_crystal_system monoclinic
+_oqmd_space_group_it_number      12
+_space_group_IT_number           8
+_space_group_name_H-M_alt        'C 1 m 1'
+_space_group_name_Hall           'C -2y'
+loop_
+_atom_site_label
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+Cl 0.325799428198 0 0.83529960645
+Cl 0.67419998465 0 0.1646999277
+Cl 0.30760022885 0.198330186167 0.82240023367
+Cl 0.692400651879 0.198330186167 0.177600465104
+Cl 0.268900171783 0 0.207299535641
+Cl 0.731100242065 0 0.792699998509
+Cl 0.30269994689 0.105010046724 0.512100207955
+Cl 0.697299932839 0.105010046724 0.487900490819
+Cl 0.479900151379 0.395460212554 0.177600465104
+Cl 0.52009972835 0.395460212554 0.82240023367
+Cl 0.500000206924 0.708819933668 0.499999767075
+K 0.390899816262 0.161209964413 0.177299992174
+K 0.609099596585 0.161209964413 0.822699541977
+Ta 0.135620424106 0.0874567264625 0.641300074163
+Ta 0.864379989743 0.087456726463 0.358699459987
+Ta 0.119079811025 0 0.368889917899
+Ta 0.880919601823 0 0.631109616252
+loop_
+_space_group_symop_id
+_space_group_symop_operation_xyz
+1 x,y,z
+2 -y,-x,z

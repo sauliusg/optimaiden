@@ -1,0 +1,15 @@
+scripts/cif_tcod_tree: tests/inputs/tcod-crafted.cif data_tcod_cif: WARNING, MD5 checksums of the original 'test.cif' and decoded files are different.
++ cat ./tmp-cif_tcod_tree_002/main.sh
++ set +x
+./tmp-cif_tcod_tree_002
+./tmp-cif_tcod_tree_002/author.txt
+./tmp-cif_tcod_tree_002/main.sh
+./tmp-cif_tcod_tree_002/test.cif
+#!/bin/bash
+
+(
+    PATH=.
+    PERL5LIB=.
+
+    cat test.cif
+)

@@ -1,0 +1,85 @@
+#! /bin/sh
+#!perl -w # --*- Perl -*--
+eval 'exec perl -x $0 ${1+"$@"}'
+    if 0;
+#------------------------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2021-04-28 19:35:53 +0300 (Wed, 28 Apr 2021) $
+#$Revision: 8738 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/scripts/cod_fetch $
+#------------------------------------------------------------------------------
+#*
+#* Query COD server using the Perl DBD::mysql interface.
+#*
+#* USAGE:
+#*   $0 --options "search text"
+#*   $0 --options -- "--search text"
+#**
+
+use strict;
+use warnings;
+use DBD::mysql;
+use COD::SOptions qw( getOptions );
+use COD::SUsage qw( usage options );
+use COD::ErrorHandler qw( report_message );
+use COD::ToolsVersion qw( get_version_string );
+
+my $opt_enabled = 1;
+#* OPTIONS:
+#*   --
+#*                     Notify the end of command line options. Only positional
+#*                     parameters are accepted after this option. This option
+#*                     is mandatory if the positional parameters are prefixed
+#*                     with a minus sign ('-').
+#*   --help, --usage
+#*                     Output a short usage message (this message) and exit.
+#*   --version
+#*                     Output version information and exit.
+#**
+@ARGV = getOptions(
+    '--'             => sub { if ($opt_enabled) { $opt_enabled = 0 } },
+    '--options'      => sub { if ($opt_enabled) { options; exit } },
+    '--help,--usage' => sub { if ($opt_enabled) { usage; exit } },
+    '--version'      => sub {
+                                if ($opt_enabled) {
+                                    print get_version_string(), "\n"; exit
+                                }
+                            }
+);
+
+if ( @ARGV > 1 ) {
+    report_message( {
+        'program'   => $0,
+        'err_level' => 'WARNING',
+        'message'   => 'more than one positional parameters was provided -- '
+                     . "only the first one ('$ARGV[0]') will be used"
+    }, 0 );
+}
+
+my $database = "cod";
+my $hostname = "cod.ibt.lt";
+
+my $query_text = $ARGV[0];
+
+my $dsn = "DBI:mysql:database=$database;host=$hostname";
+
+my $dbh = DBI->connect( $dsn, "cod_reader" );
+
+my $query = sprintf("SELECT file FROM data WHERE text like %s",
+                    $dbh->quote( "%" . $query_text . "%" ));
+
+print "query = >>>$query<<<\n";
+
+my $sth = $dbh->prepare( $query );
+
+$sth->execute();
+
+use COD::Serialise qw( serialiseRef );
+
+while (my $row = $sth->fetchrow_hashref()) {
+    serialiseRef( $row );
+}
+
+$sth->finish();
+
+$dbh->disconnect();

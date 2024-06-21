@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use DBI;
+
+local $SIG{__WARN__} = sub {};
+
+my $dbh = DBI->connect( "dbi:mysql:" .
+                        "hostname=www.crystallography.net;".
+                        "dbname=cod;".
+                        "user=cod_reader;" );
+if( !$dbh ) {
+    print "Test skipped - could not connect to MySQL database\n";
+    exit 1;
+}

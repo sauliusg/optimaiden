@@ -1,0 +1,116 @@
+#! /bin/sh
+#!perl -w # --*- Perl -*--
+eval 'exec perl -x $0 ${1+"$@"}'
+    if 0;
+#------------------------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2022-07-31 09:41:50 +0300 (Sun, 31 Jul 2022) $
+#$Revision: 9352 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/scripts/cif_classify $
+#------------------------------------------------------------------------------
+#*
+#* Classify a CIF structure -- find out if it is organic compound,
+#* inorganic, mineral, etc.
+#*
+#* USAGE:
+#*    $0 --options input1.cif input*.cif
+#**
+
+use strict;
+use warnings;
+use COD::CIF::Parser qw( parse_cif );
+use COD::CIF::Data::Classifier qw( cif_class_flags );
+use COD::AtomProperties;
+use COD::SOptions qw( getOptions );
+use COD::SUsage qw( usage options );
+use COD::ErrorHandler qw( process_warnings
+                          process_parser_messages
+                          report_message );
+use COD::ToolsVersion qw( get_version_string );
+
+my $die_on_error_level = {
+    ERROR   => 0,
+    WARNING => 0,
+    NOTE    => 0
+};
+
+my $use_parser = "c";
+
+#* OPTIONS:
+#*   --use-perl-parser
+#*                     Use development CIF parser written in Perl.
+#*   --use-c-parser
+#*                     Use faster C/Yacc CIF parser (default).
+#*
+#*   --help, --usage
+#*                     Output a short usage message (this message) and exit.
+#*   --version
+#*                     Output version information and exit.
+#**
+@ARGV = getOptions(
+    "--use-perl-parser"  => sub{ $use_parser = "perl" },
+    "--use-c-parser"     => sub{ $use_parser = "c" },
+
+    '--options'      => sub { options; exit },
+    '--help,--usage' => sub { usage; exit },
+    '--version'      => sub { print get_version_string(), "\n"; exit }
+);
+
+@ARGV = ( "-" ) unless @ARGV;
+
+binmode STDOUT, ':encoding(UTF-8)';
+binmode STDERR, ':encoding(UTF-8)';
+
+for my $filename (@ARGV) {
+
+    my $options = { 'parser' => $use_parser, 'no_print' => 1 };
+    my ( $data, $err_count, $messages ) = parse_cif( $filename, $options );
+    process_parser_messages( $messages, $die_on_error_level );
+    next if ( $err_count > 0 );
+
+    if( !@$data || !defined $data->[0] || !defined $data->[0]{name} ) {
+        report_message( {
+           'program'   => $0,
+           'filename'  => $filename,
+           'err_level' => 'WARNING',
+           'message'   => 'file seems to be empty'
+        }, $die_on_error_level->{WARNING} );
+        next;
+    }
+
+    my $bond_safety_margin = 0.2; # Angstroems
+
+    for my $datablock (@$data) {
+        my $dataname = 'data_' . $datablock->{'name'};
+
+        local $SIG{__WARN__} = sub {
+            process_warnings( {
+                'message'  => @_,
+                'program'  => $0,
+                'filename' => $filename,
+                'add_pos'  => $dataname
+            }, $die_on_error_level )
+        };
+
+        eval {
+            my $flags = cif_class_flags( $datablock,
+                                         \%COD::AtomProperties::atoms,
+                                         $bond_safety_margin );
+
+            if( $flags ) {
+                print $datablock->{name}, "\t", $flags, "\n";
+            } else {
+                print $datablock->{name}, "\t", 0, "\n";
+            }
+        };
+        if( $@ ) {
+            $@ =~ s/^ERROR,/WARNING,/;
+            process_warnings( {
+              'message'       => $@,
+              'program'       => $0,
+              'filename'      => $filename,
+              'add_pos'       => $dataname,
+            }, $die_on_error_level )
+        }
+    }
+}

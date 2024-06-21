@@ -1,0 +1,276 @@
+#! /bin/sh
+#!perl -w # --*- Perl -*--
+eval 'exec perl -x $0 ${1+"$@"}'
+    if 0;
+#------------------------------------------------------------------------------
+#$Author: antanas $
+#$Date: 2022-07-31 09:41:50 +0300 (Sun, 31 Jul 2022) $
+#$Revision: 9352 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/scripts/cif_fillcell $
+#------------------------------------------------------------------------------
+#*
+#* Generate symmetric atoms from a CIF file.
+#*
+#* USAGE:
+#*    $0 --options input.cif inputs*.cif
+#**
+
+use strict;
+use warnings;
+use File::Basename qw( fileparse );
+use COD::AtomProperties;
+use COD::CIF::Parser qw( parse_cif );
+use COD::CIF::Data qw( get_symmetry_operators );
+use COD::CIF::Data::AtomList qw( atom_array_from_cif
+                                 datablock_from_atom_array
+                                 generate_cod_molecule_data_block );
+use COD::CIF::Data::SymmetryGenerator qw( apply_shifts
+                                          symop_generate_atoms
+                                          symop_apply );
+use COD::CIF::Tags::CanonicalNames qw( canonicalize_names );
+use COD::CIF::Tags::Manage qw( new_datablock set_tag set_loop_tag );
+use COD::CIF::Tags::Merge qw( merge_datablocks );
+use COD::CIF::Tags::Print qw( print_cif );
+use COD::Spacegroups::Symop::Parse qw( symop_from_string
+                                       symop_string_canonical_form );
+use COD::SOptions qw( getOptions );
+use COD::SUsage qw( usage options );
+use COD::ErrorHandler qw( process_warnings
+                          process_errors
+                          process_parser_messages );
+use COD::ToolsVersion qw( get_version_string );
+
+my $use_parser = 'c';
+my $die_on_errors    = 1;
+my $die_on_warnings  = 0;
+my $die_on_notes     = 0;
+my $die_on_error_level = {
+    ERROR   => $die_on_errors,
+    WARNING => $die_on_warnings,
+    NOTE    => $die_on_notes
+};
+
+my $print_cod_molecule_data_items = 0;
+my $build_supercell = 0;
+my $merge_special_positions = 0;
+
+#* OPTIONS:
+#*   --merge-special-positions
+#*                     Merge atoms that are located in special positions.
+#*   --no-merge-special-positions,
+#*   --dont-merge-special-positions
+#*                     Output unmerged special positions (default).
+#*
+#*   --supercell
+#*                     Build the 3x3x3 supercell by shifting atoms of the
+#*                     unit cell in all 3D directions.
+#*   --unit-cell, --no-supercell
+#*                     Only build the unit cell (default).
+#*
+#*   --output-cod-molecule-data-items
+#*                     Print _cod_molecule_* data items describing the
+#*                     transformations of atoms.
+#*   --no-output-cod-molecule-data-items,
+#*   --dont-output-cod-molecule-data-items
+#*                     Do not print _cod_molecule_* data items (default).
+#*
+#*   --use-c-parser
+#*                     Use the faster C parser for CIFs (default).
+#*   --use-perl-parser
+#*                     Use the Perl parser for parsing CIFs.
+#*   --help, --usage
+#*                     Output a short usage message (this message) and exit.
+#*   --version
+#*                     Output version information and exit.
+#**
+@ARGV = getOptions(
+    '--merge-special-positions'      => sub { $merge_special_positions = 1 },
+    '--dont-merge-special-positions' => sub { $merge_special_positions = 0 },
+    '--no-merge-special-positions'   => sub { $merge_special_positions = 0 },
+
+    '--supercell'    => sub { $build_supercell = 1 },
+    '--no-supercell' => sub { $build_supercell = 0 },
+    '--unit-cell'    => sub { $build_supercell = 0 },
+
+    '--output-cod-molecule-data-items' =>
+        sub { $print_cod_molecule_data_items = 1 },
+    '--dont-output-cod-molecule-data-items' =>
+        sub { $print_cod_molecule_data_items = 0 },
+    '--no-output-cod-molecule-data-items' =>
+        sub { $print_cod_molecule_data_items = 0 },
+
+    '--use-perl-parser' => sub { $use_parser = 'perl' },
+    '--use-c-parser'    => sub { $use_parser = 'c' },
+
+    '--options'      => sub { options; exit },
+    '--help,--usage' => sub { usage; exit },
+    '--version'      => sub { print get_version_string(), "\n"; exit }
+);
+
+@ARGV = ('-') unless @ARGV;
+
+binmode STDOUT, ':encoding(UTF-8)';
+binmode STDERR, ':encoding(UTF-8)';
+
+foreach my $filename (@ARGV) {
+    my $options = { 'parser' => $use_parser, 'no_print' => 1 };
+    my ( $data, $err_count, $messages ) = parse_cif( $filename, $options );
+    process_parser_messages( $messages, $die_on_error_level );
+
+    foreach my $dataset (@{$data}) {
+        canonicalize_names( $dataset );
+
+        my $values   = $dataset->{values};
+        my $dataname = 'data_' . $dataset->{'name'};
+
+        local $SIG{__WARN__} = sub {
+            process_warnings( {
+                'message'  => @_,
+                'program'  => $0,
+                'filename' => $filename,
+                'add_pos'  => $dataname
+            }, $die_on_error_level )
+        };
+
+        my $atoms;
+        eval {
+            # Create a list of symmetry operators:
+            my $sym_data = get_symmetry_operators( $dataset );
+            my @sym_operators = map { symop_from_string($_) }
+                                    @{$sym_data};
+            my $symop_list = { symops => \@sym_operators,
+                               symop_ids => {} };
+            for (my $i = 0; $i < @{$sym_data}; $i++) {
+                $symop_list->{symop_ids}
+                             {symop_string_canonical_form($sym_data->[$i])} = $i;
+            }
+
+            my $cif_atom_list_options = {
+                allow_unknown_chemical_types => 1,
+                atom_properties => \%COD::AtomProperties::atoms,
+                exclude_dummy_atoms => 1,
+                exclude_dummy_coordinates => 1,
+                exclude_unknown_coordinates => 1,
+                modulo_1 => 1,
+                symop_list => $symop_list,
+                uniquify_atom_names => 1,
+            };
+
+            # Build an atom array from the CIF data structure:
+            my $initial_atoms =
+                atom_array_from_cif( $dataset, $cif_atom_list_options );
+
+            if( $merge_special_positions ) {
+                $atoms =
+                    symop_generate_atoms( \@sym_operators,
+                                          $initial_atoms,
+                                          { append_atoms_mapping_to_self => 0 } );
+            } else {
+                $atoms = fillcell( $initial_atoms, $symop_list );
+            }
+
+            if( $build_supercell ) {
+                $atoms = apply_shifts( $atoms );
+            }
+
+            my $atom_list_datablock = datablock_from_atom_array( $atoms );
+            my $new_datablock = p1_datablock( $dataset );
+            merge_datablocks( $atom_list_datablock, $new_datablock );
+
+            if( $print_cod_molecule_data_items ) {
+                my $cod_molecule_datablock =
+                    generate_cod_molecule_data_block( $atoms );
+                merge_datablocks( $cod_molecule_datablock, $new_datablock );
+            }
+
+            my @squeeze_tags = grep { /^_platon_squeeze_void_/ }
+                                    @{$dataset->{tags}};
+            my %squeeze_loops =
+                map { $dataset->{inloop}{$_} => 1 } @squeeze_tags;
+            # All tags should belong in the same loop
+            if( scalar keys %squeeze_loops == 1 ) {
+                my $first_tag = $squeeze_tags[0];
+                foreach (@squeeze_tags) {
+                    set_loop_tag( $new_datablock,
+                                  $_,
+                                  $first_tag,
+                                  $dataset->{values}{$_} );
+                }
+            }
+
+            print_cif( $new_datablock,
+                       {
+                            preserve_loop_order => 1,
+                            keep_tag_order => 1
+                       }
+                     );
+        };
+        if ( $@ ) {
+            process_errors( {
+              'message'       => $@,
+              'program'       => $0,
+              'filename'      => $filename,
+              'add_pos'       => $dataname
+            }, $die_on_errors )
+        }
+    }
+}
+
+#===============================================================#
+sub fillcell
+{
+    my( $atoms, $symop_list ) = @_;
+
+    my @new_atoms;
+    for my $symop ( @{$symop_list->{'symops'}} ) {
+        for my $atom ( @{$atoms} ) {
+            push @new_atoms, symop_apply( $atom, $symop, { 'modulo_1' => 1 } );
+        }
+    }
+
+    return \@new_atoms;
+}
+
+#==============================================================#
+sub p1_datablock
+{
+    my( $dataset ) = @_;
+
+    my $new_datablock = new_datablock( $dataset->{name} . '_' .
+                                       fileparse($0) );
+
+    set_tag( $new_datablock, '_space_group_IT_number',     1 );
+    set_tag( $new_datablock, '_space_group_name_Hall',    'P 1' );
+    set_tag( $new_datablock, '_space_group_name_H-M_alt', 'P 1' );
+
+    my $values = $dataset->{values};
+
+    # set unit cell lengths and angles
+    foreach ( qw( _cell_angle_alpha
+                  _cell_angle_beta
+                  _cell_angle_gamma ) )
+    {
+        if( defined $values->{$_}[0] ) {
+            set_tag( $new_datablock, $_, $values->{$_}[0] );
+        }
+    }
+
+    foreach ( qw( _cell_length_a
+                  _cell_length_b
+                  _cell_length_c ) )
+    {
+        set_tag( $new_datablock, $_, $values->{$_}[0] );
+    }
+
+    # set symmetry operation information
+    set_loop_tag( $new_datablock,
+                  '_space_group_symop_id',
+                  '_space_group_symop_id',
+                  [ 1 ] );
+    set_loop_tag( $new_datablock,
+                  '_space_group_symop_operation_xyz',
+                  '_space_group_symop_id',
+                  [ 'x, y, z' ] );
+
+    return $new_datablock;
+}

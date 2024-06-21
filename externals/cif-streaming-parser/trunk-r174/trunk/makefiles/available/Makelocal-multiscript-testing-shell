@@ -1,0 +1,102 @@
+#---*- Makefile -*-------------------------------------------------------
+#$Author: saulius $
+#$Date: 2022-04-24 13:33:00 +0300 (Sun, 24 Apr 2022) $
+#$Revision: 311 $
+#$URL: svn+ssh://saulius-grazulis.lt/home/saulius/svn-repositories/makefiles/multiscript-testing-shell/Makelocal-multiscript-testing-shell $
+#------------------------------------------------------------------------
+
+# Run tests in a test directory (tests/ by default) and report if
+# all tests pass.
+
+# USAGE:
+#     make clean
+#     make distclean
+#     make tests
+#     make
+
+#------------------------------------------------------------------------------
+
+# The BIN_DIR value MUST be not empty; use "." for testing scripts in
+# the current working directory"
+BIN_DIR  ?= .
+
+TEST_DIR ?= tests/cases
+OUTP_DIR ?= tests/outputs
+
+SH_FILES ?= $(sort ${wildcard ${TEST_DIR}/*.sh})
+
+SH_DIFFS ?= ${SH_FILES:${TEST_DIR}/%.sh=${OUTP_DIR}/%.diff}
+SH_OUTS  ?= ${SH_FILES:${TEST_DIR}/%.sh=${OUTP_DIR}/%.out}
+
+DIFF_FILES += ${SH_DIFFS}
+OUTP_FILES += ${SH_OUTS}
+
+.PHONY: all clean cleanAll distclean test tests out outputs
+
+all:
+
+#------------------------------------------------------------------------------
+
+test tests: ${DIFF_FILES}
+
+out outputs: ${OUTP_FILES}
+
+#------------------------------------------------------------------------------
+
+# Dependencies for the test files:
+
+SH_TEST_DEPENDECIES = .test-sh-depend
+
+include ${SH_TEST_DEPENDECIES}
+
+${SH_TEST_DEPENDECIES}: ${SH_FILES}
+	date '+# %F %T %Z' > $@
+	for i in $^; do \
+		echo "$$i: $$(echo $$i | sed -e 's/_[0-9]*\..*$$//' \
+			| sed 's,${TEST_DIR},${BIN_DIR},')" \
+			| sed 's,.sh,.diff,' \
+			| sed 's,/cases/,/outputs/,' \
+		; \
+	done | sort | uniq >> $@
+
+#------------------------------------------------------------------------------
+
+${OUTP_DIR}/%.diff: ${TEST_DIR}/%.sh ${OUTP_DIR}/%.out | ${TEST_PREREQUISITES}
+	-@printf "%-50s " "$<:" ; \
+	if [ ! -e ${TEST_DIR}/$*.chk ] || ${TEST_DIR}/$*.chk; then \
+		test -f $(dir $<)/$*.env && . $(dir $<)/$*.env; \
+		$< 2>&1 \
+		| diff -I 'Expires:\|Date:\|^# ?Id: ' \
+			${OUTP_DIR}/$*.out - \
+		> $@ ; \
+		if [ $$? = 0 ]; then \
+			echo "OK"; \
+		else \
+			echo "FAILED:"; cat $@; \
+		fi; \
+	else \
+		touch $@; \
+	fi
+
+# Rules to generate sample test outputs:
+
+${OUTP_DIR}/%.out: ${TEST_DIR}/%.sh | ${TEST_PREREQUISITES}
+	-@test -f $@ || echo "$@:"
+	-@test -f $(dir $<)/$*.env && . $(dir $<)/$*.env; \
+	test -f $@ || \
+	$< 2>&1 | tee $@
+	-@touch $@
+
+#------------------------------------------------------------------------------
+
+.PHONY: shell-clean shell-distclean
+
+shell-clean:
+	rm -f ${SH_DIFFS}
+
+shell-distclean shell-cleanAll: shell-clean
+	rm -f ${SH_TEST_DEPENDECIES}
+
+clean: shell-clean
+
+distclean cleanAll: shell-distclean

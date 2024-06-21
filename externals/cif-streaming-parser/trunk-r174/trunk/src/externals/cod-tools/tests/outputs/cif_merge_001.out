@@ -1,0 +1,9 @@
+scripts/cif_merge: tests/inputs/merge_1b.cif data_merge2: WARNING, data item '_data_tag2' value '1.02(3)' differs from the value '1.01(3)' encountered in previously processed files.
+data_merge
+_data_tag1                       123
+_data_tag2                       abc
+_data_tag3                       xyz
+data_merge2
+_data_tag1                       'xyz now'
+_data_tag2                       1.01(3)
+_data_tag4                       'never mind'

@@ -1,0 +1,41 @@
+V "GNAT Lib v13"
+A -gnatA
+A -mtune=generic
+A -march=x86-64
+P ZX
+
+RN
+RV NO_STANDARD_STORAGE_POOLS
+RV NO_IMPLEMENTATION_PRAGMAS
+
+U cexceptions_ada%s	cexceptions_ada.ads	b2953bd2 NE OO PK
+W interfaces%s		interfac.ads		interfac.ali
+W interfaces.c%s	i-c.adb			i-c.ali
+W interfaces.c.strings%s  i-cstrin.adb		i-cstrin.ali
+W system%s		system.ads		system.ali
+
+D ada.ads		20230727081304 76789da1 ada%s
+D a-unccon.ads		20230727081304 0e9b276f ada.unchecked_conversion%s
+D cexceptions_ada.ads	20221228144811 04f419de cexceptions_ada%s
+D interfac.ads		20230727081304 15f799c2 interfaces%s
+D i-c.ads		20230727081304 5c5a6c17 interfaces.c%s
+D i-cstrin.ads		20230727081304 f40c8db4 interfaces.c.strings%s
+D system.ads		20230727081304 426dafb8 system%s
+D s-exctab.ads		20230727081304 91bef6ef system.exception_table%s
+D s-parame.ads		20230727081304 d494a4a6 system.parameters%s
+D s-stalib.ads		20230727081304 1c9580f6 system.standard_library%s
+G a e
+G c Z s s [error_code_tIP cexceptions_ada 11 10 none]
+X 3 cexceptions_ada.ads
+9K9*CExceptions_Ada 15l5 15e20
+11R10*Error_Code_T 13r44
+13P10*Error_Code_T_Access(11R10)
+X 4 interfac.ads
+38K9*Interfaces 3|6r6 6r32 4|232e15
+X 5 i-c.ads
+29K20*C 3|6r17 6r43 5|597e17
+X 6 i-cstrin.ads
+44K22*Strings 3|6w19 6r45 6|156e25
+X 7 system.ads
+37K9*System 3|7w6 7|153e11
+

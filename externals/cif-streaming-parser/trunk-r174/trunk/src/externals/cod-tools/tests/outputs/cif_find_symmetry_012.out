@@ -1,0 +1,72 @@
+data_1769667
+_cell_length_a                   6.56428400004
+_cell_length_b                   6.56428400004
+_cell_length_c                   6.56428400004
+_cell_angle_alpha                89.999999999
+_cell_angle_beta                 89.999999999
+_cell_angle_gamma                89.999999999
+_chemical_formula_sum            'N3 Rh1'
+_cod_original_sg_symbol_H-M      'P 1'
+_cod_original_sg_symbol_Hall     ' P 1'
+_cell_formula_units_Z            8
+_oqmd_database_code              1769667
+_oqmd_structure_label            final
+_oqmd_space_group_name_h-m       Im-3
+_oqmd_space_group_name_hall      '-I 2 2 3'
+_oqmd_space_group_crystal_system cubic
+_oqmd_space_group_it_number      204
+_oqmd_calculation_label          static
+_tcod_initial_cell_param_db_name 'Open Quantum Materials Database'
+_tcod_initial_cell_param_db_code 1768387
+_tcod_initial_cell_param_URI     http://oqmd.org/materials/structure/1768387
+_tcod_initial_coordinate_db_name 'Open Quantum Materials Database'
+_tcod_initial_coordinate_db_code 1768387
+_tcod_initial_coordinate_URI     http://oqmd.org/materials/structure/1768387
+_oqmd_calculation_converged      yes
+_tcod_total_energy               -7.3415170975
+_tcod_computation_wallclock_time 289.98
+_dft_kinetic_energy_cutoff_wavefunctions 520
+_dft_cell_energy_conv            0.0001
+_dft_BZ_integration_smearing_width 0.2
+_dft_BZ_integration_smearing_method_other
+'tetrahedron method with Bl\"ochl corrections'
+_dft_cell_magn_moment            0.0000389375
+_dft_lattice_energy              1447.03557086273
+_space_group_IT_number           204
+_space_group_name_H-M_alt        'I m -3'
+_space_group_name_Hall           '-I 2 2 3'
+loop_
+_atom_site_label
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+N 0.5 0.117132653005 0.38888963366 1
+Rh 0.74999984766 0.25000015234 0.250000152339 1
+loop_
+_space_group_symop_id
+_space_group_symop_operation_xyz
+1 x,y,z
+2 -x,-y,-z
+3 -y+z,-y,x-y
+4 y-z,y,-x+y
+5 -x,-x+z,-x+y
+6 x,x-z,x-y
+7 y-z,x-z,-z
+8 -y+z,-x+z,z
+9 y,z,x
+10 -y,-z,-x
+11 -y,x-y,-y+z
+12 y,-x+y,y-z
+13 -x+z,-x+y,-x
+14 x-z,x-y,x
+15 x-z,-z,y-z
+16 -x+z,z,-y+z
+17 z,x,y
+18 -z,-x,-y
+19 x-y,-y+z,-y
+20 -x+y,y-z,y
+21 -x+y,-x,-x+z
+22 x-y,x,x-z
+23 -z,y-z,x-z
+24 z,-y+z,-x+z

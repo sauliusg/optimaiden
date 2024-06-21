@@ -1,0 +1,64 @@
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_publ: WARNING, recommended data item '_chemical_formula_sum' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_publ: WARNING, recommended data item '_publ_author_name' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_publ: WARNING, data item '_journal_name_full' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_publ: WARNING, data item '_publ_section_title' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_publ: WARNING, neither data item '_journal_year' nor data item '_journal_volume' was found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_publ: WARNING, neither data item '_journal_page_first' nor data item '_journal_article_reference' was found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_publ: WARNING, no symmetry information found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_publ: WARNING, the space group symmetry operation list was not provided.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_publ: WARNING, no space group symbol to check cell constraints.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_publ: NOTE, could not check the mandatory presence of atomic displacement parameters -- data item '_journal_year' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_overall: WARNING, recommended data item '_chemical_formula_sum' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_overall: WARNING, recommended data item '_publ_author_name' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_overall: WARNING, data item '_journal_name_full' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_overall: WARNING, data item '_publ_section_title' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_overall: WARNING, neither data item '_journal_year' nor data item '_journal_volume' was found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_overall: WARNING, neither data item '_journal_page_first' nor data item '_journal_article_reference' was found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_overall: WARNING, no symmetry information found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_overall: WARNING, the space group symmetry operation list was not provided.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_overall: WARNING, no space group symbol to check cell constraints.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_overall: NOTE, could not check the mandatory presence of atomic displacement parameters -- data item '_journal_year' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_diffractogram1: WARNING, recommended data item '_chemical_formula_sum' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_diffractogram1: WARNING, recommended data item '_publ_author_name' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_diffractogram1: WARNING, data item '_journal_name_full' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_diffractogram1: WARNING, data item '_publ_section_title' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_diffractogram1: WARNING, neither data item '_journal_year' nor data item '_journal_volume' was found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_diffractogram1: WARNING, neither data item '_journal_page_first' nor data item '_journal_article_reference' was found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_diffractogram1: WARNING, no symmetry information found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_diffractogram1: WARNING, the space group symmetry operation list was not provided.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_diffractogram1: WARNING, no space group symbol to check cell constraints.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_diffractogram1: NOTE, could not check the mandatory presence of atomic displacement parameters -- data item '_journal_year' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_diffractogram2: WARNING, recommended data item '_chemical_formula_sum' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_diffractogram2: WARNING, recommended data item '_publ_author_name' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_diffractogram2: WARNING, data item '_journal_name_full' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_diffractogram2: WARNING, data item '_publ_section_title' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_diffractogram2: WARNING, neither data item '_journal_year' nor data item '_journal_volume' was found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_diffractogram2: WARNING, neither data item '_journal_page_first' nor data item '_journal_article_reference' was found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_diffractogram2: WARNING, no symmetry information found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_diffractogram2: WARNING, the space group symmetry operation list was not provided.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_diffractogram2: WARNING, no space group symbol to check cell constraints.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_diffractogram2: NOTE, could not check the mandatory presence of atomic displacement parameters -- data item '_journal_year' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_phase1: WARNING, recommended data item '_chemical_formula_sum' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_phase1: WARNING, recommended data item '_publ_author_name' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_phase1: WARNING, data item '_journal_name_full' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_phase1: WARNING, data item '_publ_section_title' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_phase1: WARNING, neither data item '_journal_year' nor data item '_journal_volume' was found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_phase1: WARNING, neither data item '_journal_page_first' nor data item '_journal_article_reference' was found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_phase1: WARNING, no symmetry information found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_phase1: WARNING, the space group symmetry operation list was not provided.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_phase1: WARNING, no space group symbol to check cell constraints.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_phase1: NOTE, could not check the mandatory presence of atomic displacement parameters -- data item '_journal_year' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_phase2: WARNING, recommended data item '_chemical_formula_sum' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_phase2: WARNING, recommended data item '_publ_author_name' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_phase2: WARNING, data item '_journal_name_full' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_phase2: WARNING, data item '_publ_section_title' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_phase2: WARNING, neither data item '_journal_year' nor data item '_journal_volume' was found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_phase2: WARNING, neither data item '_journal_page_first' nor data item '_journal_article_reference' was found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_phase2: WARNING, no symmetry information found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_phase2: WARNING, the space group symmetry operation list was not provided.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_phase2: WARNING, no space group symbol to check cell constraints.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp data_test_phase2: NOTE, could not check the mandatory presence of atomic displacement parameters -- data item '_journal_year' was not found.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp: ERROR, diffractogram data block with _pd_block_id 'diffractogram3' listed in the _pd_block_diffractogram_id loop of the overall data block 'data_test_overall', but does not exist.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp: NOTE, 6 NOTE(s) encountered.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp: NOTE, 54 WARNING(s) encountered.
+scripts/cif_cod_check: tests/cases/cif_cod_check_092.inp: ERROR, 1 ERROR(s) encountered -- die on ERROR(s) requested.

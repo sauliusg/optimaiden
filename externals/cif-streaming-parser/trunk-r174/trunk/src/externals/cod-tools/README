@@ -1,0 +1,44 @@
+cod-tools -- a set of tools for CIF manipulation.
+
+INSTALLATION
+
+Before the installation of cod-tools, dependencies have to be installed.
+Dependency installers for some operating systems are provided with the
+cod-tools, under dependencies/, and can be executed as follows:
+
+    sh dependencies/Ubuntu-20.04/install.sh
+
+To install cod-tools from a clean distribution, the following steps have
+to be executed:
+
+    make all
+    make check
+    make install PREFIX=/usr/local/install/cod-tools
+
+Variable 'PREFIX' may be set to any preferred writable location.
+
+ENVIRONMENT SETUP
+
+After a successful installation, several environment variables should
+be updated to make the installed programs and libraries automatically
+discoverable by the system. This can be done by executing the following
+commands:
+
+    COD_TOOLS_PREFIX=/usr/local/install/cod-tools
+    export PATH=${COD_TOOLS_PREFIX}/bin:${PATH}
+    export PERL5LIB=${COD_TOOLS_PREFIX}/lib/perl5/:${PERL5LIB}
+    export PYTHONPATH=${COD_TOOLS_PREFIX}/usr/local/lib/python${PYTHON_VERSION}/dist-packages:${PYTHONPATH}
+
+Where "${PYTHON_VERSION}" is the Python3 version in the X.Y format
+(i.e. '3.8'). On Debian/Ubuntu systems this version can be found by
+executing the following command:
+
+    py3versions --default --version
+
+The provided commands can also be copied to the ~/.bashrc file to
+automatically execute them each time a new shell is started.
+
+BUGS
+
+If you find bugs in cod-tools or have any feedback, please contact us at
+cod-bugs@ibt.lt

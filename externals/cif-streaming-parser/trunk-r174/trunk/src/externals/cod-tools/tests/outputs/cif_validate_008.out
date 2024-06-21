@@ -1,0 +1,5 @@
+scripts/cif_validate: tests/cases/cif_validate_008.inp data_proper_local_data_names: NOTE, definition of the '_[local]_looped_local_name' data item was not found in the provided dictionaries.
+scripts/cif_validate: tests/cases/cif_validate_008.inp data_proper_local_data_names: NOTE, definition of the '_[local]_unlooped_local_name' data item was not found in the provided dictionaries.
+scripts/cif_validate: tests/cases/cif_validate_008.inp data_incorrect_local_data_names: NOTE, definition of the '_ddl1_data_type.[local]_type' data item was not found in the provided dictionaries.
+scripts/cif_validate: tests/cases/cif_validate_008.inp data_incorrect_local_data_names: NOTE, definition of the '_local_looped_local_name' data item was not found in the provided dictionaries.
+scripts/cif_validate: tests/cases/cif_validate_008.inp data_incorrect_local_data_names: NOTE, definition of the '_local_unlooped_data_name' data item was not found in the provided dictionaries.

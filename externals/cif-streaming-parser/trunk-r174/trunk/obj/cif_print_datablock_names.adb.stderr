@@ -1,0 +1,26 @@
+cif_print_datablock_names.adb:1:09: warning: unit "Ada.Command_Line" is not referenced [-gnatwu]
+cif_print_datablock_names.adb:9:18: warning: no entities of "Interfaces.C.Strings" are referenced [-gnatwu]
+cif_print_datablock_names.adb:9:28: warning: use clause for package "Strings" has no effect [-gnatwu]
+cif_print_datablock_names.adb:13:03: (style) bad indentation
+cif_print_datablock_names.adb:15:03: (style) bad indentation
+cif_print_datablock_names.adb:16:03: (style) bad indentation
+cif_print_datablock_names.adb:17:03: (style) bad indentation
+cif_print_datablock_names.adb:17:03: warning: exception "Filename_Missing_Error" is not referenced [-gnatwu]
+cif_print_datablock_names.adb:18:03: (style) bad indentation
+cif_print_datablock_names.adb:21:03: (style) bad indentation
+cif_print_datablock_names.adb:23:03: (style) bad indentation
+cif_print_datablock_names.adb:25:05: (style) bad indentation
+cif_print_datablock_names.adb:25:17: (style) "and then" required
+cif_print_datablock_names.adb:26:80: (style) this line is too long
+cif_print_datablock_names.adb:27:05: (style) bad indentation
+cif_print_datablock_names.adb:29:05: (style) bad indentation
+cif_print_datablock_names.adb:30:01: (style) trailing spaces not permitted
+cif_print_datablock_names.adb:31:05: (style) bad indentation
+cif_print_datablock_names.adb:33:05: (style) bad indentation
+cif_print_datablock_names.adb:40:25: (style) "and then" required
+cif_print_datablock_names.adb:40:28: (style) trailing spaces not permitted
+cif_print_datablock_names.adb:41:57: (style) misplaced "then"
+cif_print_datablock_names.adb:42:09: (style) bad indentation
+cif_print_datablock_names.adb:44:05: (style) bad indentation
+cif_print_datablock_names.adb:45:03: (style) bad indentation
+cif_print_datablock_names.adb:46:01: (style) trailing spaces not permitted

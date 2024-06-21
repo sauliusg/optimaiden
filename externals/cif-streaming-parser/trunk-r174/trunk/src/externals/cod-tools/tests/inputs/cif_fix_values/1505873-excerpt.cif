@@ -1,0 +1,14 @@
+#------------------------------------------------------------------------------
+#$Date$
+#$Revision$
+#$URL$
+#------------------------------------------------------------------------------
+#
+# This file is available in the Crystallography Open Database (COD),
+# http://www.crystallography.net/
+#
+# All data on this site have been placed in the public domain by the
+# contributors.
+#
+data_1505873
+_exptl_absorpt_process_details)  '(North, Phillips & Mathews, 1968)'

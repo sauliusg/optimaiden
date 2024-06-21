@@ -1,0 +1,1216 @@
+# --*-Perl-*----------------------------------------------------
+#$Author: antanas $
+#$Date: 2022-01-04 16:26:21 +0200 (Tue, 04 Jan 2022) $
+#$Revision: 9090 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/src/lib/perl5/COD/CIF/Parser/Yapp/Yapp.yp $
+# --------------------------------------------------------------
+#
+# parse.yp
+#
+# Parsed CIF file structure overview is described at the end of this file.
+# --------------------------------------------------------------
+# begin of header
+# --------------------------------------------------------------
+# copy directly to PERL module:
+%{
+use warnings;
+use Data::Dumper;
+use Encode qw(decode);
+use FileHandle;
+use COD::CIF::Tags::Manage qw( new_datablock );
+use COD::Precision qw( unpack_precision );
+use COD::UserMessage qw( sprint_message );
+
+use version; our $VERSION = version->declare("v@VERSION@");
+
+my $SVNID = '$Id: Yapp.yp 9090 2022-01-04 14:26:21Z antanas $';
+
+# 0 - no debug
+# 1 - only YAPP output (type -> value)
+# 2 - lex & yapp output
+# 3 - generated array dump
+our $debug = 0;
+
+sub merge_data_lists($$$)
+{
+    my $parser = $_[0];
+    my $list = $_[1];
+    my $item = $_[2];
+
+    for my $tag (@{$item->{tags}}) {
+
+        if( exists $list->{values}{$tag} )  {
+            $_[0]->YYData->{VARS}{lines}--;
+            if( ( $_[0]->{USER}{OPTIONS}{fix_errors} ||
+                  $_[0]->{USER}{OPTIONS}{fix_duplicate_tags_with_same_values} ) &&
+                @{$list->{values}{$tag}} == 1 &&
+                @{$item->{values}{$tag}} == 1 &&
+                $item->{values}{$tag}[0] eq $list->{values}{$tag}[0] ) {
+                $parser->YYData->{ERRMSG} =
+                    "tag $tag appears more than once with the same value";
+                _Warning( $parser );
+                next
+            } elsif( ( $_[0]->{USER}{OPTIONS}{fix_errors} ||
+                       $_[0]->{USER}{OPTIONS}{fix_duplicate_tags_with_empty_values} ) &&
+                     @{$list->{values}{$tag}} == 1 &&
+                     @{$item->{values}{$tag}} == 1 &&
+                     $item->{values}{$tag}[0] =~ /^(\s*\?\s*)$/ ) {
+                $parser->YYData->{ERRMSG} =
+                    "tag $tag appears more than once, the second occurrence " .
+                    "'$1' is ignored";
+                _Warning( $parser );
+                next
+            } elsif( ( $_[0]->{USER}{OPTIONS}{fix_errors} ||
+                       $_[0]->{USER}{OPTIONS}{fix_duplicate_tags_with_empty_values} ) &&
+                     @{$list->{values}{$tag}} == 1 &&
+                     @{$item->{values}{$tag}} == 1 &&
+                     $list->{values}{$tag}[0] =~ /^(\s*\?\s*)$/ ) {
+                $parser->YYData->{ERRMSG} =
+                    "tag $tag appears more than once, " .
+                    "the previous value '$1' is overwritten";
+                _Warning( $parser );
+            } else {
+                $parser->YYData->{ERRMSG} =
+                    "tag $tag appears more than once";
+                # Don't call $parser->YYError() since it clears the Yapp stack.
+                # For now, let's call _Error() directly:
+                _Error( $parser, { line => $_[0]->YYData->{VARS}{token_prev_line} } );
+            }
+            $_[0]->YYData->{VARS}{lines}++;
+        }
+
+        push( @{$list->{tags}}, $tag );
+
+        $list->{values}{$tag} = $item->{values}{$tag};
+        $list->{types}{$tag}  = $item->{types}{$tag};
+
+        if( exists $item->{precisions}{$tag} ) {
+            $list->{precisions}{$tag} = $item->{precisions}{$tag};
+        }
+    }
+
+    if( defined $item->{loops}[0] ) {
+        if( defined $list->{loops} ) {
+            push( @{$list->{loops}}, $item->{loops}[0] );
+        } else {
+            $list->{loops} = [ $item->{loops}[0] ];
+        }
+    }
+
+    if( exists $item->{inloop} ) {
+        my $loop_nr = $#{$list->{loops}};
+        for my $key (keys %{$item->{inloop}} ) {
+            $list->{inloop}{$key} = $loop_nr;
+        }
+    }
+
+    if( exists $item->{save_blocks} ) {
+        $list->{save_blocks} = [] if !defined $list->{save_blocks};
+        push @{$list->{save_blocks}}, @{$item->{save_blocks}};
+    }
+
+    return $list;
+}
+
+%}
+# --------------------------------------------------------------
+
+# --------------------------------------------------------------
+# begin of body
+# --------------------------------------------------------------
+
+%%
+cif_file
+    :   #empty
+        {
+            $_[0]->{USER}->{CIFfile} = [];
+        }
+    |   data_block_list
+        {
+            if($debug >= 3)
+            {
+                print Dumper($_[1]);
+            }
+            $_[0]->{USER}->{CIFfile} = $_[1];
+        }
+    |   headerless_data_block
+        {
+            my $val = $_[1];
+            if($debug >= 3)
+            {
+                print Dumper($_[1]);
+            }
+            $_[0]->{USER}->{CIFfile} = [ $val ];
+        }
+    |   headerless_data_block data_block_list
+        {
+            my $val = $_[2];
+            unshift( @{$val}, $_[1] );
+            if($debug >= 3)
+            {
+                print Dumper($_[1]);
+            }
+            $_[0]->{USER}->{CIFfile} = $val;
+        }
+
+    |   stray_cif_value_list
+        {
+            $_[0]->{USER}->{CIFfile} = [];
+        }
+
+    |   stray_cif_value_list data_block_list
+        {
+            $_[0]->{USER}->{CIFfile} = $_[2];
+        }
+;
+
+stray_cif_value_list
+    :   cif_value
+        {
+            $_[0]->YYData->{ERRMSG} = "stray CIF values at the " .
+                            "beginning of the input file";
+            unless( $_[0]->{USER}{OPTIONS}{fix_errors} ||
+                    $_[0]->{USER}{OPTIONS}{fix_data_header} )
+            {
+                $_[0]->_Error();
+            } else {
+                $_[0]->_Warning();
+            }
+        }
+    |   cif_value
+        {
+            $_[0]->YYData->{ERRMSG} = "stray CIF values at the " .
+                            "beginning of the input file";
+            unless( $_[0]->{USER}{OPTIONS}{fix_errors} ||
+                    $_[0]->{USER}{OPTIONS}{fix_data_header} )
+            {
+                $_[0]->_Error();
+            } else {
+                $_[0]->_Warning();
+            }
+        }
+        cif_value_list
+;
+
+## cif_value_list
+##     : cif_value
+##     | cif_value_list cif_value
+## ;
+
+data_block_list
+    :   data_block_list data_block
+        {
+            my $val = $_[1];
+            push( @{$val}, $_[2] );
+            return $val;
+        }
+    |   data_block
+        {
+            return [ $_[1] ];
+        }
+;
+
+headerless_data_block
+    :   data_item
+        {
+            $_[0]->YYData->{ERRMSG} = 'no data block heading '
+                                    . '(i.e. data_somecif) found';
+            $_[0]->YYData->{VARS}{lines}--;
+            if ( $_[0]->{USER}{OPTIONS}{fix_errors} ||
+                 $_[0]->{USER}{OPTIONS}{fix_data_header} )
+            {
+                $_[0]->_Warning();
+            } else {
+                $_[0]->_Error();
+            }
+            $_[0]->YYData->{VARS}{lines}++;
+            return $_[1];
+        }
+    |   data_item
+        {
+            $_[0]->YYData->{ERRMSG} = 'no data block heading '
+                                    . '(i.e. data_somecif) found';
+            $_[0]->YYData->{VARS}{lines}--;
+            if( $_[0]->{USER}{OPTIONS}{fix_errors} ||
+                $_[0]->{USER}{OPTIONS}{fix_data_header} )
+            {
+                $_[0]->_Warning();
+            } else {
+                $_[0]->_Error();
+            }
+            $_[0]->YYData->{VARS}{lines}++;
+            return $_[1];
+        }
+        data_item_list
+        {
+            my $list = $_[3];
+            my $item = $_[1];
+            $list = merge_data_lists( $_[0], $list, $item );
+            $list->{name} = "";
+            return $list;
+        }
+;
+
+data_block
+    :   data_block_head data_item_list
+        {
+            my $name = $_[1];
+            my $val = $_[2];
+            $val->{name} = $name;
+            return $val;
+        }
+    |   data_block_head # empty data item list
+        {
+            return new_datablock( $_[1] );
+        }
+;
+
+data_item_list
+    :   data_item_list data_item
+        {
+            my $list = $_[1];
+            my $item = $_[2];
+            $list = merge_data_lists( $_[0], $list, $item );
+            return $list;
+        }
+    |   data_item
+        {
+            my $val = $_[1];
+            return $val;
+        }
+;
+
+data_block_head
+    :   DATA_
+        {
+            $_[1] =~ m/^(data_)(.*)/si;
+            $_[0]->{USER}->{CURRENT_DATABLOCK} = $2;
+            return $2;
+        }
+    |   DATA_
+        {
+            $_[1] =~ m/^(data_)(.*)/si;
+            $_[0]->{USER}->{CURRENT_DATABLOCK} = $2;
+            unless( $_[0]->{USER}{OPTIONS}{fix_errors} ||
+                    $_[0]->{USER}{OPTIONS}{fix_datablock_names} ) {
+                $_[0]->_Error();
+            }
+        }
+        cif_value_list
+        {
+            my $extra_values = join( "_", @{$_[3]} );
+            my $datablock_name = $_[0]->{USER}->{CURRENT_DATABLOCK} .
+                            "_" . $extra_values;
+            $_[0]->{USER}->{CURRENT_DATABLOCK} = $datablock_name;
+            if( $_[0]->{USER}{OPTIONS}{fix_errors} ||
+                $_[0]->{USER}{OPTIONS}{fix_string_quotes} ) {
+                    $_[0]->YYData->{ERRMSG} =
+                                'the dataname apparently had spaces in it -- ' .
+                                'replaced spaces with underscores';
+                    $_[0]->_Warning(
+                                { line =>
+                                    $_[0]->YYData->{VARS}{token_prev_line} } );
+                }
+            return $datablock_name;
+        }
+;
+
+data_item
+    :   save_item
+        {
+            return $_[1];
+        }
+    |   save_block
+        {
+            return $_[1];
+        }
+##  |   error
+;
+
+save_item_list
+    :   save_item_list save_item
+        {
+            my $list = $_[1];
+            my $item = $_[2];
+            $list = merge_data_lists( $_[0], $list, $item );
+            return $list;
+        }
+    |   save_item
+        {
+            my $val = $_[1];
+            return $val;
+        }
+;
+
+save_item
+    :   cif_entry
+        {
+            # Here we convert to new structure:
+            my $entry = $_[1];
+            my $item = new_datablock();
+            $item->{values}{$entry->{name}} = [ $entry->{value} ];
+            $item->{types}{$entry->{name}} = [ $entry->{type} ];
+            push @{$item->{tags}}, $entry->{name};
+            if( exists $entry->{precision} ) {
+                $item->{precisions}{$entry->{name}} = [ $entry->{precision} ];
+            }
+            return $item;
+        }
+    |   loop
+        {
+            return $_[1];
+        }
+;
+
+cif_entry
+    :   TAG cif_value
+        {
+            my $val;
+            if(exists $_[2]->{precision})
+            {
+                $val = { name => $_[1],
+                         kind => 'TAG',
+                         value => $_[2]->{value},
+                         type => $_[2]->{type},
+                         precision => $_[2]->{precision}
+                };
+            } else {
+                $val = { name => $_[1],
+                         kind => 'TAG',
+                         value => $_[2]->{value},
+                         type => $_[2]->{type}
+                };
+            }
+            if( $debug >= 1 && $debug <= 2 )
+            {
+                print Dumper($val);
+            }
+            return $val;
+        }
+
+    |   TAG cif_value
+        {
+            unless( $_[0]->{USER}{OPTIONS}{fix_errors} ||
+                    $_[0]->{USER}{OPTIONS}{fix_string_quotes} ) {
+                $_[0]->_Error();
+            }
+        }
+        cif_value_list
+        {
+            if( $_[0]->{USER}{OPTIONS}{fix_errors} ||
+                $_[0]->{USER}{OPTIONS}{fix_string_quotes} ) {
+                $_[0]->YYData->{ERRMSG} = 'string with spaces '
+                                        . 'without quotes -- fixed';
+                $_[0]->_Warning( { line => $_[0]->YYData->{VARS}{token_prev_line} } );
+            }
+            my $val = { name => $_[1],
+                        kind => 'TAG',
+                        value => join( " ", $_[2]->{value}, @{$_[4]} ),
+                        type => 'SQSTRING'
+                      };
+            if( $debug >= 1 && $debug <= 2 ) {
+                print Dumper($val);
+            }
+            return $val;
+        }
+;
+
+cif_value_list
+    : cif_value
+    {
+        my $values = [ $_[1]->{value} ];
+        return $values;
+    }
+    | cif_value_list cif_value
+    {
+        my $values = [ @{$_[1]}, $_[2]->{value} ];
+        return $values;
+    }
+;
+
+loop
+    :   LOOP_ loop_tags loop_values
+        {
+            my $val = new_datablock();
+            my $tags = $_[2];
+            my @values = @{$_[3]};
+            my %has_precisions;
+
+            ## push( @{$val->{loops}}, $tags );
+            $val->{loops} = [ [ @{$tags} ] ];
+            $val->{tags} = $tags;
+
+        VALUES:
+            while( int( @values ) > 0 ) {
+                for my $tag (@{$tags}) {
+                    my $value = shift( @values );
+                    if( defined $value ) {
+                        push( @{$val->{values}{$tag}}, $value->{value} );
+                        push( @{$val->{types}{$tag}},  $value->{type} );
+                        if( exists $value->{precision} ) {
+                            push( @{$val->{precisions}{$tag}},
+                                  $value->{precision} );
+                            $has_precisions{$tag} = 1;
+                        } else {
+                            push( @{$val->{precisions}{$tag}}, undef );
+                        }
+                        $val->{inloop}{$tag} = 0;
+                    } else {
+                        $_[0]->YYData->{ERRMSG} =
+                            "wrong number of elements in the " .
+                            "loop starting at line " .
+                        $_[0]->YYData->{VARS}{loop_begin};
+                        $_[0]->YYData->{VARS}{print_position} = 1;
+                        $_[0]->YYError();
+                        last VALUES;
+                    }
+                }
+            }
+
+            foreach my $tag (@{$tags}) {
+                if ( !defined $has_precisions{$tag} ) {
+                    delete $val->{precisions}{$tag};
+                }
+            }
+
+        return $val;
+        }
+;
+
+loop_tags
+    :   loop_tags TAG
+        {
+            my $val = $_[1];
+            push( @{$val}, $_[2] );
+            return $val;
+        }
+    |   TAG
+        {
+            my $val = [ $_[1] ];
+            return $val;
+        }
+;
+
+loop_values
+    :   loop_values cif_value
+        {
+            my $arr = $_[1];
+            my $val = $_[2];
+            push( @{$arr}, $val );
+            return $arr;
+        }
+    |   cif_value
+        {
+            my $val = $_[1];
+            return [ $val ];
+    }
+;
+
+save_block
+    :   SAVE_HEAD save_item_list SAVE_FOOT
+        {
+            my $save_block =
+                merge_data_lists( $_[0],
+                                  new_datablock( substr( $_[1], 5 ) ),
+                                  $_[2] );
+            my $data_block = new_datablock();
+            push @{$data_block->{save_blocks}}, $save_block;
+            return $data_block;
+        }
+;
+
+cif_value
+    :   string
+        {
+            if( $debug >= 1 && $debug <= 2 )
+            {
+                print $_[1]->{type} . "\t->\t"
+                    . $_[1]->{value} . "\n"
+            }
+            $_[1];
+        }
+    |   number
+        {
+            if( $debug >= 1 && $debug <= 2 )
+            {
+                print $_[1]->{type} . "\t\t->\t"
+                    . $_[1]->{value} . " -- "
+                    . $_[1]->{precision}
+                    . "\n" ;
+            }
+            $_[1];
+        }
+    |   textfield
+        {
+            if( $debug >= 1 && $debug <= 2 )
+            {
+                print "TFIELD\t\t->\t"
+                     . $_[1]->{value} . "\n"
+            }
+            $_[1];
+        }
+;
+
+string
+    :   SQSTRING
+        {
+            $_[1] =~ m/^(')(.*)(')$/si;
+            return { value => $2,
+                     type => 'SQSTRING' };
+        }
+    |   DQSTRING
+        {
+            $_[1] =~ m/^(")(.*)(")$/si;
+            return { value => $2,
+                     type => 'DQSTRING' };
+        }
+    |   UQSTRING {{ value => $_[1],
+                    type => 'UQSTRING'} }
+    |   TEXT_FIELD {{ value => $_[1],
+                      type => 'TEXTFIELD' };
+        }
+;
+
+number
+    :   FLOAT
+        {
+            if( $_[1] =~ m/^(.*)( \( ([0-9]+) \) )$/six )
+            {
+                my $precision = unpack_precision( $1, $3 );
+                {   type => 'FLOAT',
+                    value => $_[1],
+                    precision => $precision
+                }
+            } else {
+                {   type => 'FLOAT',
+                    value => $_[1],
+                    precision => undef
+                }
+            }
+        }
+    |   INT
+        {
+            if( $_[1] =~ m/^(.*)( \( ([0-9]+) \) )$/sx)
+            {
+                {   type => 'INT',
+                    value => $_[1],
+                    precision => $3
+                }
+            } else {
+                {   type => 'INT',
+                    value => $_[1],
+                    precision => undef
+                }
+            }
+        }
+;
+
+%%
+# --------------------------------------------------------------
+# begin of footer
+# --------------------------------------------------------------
+
+sub _Error
+{
+    my $script = $0;
+    my $filename = $_[0]->YYData->{FILENAME};
+    my $dataname = defined $_[0]->{USER}->{CURRENT_DATABLOCK} ? "data_"
+                         . $_[0]->{USER}->{CURRENT_DATABLOCK} : undef;
+    my $line = $_[0]->YYData->{VARS}{lines};
+
+    my $options = ( defined $_[1] ) ? $_[1] : {};
+
+    my $line_content = $options->{line_content}
+                     ? $options->{line_content} : undef;
+    my $pos;
+
+    if( exists $_[0]->YYData->{VARS}{print_position} ) {
+        $pos = $_[0]->YYData->{VARS}{token_prev_pos} + 1;
+        delete $_[0]->YYData->{VARS}{print_position};
+        $line_content = $_[0]->YYData->{VARS}{current_line};
+    }
+
+    $line = $options->{line} if exists $options->{line};
+    if ( exists $options->{pos} ) {
+        $pos  = $options->{pos};
+    }
+
+    my $errmsg;
+    if( exists $_[0]->YYData->{ERRMSG} ) {
+        $errmsg = $_[0]->YYData->{ERRMSG};
+        delete $_[0]->YYData->{ERRMSG};
+    } else {
+        $errmsg = "incorrect CIF syntax";
+        $pos = $_[0]->YYData->{VARS}{token_prev_pos} + 1;
+        $line_content = $_[0]->YYData->{VARS}{current_line};
+    }
+
+    $_[0]->YYData->{ERRCOUNT}++;
+
+    my $message = sprint_message( {
+        'program'      => $script,
+        'filename'     => $filename,
+        'add_pos'      => $dataname,
+        'err_level'    => 'ERROR',
+        'message'      => $errmsg,
+        'line_no'      => $line,
+        'column_no'    => $pos,
+        'line_content' => $line_content
+    } );
+
+    push @{$_[0]->YYData->{ERROR_MESSAGES}},
+         decode( 'utf8', $message );
+}
+
+sub _Warning
+{
+    if( exists $_[0]->YYData->{ERRMSG} ) {
+        my $script = $0;
+        my $filename = $_[0]->YYData->{FILENAME};
+        my $dataname = defined $_[0]->{USER}->{CURRENT_DATABLOCK} ? "data_"
+                             . $_[0]->{USER}->{CURRENT_DATABLOCK} : undef;
+
+
+        my $options = ( defined $_[1] ) ? $_[1] : {};
+
+        my $line = defined $options->{line} ? $options->{line}
+                                            : $_[0]->YYData->{VARS}{lines};
+
+        my $message;
+        if( $options->{line_content} ) {
+            $message = sprint_message( {
+                'program'      => $script,
+                'filename'     => $filename,
+                'add_pos'      => $dataname,
+                'err_level'    => 'WARNING',
+                'message'      => $_[0]->YYData->{ERRMSG},
+                'line_no'      => $line,
+                'column_no'    => $_[0]->YYData->{VARS}{token_pos},
+                'line_content' => $options->{line_content}
+            } )
+        } else {
+            $message = sprint_message( {
+                'program'      => $script,
+                'filename'     => $filename,
+                'add_pos'      => $dataname,
+                'err_level'    => 'WARNING',
+                'message'      => $_[0]->YYData->{ERRMSG},
+                'line_no'      => $line
+            } )
+        }
+
+        delete $_[0]->YYData->{ERRMSG};
+        push @{$_[0]->YYData->{WARNING_MESSAGES}},
+             decode( 'utf8', $message );
+    }
+}
+
+sub _Lexer
+{
+    my($parser) = shift;
+
+    #trimming tokenized comments
+    if( defined $parser->YYData->{INPUT} &&
+        $parser->YYData->{INPUT} =~ s/^(\s*#.*)$//s )
+    {
+        my $comment = $1;
+        if( $comment =~ /[\x{0}-\x{8}\x{b}-\x{c}\x{e}-\x{1f}\x{7f}-\x{ff}]/g ) {
+            $parser->YYData->{ERRMSG} = 'unallowed symbol in CIF comment';
+            $parser->_Warning();
+        }
+        advance_token($parser, length($comment), 1);
+    }
+
+    if( !defined $parser->YYData->{INPUT} ||
+        $parser->YYData->{INPUT} =~ m/^\s*$/ )
+    {
+        do
+        {
+            my $handle = $parser->{USER}{FILEIN};
+            $parser->YYData->{INPUT} = <$handle>;
+            $parser->YYData->{VARS}{lines}++;
+            if( defined $parser->{reporter} &&
+                $parser->YYData->{VARS}{lines} % 100 == 0 )
+            {
+                &{$parser->{reporter}}( $parser->{USER}{FILENAME},
+                                        $parser->YYData->{VARS}{lines},
+                                        $parser->{USER}{CURRENT_DATABLOCK} );
+            }
+
+            if( $parser->YYData->{VARS}{lines} == 1 &&
+                defined $parser->YYData->{INPUT} &&
+                $parser->YYData->{INPUT} =~ /^#\\#CIF_2.0[ \t]*(\r\n?|\n)$/ ) {
+                $parser->YYData->{ERRMSG} =
+                    'file is recognised as CIF v2.0 which is currently ' .
+                    'not supported by COD::CIF::Parser::Yapp -- treating ' .
+                    'as CIF v1.1 instead';
+                $parser->_Warning();
+            }
+        } until ( !defined $parser->YYData->{INPUT} ||
+        $parser->YYData->{INPUT} !~ m/^(\s*(#.*)?)$/s );
+        if( defined $parser->YYData->{INPUT} )
+        {
+            chomp $parser->YYData->{INPUT};
+            $parser->YYData->{INPUT}=~s/\r$//g;
+            $parser->YYData->{VARS}{current_line} = $parser->YYData->{INPUT};
+            $parser->YYData->{VARS}{token_pos} = 0;
+            if( $parser->YYData->{INPUT} =~ /\x{001A}/ ) {
+                if( $parser->{USER}{OPTIONS}{fix_ctrl_z} ||
+                    $parser->{USER}{OPTIONS}{fix_errors} )
+                {
+                    $parser->YYData->{ERRMSG} = "DOS EOF symbol " .
+                        "^Z was encountered and ignored";
+                    $parser->_Warning();
+                    $parser->YYData->{INPUT} =~ s/\x{001A}/ /g;
+                } else {
+                    $parser->YYData->{ERRMSG} = "DOS EOF symbol " .
+                        "^Z was encountered, " .
+                        "it is not permitted in CIFs";
+                    ## $parser->_Error();
+                }
+            }
+        } else {
+            return('',undef);
+        }
+    }
+
+    if( $parser->YYData->{INPUT} !~ /^[\x{09}\x{10}-\x{7F}]*$/ &&
+        ( $parser->{USER}{OPTIONS}{fix_errors} ||
+          $parser->{USER}{OPTIONS}{fix_non_ascii_symbols} ))
+        {
+        # Token has to be advanced and de-advanced in order to get the
+        # correct position in message, printed out by _Warning()
+        # procedure:
+        advance_token($parser, 1);
+        $parser->YYData->{ERRMSG} = "non-ASCII symbols encountered in the text";
+        $parser->_Warning( { line_content => $parser->YYData->{INPUT} } );
+        $parser->YYData->{INPUT} =~ s/([^\x{09}\x{10}-\x{7F}])/sprintf("&#x%04X;",ord($1))/eg;
+        advance_token($parser, -1);
+    }
+
+#scalars storing regular expressions, common to several matches
+my $ORDINARY_CHAR   =
+    qr/[a-zA-Z0-9!%&\(\)\*\+,-\.\/\:<=>\?@\\\^`{\|}~]/is;
+my $SPECIAL_CHAR    =   qr/["#\$'_\[\]]/is;
+my $NON_BLANK_CHAR  =   qr/(?:$ORDINARY_CHAR|$SPECIAL_CHAR|;)/is;
+my $TEXT_LEAD_CHAR  =   qr/(?:$ORDINARY_CHAR|$SPECIAL_CHAR|\s)/s;
+my $ANY_PRINT_CHAR  =   qr/(?:$NON_BLANK_CHAR|\s)/is;
+my $INTEGER         =   qr/[-+]?[0-9]+/s;
+my $EXPONENT        =   qr/e[-+]?[0-9]+/is;
+my $FLOAT11         =   qr/(?: $INTEGER $EXPONENT)/ix;
+my $FLOAT21         =   qr/(?: [+-]? [0-9]* \. [0-9]+ $EXPONENT ?)/ix;
+my $FLOAT31         =   qr/(?: $INTEGER \. $EXPONENT ?)/ix;
+my $FLOAT           =   qr/(?: (?: $FLOAT11 | $FLOAT21 | $FLOAT31))/six;
+my $UQSTRING_FIRSTPOS   =       qr/^(?:
+                                        $ORDINARY_CHAR
+                                        ${NON_BLANK_CHAR} *
+                                    )/six;
+my $UQSTRING_INLINE     =       qr/^(?:
+                                        (?:$ORDINARY_CHAR | ;)
+                                        ${NON_BLANK_CHAR} *
+                                    )/six;
+
+    if( $parser->{USER}{OPTIONS}{fix_errors} ||
+        $parser->{USER}{OPTIONS}{allow_uqstring_brackets} ) {
+        $UQSTRING_FIRSTPOS = qr/^(?:
+                                (?:$ORDINARY_CHAR | \[)
+                                ${NON_BLANK_CHAR} *
+                            )/six;
+        $UQSTRING_INLINE   = qr/^(?:
+                                (?:$ORDINARY_CHAR | ; | \[)
+                                ${NON_BLANK_CHAR} *
+                            )/six;
+    }
+
+    #matching white space characters
+    if( $parser->YYData->{INPUT} =~ s/^(\s+)//s )
+    {
+        advance_token($parser, length($1), 1);
+    }
+
+    if( $debug >= 2 && $debug < 3 )
+    {
+        print ">>> '", $parser->YYData->{INPUT}, "'\n";
+    }
+
+    for ($parser->YYData->{INPUT})
+    {
+        #matching floats:
+        if( s/^($FLOAT (?:\([0-9]+\))?)(\s|$)//six )
+        {
+            advance_token($parser, length($1 . $2));
+            return('FLOAT', $1);
+        }
+        #matching integers:
+        if( s/^($INTEGER (?:\([0-9]+\))?)(\s|$)//sx )
+        {
+            advance_token($parser, length($1 . $2));
+            return('INT', $1);
+        }
+        #matching double quoted strings
+        if( s/^("${ANY_PRINT_CHAR}*?")(\s|$)//s )
+        {
+            advance_token($parser, length($1 . $2));
+            return('DQSTRING', $1);
+        }
+        #matching single quoted strings
+        if( s/^('${ANY_PRINT_CHAR}*?')(\s|$)//s )
+        {
+            advance_token($parser, length($1 . $2));
+            return('SQSTRING', $1);
+        }
+        #matching double quoted strings without a closing quote
+        if( ( $parser->{USER}{OPTIONS}{fix_errors} ||
+              $parser->{USER}{OPTIONS}
+                      {fix_missing_closing_double_quote} ) &&
+                    s/^("${ANY_PRINT_CHAR}*)(\s|$)//s)
+        {
+            my $value = $1;
+            my $space = $2;
+
+            $parser->YYData->{ERRMSG} = 'double-quoted string is missing a '
+                                      . 'closing quote -- fixed';
+            $parser->_Warning();
+
+            advance_token($parser, length($value . $space));
+            return('DQSTRING', $value . '"');
+        }
+        #matching single quoted strings without a closing quote
+        if ( ( $parser->{USER}{OPTIONS}{fix_errors} ||
+               $parser->{USER}{OPTIONS}{fix_missing_closing_single_quote} ) &&
+                    s/^('${ANY_PRINT_CHAR}*)(\s|$)//s )
+        {
+            my $value = $1;
+            my $space = $2;
+
+            $parser->YYData->{ERRMSG} = 'single-quoted string is missing a '
+                                      . 'closing quote -- fixed';
+            $parser->_Warning();
+
+            advance_token($parser, length($value . $space));
+            return('SQSTRING', $value . "'");
+        }
+        #matching text field
+        if( $parser->YYData->{VARS}{token_pos} == 0 )
+        {
+            if( s/^;(${ANY_PRINT_CHAR}*)$//s )
+            {
+                my $eotf = 0;
+                my $tfield; #all textfield
+                my $tf_line_begin =
+                    $parser->YYData->{VARS}{lines};
+                $tfield = $1;
+                while( 1 )
+                {
+                    my $handle = $parser->{USER}{FILEIN};
+                    my $line = <$handle>;
+                    if( defined $line )
+                    {
+                        chomp $line;
+                        $line=~s/\r$//g;
+                        $parser->YYData->{VARS}{current_line} = $line;
+                        $parser->YYData->{VARS}{lines}++;
+                        if( $line =~ s/^;//s )
+                        {
+                            if( defined $line )
+                            {
+                                $parser->YYData->{INPUT} = $line;
+                                $parser->YYData->{VARS}{token_pos} = 1;
+                            }
+                            if( $line && $line !~ /^\s/ )
+                            {
+                                $parser->YYError();
+                            }
+                            last;
+                        } else {
+                            $tfield .= "\n" . $line;
+                        }
+                    } else {
+                        undef $parser->YYData->{INPUT};
+                        last;
+                    }
+                }
+                if( !defined $parser->YYData->{INPUT} )
+                {
+                    $parser->YYData->{ERRMSG} =
+                        "end of file encountered while in text field "
+                      . "starting in line $tf_line_begin, "
+                      . "possible runaway closing semicolon (';')";
+                    $parser->YYError();
+                }
+                if( $tfield !~ /^[\x08-\x7F]*$/ ) {
+                    if( $parser->{USER}{OPTIONS}{fix_errors} ||
+                        $parser->{USER}{OPTIONS}{fix_non_ascii_symbols} )
+                    {
+                        $parser->YYData->{ERRMSG} =
+                            'non-ASCII symbols encountered in the text '
+                          . 'field -- replaced with XML entities';
+                        $parser->_Warning( { line_content => ";$tfield\n;" } );
+                        $tfield =~ s/([^\x08-\x7F])/sprintf("&#x%04X;",ord($1))/eg;
+                    } else {
+                        $parser->YYData->{ERRMSG} =
+                            "non-ASCII symbols encountered in the text field";
+                        $parser->_Error( { line_content => ";$tfield\n;" } );
+                    }
+                }
+
+                # CIF 2.0 paper [1] states that the first line of a prefixed
+                # text field may contain zero or more trailing in-line
+                # whitespace characters. According to the CIF 2.0 grammar
+                # in-line whitespace characters include only the space (U+0020)
+                # and tab (U+0009) characters.
+                #
+                # [1] Bernstein, H. J. et al. (2016). Specification of
+                #     the Crystallographic Information File format,
+                #     version 2.0. Journal of Applied Crystallography, 49(1).
+                #     https://doi.org/10.1107/S1600576715021871
+                my $INLINE_WS = '\ \t';
+                my $unprefixed = 0;
+                if( !$parser->{USER}{OPTIONS}{do_not_unprefix_text} ) {
+                    if( $tfield =~ /^([^\n\r\\]+)\\(\\)?[${INLINE_WS}]*\n/ ) {
+                        my $prefix = $1;
+                        my @tfield_lines = split /\n/, $tfield, -1;
+                        # Unprefix only if all lines in the text field
+                        # start with the same prefix:
+                        if( scalar @tfield_lines ==
+                            grep { /^\Q${prefix}\E/ } @tfield_lines ) {
+                            $tfield =~ s/^\Q${prefix}\E\\[${INLINE_WS}]*\n/\n/;
+                            $tfield =~ s/^\Q${prefix}\E\\\\/\\/;
+                            $tfield =~ s/^\Q${prefix}\E//mg;
+                            $unprefixed = 1;
+                        }
+                    }
+                }
+
+                my $unfolded = 0;
+                if( !$parser->{USER}{OPTIONS}{do_not_unfold_text} ) {
+                    if( $tfield =~ /^\\[${INLINE_WS}]*\n/ ) {
+                        $tfield =~ s/\\[${INLINE_WS}]*\n//mg;
+                        $tfield =~ s/\\[${INLINE_WS}]*$//;
+                        my $unfolded = 1;
+                    }
+                };
+
+                # Unprefixing transforms the first line to either "\\n" or "\n".
+                # These symbols signal whether the processed text should be
+                # unfolded or not (if the unfolding option is also set).
+                # As a result, if the text was unprefixed, but not unfolded
+                # an unnecessary empty line might occur at the beginning of
+                # the text field. This empty line should be removed.
+                if ($unprefixed && !$unfolded) {
+                    $tfield =~ s/^\n//;
+                }
+
+                return('TEXT_FIELD', $tfield);
+            }
+        }
+        #matching GLOBAL_ field
+        if( s/^(global_)(\s+|$)//si ) {
+            advance_token($parser, length($1 . $2));
+            $parser->YYData->{ERRMSG} = "GLOBAL_ symbol detected"
+                                      . " -- it is not acceptable in CIF v1.1";
+            $parser->_Error( { line_content =>
+                               $parser->YYData->{VARS}{current_line} } );
+            return('GLOBAL_', $1);
+        }
+        #matching SAVE_ head
+        if( s/^(save_${NON_BLANK_CHAR}+)//si )
+        {
+            advance_token($parser, length($1));
+            return('SAVE_HEAD', $1);
+        }
+        #matching SAVE_ foot
+        if( s/^(save_)//si )
+        {
+            advance_token($parser, length($1));
+            return('SAVE_FOOT', $1);
+        }
+        #matching STOP_ field
+        if( s/^(stop_)(\s+|$)//si )
+        {
+            advance_token($parser, length($1 . $2));
+            $parser->YYData->{ERRMSG} = "STOP_ symbol detected" .
+                                        " -- it is not acceptable in CIF v1.1";
+            $parser->_Error( { line_content =>
+                               $parser->YYData->{VARS}{current_line} } );
+            return('STOP_', $1);
+        }
+        #matching DATA_ field
+        if( s/^(data_(${NON_BLANK_CHAR}*))//si )
+        {
+            advance_token($parser, length($1));
+            #detecting zero-length data block names
+            if ( length($2) == 0 ) {
+                if ( $parser->{USER}{OPTIONS}{fix_errors} ||
+                     $parser->{USER}{OPTIONS}{fix_datablock_names} ) {
+                    $parser->YYData->{ERRMSG} = 'zero-length data block name '
+                                              . 'detected -- ignored';
+                    $parser->_Warning();
+                } else {
+                    $parser->YYData->{VARS}{print_position} = 1;
+                    $parser->YYData->{ERRMSG} = 'zero-length data block name '
+                                              . 'detected';
+                    $parser->_Error( { line_content =>
+                                       $parser->YYData->{VARS}{current_line} } );
+                }
+            }
+            return('DATA_', $1);
+        }
+        #matching LOOP_ beginning
+        if( s/^(loop_)(\s+|$)//si )
+        {
+            advance_token($parser, length($1 . $2));
+            $parser->YYData->{VARS}{loop_begin} =
+                $parser->YYData->{VARS}{lines};
+            return('LOOP_', $1);
+        }
+        #matching TAG's
+        if( s/^(_${NON_BLANK_CHAR}+)//si )
+        {
+            advance_token($parser, length($1));
+            return('TAG', lc($1));
+        }
+        #matching unquoted strings
+        if( $parser->YYData->{VARS}{token_pos} == 0 )
+        { #UQSTRING at first pos. of line
+            if( s/^(${UQSTRING_FIRSTPOS})//s)
+            {
+                advance_token($parser, length($1));
+                return('UQSTRING', $1);
+            }
+        } else { #UQSTRING in line
+            if( s/^(${UQSTRING_INLINE})//sx )
+            {
+                advance_token($parser, length($1));
+                return('UQSTRING', $1);
+            }
+        }
+        #matching any still unmatched symbol:
+        if( s/^(.)//m )
+        {
+            advance_token($parser, length($1), 1);
+            #reporting opening square bracket:
+            if( $1 eq '[' ) {
+                $parser->YYData->{ERRMSG} =
+                    "opening square brackets are reserved and may not " .
+                    "start an unquoted string";
+                $parser->YYData->{VARS}{print_position} = 1;
+            #reporting closing square bracket:
+            } elsif( $1 eq ']' ) {
+                $parser->YYData->{ERRMSG} =
+                    "closing square brackets are reserved and may not " .
+                    "start an unquoted string";
+                $parser->YYData->{VARS}{print_position} = 1;
+            #reporting dollar symbol:
+            } elsif( $1 eq '$' ) {
+                $parser->YYData->{ERRMSG} =
+                    "dollar symbol ('\$') must not start an unquoted " .
+                    "string";
+                $parser->YYData->{VARS}{print_position} = 1;
+            }
+            return($1,$1);
+        }
+    }
+}
+
+sub advance_token
+{
+    my ($parser, $length, $do_not_remember) = @_;
+    if( !defined $do_not_remember ||
+        $do_not_remember == 0 ) {
+        if( exists $parser->YYData->{VARS}{token_this_line} ) {
+            $parser->YYData->{VARS}{token_prev_line} =
+                $parser->YYData->{VARS}{token_this_line};
+        }
+        $parser->YYData->{VARS}{token_this_line} =
+            $parser->YYData->{VARS}{lines};
+    }
+    $parser->YYData->{VARS}{token_prev_pos} =
+        $parser->YYData->{VARS}{token_pos};
+    $parser->YYData->{VARS}{token_pos} += $length;
+}
+
+sub Run
+{
+    my ($self, $filename, $options ) = @_;
+
+    if( ref $options eq "HASH" ) {
+        $self->{USER}{OPTIONS} = $options;
+        if ( exists $options->{reporter} ) {
+            $self->{reporter} = $options->{reporter};
+        }
+    }
+
+    # Default value of print_error_messages is to be discussed
+    if (!defined $self->{USER}{OPTIONS}{no_print}) {
+        $self->{USER}{OPTIONS}{no_print} = 0;
+    }
+
+    $filename = "-" unless $filename;
+
+    $self->{USER}{FILENAME} = $filename;
+    $self->{USER}{CIFfile} = undef;
+    $self->YYData->{WARNING_MESSAGES} = [];
+    $self->YYData->{ERROR_MESSAGES} = [];
+    $self->YYData->{ERRCOUNT} = 0;
+
+    if( ref $options eq "HASH"  && defined $options->{filehandle} ) {
+        $self->{USER}{FILEIN} = $options->{filehandle};
+    } else {
+        my $program = $0 eq '-e' ? "perl -e '...'" : $0;
+        $self->{USER}{FILEIN} = new FileHandle $filename;
+        if( !defined $self->{USER}{FILEIN} ) {
+            my $message = sprint_message( {
+                'program'      => $program,
+                'filename'     => $filename,
+                'err_level'    => 'ERROR',
+                'message'      => 'could not open file -- ' . ( lcfirst $! )
+            } );
+
+            push ( @{$self->YYData->{ERROR_MESSAGES}}, $message );
+            $self->YYData->{ERRCOUNT}++;
+            die $message if $self->{USER}{OPTIONS}{no_print} == 0;
+            return [];
+        }
+    }
+
+    $| = 1;
+    if( $debug >= 2 && $debug < 3)
+    {
+        $self->YYParse( yylex => \&_Lexer,
+                        yyerror => \&_Error,
+                        yydebug => 0x05 );
+    } else {
+        $self->YYParse( yylex => \&_Lexer, yyerror => \&_Error );
+    }
+    if( $self->YYNberr() == 0 )
+    {
+        if( $debug >= 1 && $debug < 3)
+        {
+            print "File syntax is CORRECT!\n";
+        }
+        undef $self->{USER}{FILEIN};
+    } else {
+        if( $debug >= 1 && $debug < 3)
+        {
+            print "Syntax check failed.\n";
+        }
+        undef $self->{USER}{FILEIN};
+    }
+
+    if( $self->{USER}{OPTIONS}{no_print} == 0 ) {
+        print STDERR $_ foreach( @{$self->YYData->{WARNING_MESSAGES}} );
+        my $last_error = pop @{$self->YYData->{ERROR_MESSAGES}};
+        print STDERR $_ foreach( @{$self->YYData->{ERROR_MESSAGES}} );
+        if (defined $last_error) {
+            die $last_error;
+            push ( @{$self->YYData->{ERROR_MESSAGES}}, $last_error );
+        }
+    }
+    unshift @{$self->YYData->{ERROR_MESSAGES}},
+            @{$self->YYData->{WARNING_MESSAGES}};
+
+    return $self->{USER}->{CIFfile};
+}
+
+return 1;

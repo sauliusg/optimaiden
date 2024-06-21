@@ -1,0 +1,36 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+#------------------------------------------------------------------------------
+#$Author: antanas $
+#$Revision: 8230 $
+#$URL: svn://cod.ibt.lt/cif-tools/trunk/src/components/pycodcif/tests/scripts/cif_parser_test $
+#$Date: 2020-07-20 16:43:00 +0300 (Mon, 20 Jul 2020) $
+#$Id: cif_parser_test 8230 2020-07-20 13:43:00Z antanas $
+#------------------------------------------------------------------------------
+#*
+#  Test driver for pycodcif module.
+#**
+import re
+import sys
+from pycodcif import parse, CifParserException
+
+options = {}
+filenames = []
+dump = False
+
+options = {}
+for arg in sys.argv[1:]:
+    if arg == '--dump':
+        dump = True
+    elif arg.startswith('--'):
+        options[re.sub('-','_',re.sub('--','',arg))] = 1
+    else:
+        filenames.append(arg)
+
+try:
+    data, _, _ = parse( filenames[0], options )
+except CifParserException as e:
+    pass
+
+if dump:
+    print( data )

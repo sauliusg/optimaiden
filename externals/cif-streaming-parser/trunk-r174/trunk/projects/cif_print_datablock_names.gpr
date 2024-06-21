@@ -1,0 +1,63 @@
+project Cif_Print_Datablock_Names is
+
+    for Languages use ("Ada", "C");
+    for Create_Missing_Dirs use "True";
+    for Source_Dirs use ("../src", "../programs", "../src/externals/cexceptions", "../src/externals/codcif");
+    for Object_Dir use "../obj";
+    for Exec_Dir use "../bin";
+    for Main use ("cif_print_datablock_names.adb");
+
+    Ada_Compiler_Switches :=
+          (
+            -- Commenting out the "-Og" option since it causes STORAGE_ERROR
+            -- exception:
+            -- "-Og", -- Optimize for debug
+            "-ffunction-sections" -- Separate ELF section for each function
+            -- The following configuration section prevents the CIF Streaming Parser
+            -- from correctly enqueing/dequeing the data blocks, the parser seems
+            -- to "hang":
+            -- ,"-fdata-sections" -- Separate ELF section for each variable
+            ,"-g" -- Generate debug info
+            ,"-gnatwa" -- Enable all warnings
+            ,"-gnatw.X" -- Disable warnings for No_Exception_Propagation
+            ,"-gnatVa" -- All validity checks
+            ,"-gnaty3" -- Specify indentation level of 3
+            ,"-gnatya" -- Check attribute casing
+            ,"-gnatyA" -- Use of array index numbers in array attributes
+            ,"-gnatyB" -- Check Boolean operators
+            ,"-gnatyb" -- Blanks not allowed at statement end
+            ,"-gnatyc" -- Check comments
+            ,"-gnaty-d" -- Disable check no DOS line terminators present
+            ,"-gnatye" -- Check end/exit labels
+            ,"-gnatyf" -- No form feeds or vertical tabs
+            ,"-gnatyh" -- No horizontal tabs
+            ,"-gnatyi" -- Check if-then layout
+            ,"-gnatyI" -- check mode IN keywords
+            ,"-gnatyk" -- Check keyword casing
+            ,"-gnatyl" -- Check layout
+            ,"-gnatym" -- Check maximum line length
+            ,"-gnatyn" -- Check casing of entities in Standard
+            ,"-gnatyO" -- Check that overriding subprograms are explicitly marked as such
+            ,"-gnatyp" -- Check pragma casing
+            ,"-gnatyr" -- Check identifier references casing
+            ,"-gnatyS" -- Check no statements after THEN/ELSE
+            ,"-gnatyt" -- Check token spacing
+            ,"-gnatyu" -- Check unnecessary blank lines
+            ,"-gnatyx" -- Check extra parentheses
+            ,"-gnatW8" -- UTF-8 encoding for wide characters
+          );
+
+    package Compiler is
+        -- for Default_Switches ("Ada") use ("-Og", "-fsanitize=address");
+        for Default_Switches ("Ada") use Ada_Compiler_Switches;
+        for Default_Switches ("C")
+          -- use ("-fPIE", "-DHAS_VSNPRINTF", "-fsanitize=address");
+          use ("-fPIE", "-DHAS_VSNPRINTF");
+    end Compiler;
+
+    package Linker is
+        -- for Default_Switches ("Ada") use ("-lm", "-lasan");
+        for Default_Switches ("Ada") use ("-lm", "-lcif_print_datablock_names");
+    end Linker;
+
+end Cif_Print_Datablock_Names;

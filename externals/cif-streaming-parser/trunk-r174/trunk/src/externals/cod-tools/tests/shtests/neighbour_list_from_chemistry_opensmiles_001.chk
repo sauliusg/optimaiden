@@ -1,0 +1,22 @@
+#!/bin/sh
+
+if ! perl -MChemistry::OpenSMILES -e '1' 2>/dev/null
+then
+    echo Test skipped - no Chemistry::OpenSMILES
+    exit 1
+fi
+
+perl <<'END'
+
+use strict;
+use warnings;
+use version;
+use Chemistry::OpenSMILES;
+
+if( version->parse( $Chemistry::OpenSMILES::VERSION ) <
+    version->parse( '0.2.1' ) ) {
+    print "Test skipped - test only compatible with Chemistry::OpenSMILES version 0.2.1 or later\n";
+    exit 1;
+}
+
+END

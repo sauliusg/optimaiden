@@ -1,0 +1,1 @@
+[{'name': 'deeply_nested', 'tags': ['_sudėtinga_struktūra'], 'values': {'_sudėtinga_struktūra': [{'Katė': [{'Pelė': {'Žalia': '42'}}]}]}, 'types': {'_sudėtinga_struktūra': [{'Katė': [{'Pelė': {'Žalia': 'INT'}}]}]}, 'inloop': {}, 'loops': [], 'save_blocks': [], 'cifversion': {'major': 2, 'minor': 0}, 'precisions': {'_sudėtinga_struktūra': [{'Katė': [{'Pelė': {'Žalia': None}}]}]}}]
