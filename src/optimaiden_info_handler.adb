@@ -40,7 +40,7 @@ package body Optimaiden_Info_Handler is
       Stream.Start_Array ("available_api_versions");
       Stream.Start_Entity ("");
       Stream.Write_Attribute ("url", "localhost:8080");
-      Stream.Write_Attribute ("version", "1.0.0");
+      Stream.Write_Attribute ("version", "1.1.0");
       Stream.End_Entity ("");
       Stream.End_Array ("available_api_versions");
 
