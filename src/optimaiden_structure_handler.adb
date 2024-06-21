@@ -177,6 +177,8 @@ package body Optimaiden_Structure_Handler is
       Stream.Start_Document;
       Stream.Start_Array ("data");
       
+      Enable_Parsing;
+
       Parse_Cif_From_File (CIF_File_Name);
       
       loop  
