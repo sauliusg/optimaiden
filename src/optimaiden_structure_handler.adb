@@ -163,7 +163,8 @@ package body Optimaiden_Structure_Handler is
    CIF_Integer_Value_Tags : constant array (Integer range <>) 
      of CIF_JSON_Mapping :=
      (
-      1 => Make_Mapping ("_cod_Z", "_cell_formula_units_Z")
+      -- all CIF tags, beeing case-insensitive, are coverted to lowercase:
+      1 => Make_Mapping ("_cod_Z", "_cell_formula_units_z")
      );
       
    procedure Write
