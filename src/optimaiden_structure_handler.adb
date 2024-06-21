@@ -11,7 +11,7 @@ package body Optimaiden_Structure_Handler is
    
    function Get_Float_Value
      (
-      CDA : Controlled_Datablock_Access;
+      CDA : Controlled_Datablock;
       Tag_Index : Integer;
       Value_Index : Integer
      ) return Float is
@@ -31,7 +31,7 @@ package body Optimaiden_Structure_Handler is
    
    function Get_Integer_Value
      (
-      CDA : Controlled_Datablock_Access;
+      CDA : Controlled_Datablock;
       Tag_Index : Integer;
       Value_Index : Integer
      ) return Integer is
@@ -72,7 +72,7 @@ package body Optimaiden_Structure_Handler is
       Stream : in out Util.Serialize.IO.JSON.Output_Stream;
       JSON_Name : String;
       CIF_Tag_Name : String;
-      CDA : Controlled_Datablock_Access
+      CDA : Controlled_Datablock
      ) is
       Tag_Index : Integer := Get_Tag_Index (CDA, CIF_Tag_Name);
    begin
@@ -90,7 +90,7 @@ package body Optimaiden_Structure_Handler is
       Stream : in out Util.Serialize.IO.JSON.Output_Stream;
       JSON_Name : Unbounded_String;
       CIF_Tag_Name : Unbounded_String;
-      CDA : Controlled_Datablock_Access
+      CDA : Controlled_Datablock
      ) is
    begin
       Write_Float_If_Exists
@@ -107,7 +107,7 @@ package body Optimaiden_Structure_Handler is
       Stream : in out Util.Serialize.IO.JSON.Output_Stream;
       JSON_Name : String;
       CIF_Tag_Name : String;
-      CDA : Controlled_Datablock_Access
+      CDA : Controlled_Datablock
      ) is
       Tag_Index : Integer := Get_Tag_Index (CDA, CIF_Tag_Name);
    begin
@@ -125,7 +125,7 @@ package body Optimaiden_Structure_Handler is
       Stream : in out Util.Serialize.IO.JSON.Output_Stream;
       JSON_Name : Unbounded_String;
       CIF_Tag_Name : Unbounded_String;
-      CDA : Controlled_Datablock_Access
+      CDA : Controlled_Datablock
      ) is
    begin
       Write_Integer_If_Exists
@@ -171,7 +171,7 @@ package body Optimaiden_Structure_Handler is
       Stream : out Util.Serialize.IO.JSON.Output_Stream;
       CIF_File_Name : Unbounded_String
      ) is
-      CDA : Controlled_Datablock_Access;
+      CDA : Controlled_Datablock;
       
    begin
       Stream.Start_Document;

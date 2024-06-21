@@ -12,7 +12,7 @@ procedure Cif_Print_Datablock_Names is
 
   use Arguments_Vector;
 
-  Cif_Datablock :  Controlled_Datablock_Access;
+  Cif_Datablock :  Controlled_Datablock;
   Cif_Sources_Args   :  Arguments_Vector.Vector;
   Filename_Missing_Error : exception;
   File_Does_Not_Exist_Error : exception;
