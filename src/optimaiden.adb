@@ -50,6 +50,7 @@ begin
       Max_Connection (Web_Config, 1);
       Free_Slots_Keep_Alive_Limit (Web_Config, 1);
       Keep_Alive_Force_Limit (Web_Config, 1);
+      Server_Port (Web_Config, 8081);
    end;
 
    AWS.Config.Set.Server_Name (Web_Config, "Optimaiden: Hello World");
