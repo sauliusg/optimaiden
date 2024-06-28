@@ -1,4 +1,9 @@
 with "config/optimaiden_config.gpr";
+
+with "externals/utilada/2.6.0_99ca46a1/utilada_sys.gpr";
+with "externals/utilada/2.6.0_99ca46a1/utilada_base.gpr";
+with "externals/utilada/2.6.0_99ca46a1/utilada_core.gpr";
+
 project Optimaiden is
 
    for Languages use ("Ada", "C");
