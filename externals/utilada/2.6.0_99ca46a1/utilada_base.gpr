@@ -1,0 +1,80 @@
+with "utilada_conf";
+with "utilada_core";
+
+library project UtilAda_Base is
+
+   for Source_Dirs use ("src/base",
+                        "src/base/beans",
+                        "src/base/commands",
+                        "src/base/dates",
+                        "src/base/events",
+                        "src/base/files",
+                        "src/base/log",
+                        "src/base/properties");
+
+   for Library_Name use "utilada_base";
+   for Library_Kind use UtilAda_Conf.Library_Type;
+   for Library_Version use "lib" & Project'Library_Name & ".so." & UtilAda_Conf.Version;
+
+   package Naming is
+      case UtilAda_Conf.Has_Gnat_Traceback is
+         when "yes" =>
+            for Implementation ("Util.Log.Loggers.Traceback")
+               use "util-log-loggers-traceback-gnat.adb";
+
+         when "no" =>
+            for Implementation ("Util.Log.Loggers.Traceback")
+               use "util-log-loggers-traceback-none.adb";
+
+      end case;
+
+      --  The GNAT traceback is not available for shared libraries.
+      case UtilAda_Conf.Library_Type is
+         when "relocatable" =>
+            for Implementation ("Util.Log.Loggers.Traceback")
+               use "util-log-loggers-traceback-none.adb";
+     
+         when others =>
+            null;
+
+      end case;
+   end Naming;
+
+   case UtilAda_Conf.Os_Version is
+      when "none" =>
+         null;
+
+      when "win64" | "win32" =>
+         for Source_Dirs use Project'Source_Dirs
+            & ("src/base/os-windows",
+               "src/base/os-" & UtilAda_Conf.Os_Version);
+
+      when "unix" =>
+         --  Unix with utilgen generated files
+         for Source_Dirs use Project'Source_Dirs
+            & ("src/base/os-unix",
+               "src/base/os-generated");
+
+      when "windows" =>
+         --  Windows with utilgen generated files
+         -- (!!! requires correct gcc version to compile utilgen)
+         for Source_Dirs use Project'Source_Dirs
+            & ("src/base/os-windows",
+               "src/base/os-generated");
+
+      when others =>
+         for Source_Dirs use Project'Source_Dirs
+            & ("src/base/os-unix",
+               "src/base/os-" & UtilAda_Conf.Os_Version);
+
+   end case;
+
+   for Library_Dir use "lib/utilada_core/" & Project'Library_Kind;
+   for Object_Dir use "obj/utilada_core/" & Project'Library_Kind;
+
+   package Builder  renames UtilAda_Conf.Builder;
+   package Compiler renames UtilAda_Conf.Compiler;
+   package Ide      renames UtilAda_Conf.Ide;
+   package Binder   renames UtilAda_Core.Binder;
+
+end UtilAda_Base;
