@@ -101,6 +101,11 @@ package Util.Serialize.IO.JSON is
    overriding
    procedure Write_Attribute (Stream : in out Output_Stream;
                               Name   : in String;
+                              Value  : in Float);
+
+   overriding
+   procedure Write_Attribute (Stream : in out Output_Stream;
+                              Name   : in String;
                               Value  : in Boolean);
 
    --  Write a JSON name/value pair.  The value is written according to its type

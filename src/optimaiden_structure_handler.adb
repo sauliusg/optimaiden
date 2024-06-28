@@ -49,10 +49,8 @@ package body Optimaiden_Structure_Handler is
       Name   : in String;
       Value  : in Float
      ) is
-      Beans_Object : Util.Beans.Objects.Object :=
-        Util.Beans.Objects.To_Object (Value);
    begin
-      Stream.Write_Entity (Name, Beans_Object);
+      Stream.Write_Attribute (Name, Value);
    end;
    
    procedure Write_Entity

@@ -63,6 +63,10 @@ package Util.Serialize.IO is
 
    procedure Write_Attribute (Stream : in out Output_Stream;
                               Name   : in String;
+                              Value  : in Float) is null;
+
+   procedure Write_Attribute (Stream : in out Output_Stream;
+                              Name   : in String;
                               Value  : in Boolean) is abstract;
 
    procedure Write_Attribute (Stream : in out Output_Stream;

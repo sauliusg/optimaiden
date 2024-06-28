@@ -294,6 +294,15 @@ package body Util.Serialize.IO.JSON is
    overriding
    procedure Write_Attribute (Stream : in out Output_Stream;
                               Name   : in String;
+                              Value  : in Float) is
+   begin
+      Stream.Write_Field_Name (Name);
+      Stream.Write (Float'Image (Value));
+   end Write_Attribute;
+
+   overriding
+   procedure Write_Attribute (Stream : in out Output_Stream;
+                              Name   : in String;
                               Value  : in Boolean) is
    begin
       Stream.Write_Field_Name (Name);
