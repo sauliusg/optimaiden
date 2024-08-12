@@ -9,6 +9,9 @@ licenses = "LGPL-3.0-or-later"
 website = ""
 tags = []
 
+[build-switches]
+"*".style_checks = ["-gnatytux"]
+
 [[depends-on]]
 aws = "^24.0.0"
 
