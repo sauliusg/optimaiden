@@ -10,6 +10,6 @@ GPR_PROJECT = $(shell find -maxdepth 1 -name '*.gpr' | sort | head -n 1)
 
 ALL_ADA_SOURCES = $(shell find -name '*.adb' -o -name '*.ads')
 
-GPR_PROJECT_PATH := externals/utilada/2.6.0_99ca46a1/.alire
+GPR_PROJECT_PATH := externals/utilada/2.6.0_99ca46a1/.alire:externals/json_ada/fda3e8b1/json
 
 export GPR_PROJECT_PATH

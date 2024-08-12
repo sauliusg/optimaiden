@@ -10,11 +10,7 @@ website = ""
 tags = []
 
 [[depends-on]]
-json = "^5.0.3"
-
-[[depends-on]]
 aws = "^24.0.0"
 
 [[depends-on]]
 gnatcoll = "^24.0.0"
-
