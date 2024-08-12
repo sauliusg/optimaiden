@@ -11,6 +11,12 @@ with AWS.Services.Dispatchers.URI;
 with Optimaiden_Info_Handler; use Optimaiden_Info_Handler;
 with Optimaiden_Structure_Handler; use Optimaiden_Structure_Handler;
 
+with JSON;
+with JSON.Streams;
+with JSON.Parsers;
+with JSON.Tokenizers;
+with JSON.Types;
+
 procedure Optimaiden is
 
    task Waiter is

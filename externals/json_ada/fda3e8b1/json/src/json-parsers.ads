@@ -28,7 +28,8 @@ generic
    Check_Duplicate_Keys  : Boolean  := False;
    --  If enabled, raise a Constraint_Error when an object contains
    --  duplicate keys. Parsing a JSON text will be slower if enabled.
-package JSON.Parsers with SPARK_Mode => On is
+package JSON.Parsers -- with SPARK_Mode => On
+is
    pragma Preelaborate;
 
    type Parser is tagged limited private;

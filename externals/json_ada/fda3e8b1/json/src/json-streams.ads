@@ -16,7 +16,8 @@
 
 with Ada.Streams;
 
-package JSON.Streams with SPARK_Mode => On is
+package JSON.Streams -- with SPARK_Mode => On
+is
    pragma Preelaborate;
 
    pragma Elaborate_Body;
