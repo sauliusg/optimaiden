@@ -31,7 +31,7 @@ package body Optimaiden_Record_Handler is
          if Ada.Environment_Variables.Exists ("CODPATH") then
              Ada.Environment_Variables.Value ("CODPATH")
          else
-             "."
+             "cif"
         );
       
       D1 : constant String := COD_ID (COD_ID'First .. COD_ID'First);
