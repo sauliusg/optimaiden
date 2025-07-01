@@ -11,7 +11,7 @@ package body Structure_To_JSON is
       Value_Index : Integer
      ) return Float is
       
-      Value_String : String :=
+      Value_String : constant String :=
         Get_Tag_Value (CDA, Tag_Index, Value_Index);
 
       Last_Index : Integer := Value_String'First;
@@ -31,7 +31,7 @@ package body Structure_To_JSON is
       Value_Index : Integer
      ) return Integer is
       
-      Value_String : String :=
+      Value_String : constant String :=
         Get_Tag_Value (CDA, Tag_Index, Value_Index);
 
    begin
@@ -75,7 +75,7 @@ package body Structure_To_JSON is
       CIF_Tag_Name : String;
       CDA : Controlled_Datablock
      ) is
-      Tag_Index : Integer := Get_Tag_Index (CDA, CIF_Tag_Name);
+      Tag_Index : constant Integer := Get_Tag_Index (CDA, CIF_Tag_Name);
    begin
       if Tag_Index >= 0 then
          Write_Entity
@@ -110,7 +110,7 @@ package body Structure_To_JSON is
       CIF_Tag_Name : String;
       CDA : Controlled_Datablock
      ) is
-      Tag_Index : Integer := Get_Tag_Index (CDA, CIF_Tag_Name);
+      Tag_Index : constant Integer := Get_Tag_Index (CDA, CIF_Tag_Name);
    begin
       if Tag_Index >= 0 then
          Write_Entity
@@ -145,7 +145,7 @@ package body Structure_To_JSON is
       CIF_Tag_Name : String;
       CDA : Controlled_Datablock
      ) is
-      Tag_Index : Integer := Get_Tag_Index (CDA, CIF_Tag_Name);
+      Tag_Index : constant Integer := Get_Tag_Index (CDA, CIF_Tag_Name);
    begin
       if Tag_Index >= 0 then
          Write_Entity
@@ -173,8 +173,6 @@ package body Structure_To_JSON is
         );
    end;
 
-   type Access_All_String is access all String;
-   
    type CIF_JSON_Mapping is record
       JSON_Name : Unbounded_String;
       CIF_Tag : Unbounded_String;
