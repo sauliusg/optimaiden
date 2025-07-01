@@ -24,8 +24,14 @@ package body Optimaiden_Record_Handler is
       Slash_Idx : constant Integer := Index (URL, "/", Going => Backward);
       COD_ID : constant String := URL (Slash_Idx + 1 .. URL'Last);
       
+      COD_Base : constant String := "/home/saulius/struct/cod/cif";
+      D1 : constant String := COD_ID (COD_ID'First .. COD_ID'First);
+      D2 : constant String := COD_ID (COD_ID'First + 1 .. COD_ID'First + 2);
+      D3 : constant String := COD_ID (COD_ID'First + 3 .. COD_ID'First + 4);
+      
       CIF_File_Name : constant Unbounded_String :=
-        To_Unbounded_String ("/home/saulius/struct/cod/cif/1/00/00/" & COD_ID & ".cif");
+        To_Unbounded_String (COD_Base & "/"& D1 & "/" & D2 & "/" & D3 & "/" & 
+                               COD_ID & ".cif");
       
    begin
       Output.Initialize (Size => 10000);
