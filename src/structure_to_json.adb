@@ -1,3 +1,4 @@
+with Ada.Directories; use Ada.Directories;
 with Cif_Datablock; use Cif_Datablock;
 with Cif_Streaming_Parser; use Cif_Streaming_Parser;
 
@@ -220,6 +221,11 @@ package body Structure_To_JSON is
    begin
       Stream.Start_Document;
       Stream.Start_Array ("data");
+      
+      if not Exists (To_String (CIF_File_Name)) then
+         raise NAME_ERROR with 
+           "File """ & To_String (CIF_File_Name) & """ does not exist";
+      end if;
       
       Enable_Parsing;
 
