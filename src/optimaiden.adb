@@ -10,6 +10,7 @@ with AWS.Services.Dispatchers.URI;
 
 with Optimaiden_Info_Handler; use Optimaiden_Info_Handler;
 with Optimaiden_Structure_Handler; use Optimaiden_Structure_Handler;
+with Optimaiden_Record_Handler; use Optimaiden_Record_Handler;
 
 -- with JSON;
 -- with JSON.Streams;
@@ -42,6 +43,7 @@ procedure Optimaiden is
 
    Info_Handler : Optimaiden_Info_Handler_Type;
    Structure_Handler : Optimaiden_Structure_Handler_Type;
+   Single_Record_Handler : Optimaiden_Record_Handler_Type;
 
 begin
    
@@ -65,6 +67,12 @@ begin
    AWS.Services.Dispatchers.URI.Register (Root, "/info", Info_Handler);
    AWS.Services.Dispatchers.URI.Register (Root, "/structures",
                                           Structure_Handler);
+
+   AWS.Services.Dispatchers.URI.Register_Regexp
+     (
+      Root, "/structures/[0-9][0-9]*",
+      Single_Record_Handler
+     );
 
    pragma Debug
      (
