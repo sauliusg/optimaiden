@@ -2,6 +2,8 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Strings;           use Ada.Strings;
 with Ada.Strings.Fixed;     use Ada.Strings.Fixed;
 
+with Ada.Environment_Variables;
+
 with Util.Streams.Texts;
 with Util.Serialize.IO.JSON;
 with AWS.MIME; use AWS.MIME;
@@ -24,7 +26,14 @@ package body Optimaiden_Record_Handler is
       Slash_Idx : constant Integer := Index (URL, "/", Going => Backward);
       COD_ID : constant String := URL (Slash_Idx + 1 .. URL'Last);
       
-      COD_Base : constant String := "/home/saulius/struct/cod/cif";
+      COD_Base : constant String := 
+        (
+         if Ada.Environment_Variables.Exists ("CODPATH") then
+             Ada.Environment_Variables.Value ("CODPATH")
+         else
+             "."
+        );
+      
       D1 : constant String := COD_ID (COD_ID'First .. COD_ID'First);
       D2 : constant String := COD_ID (COD_ID'First + 1 .. COD_ID'First + 2);
       D3 : constant String := COD_ID (COD_ID'First + 3 .. COD_ID'First + 4);
