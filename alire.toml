@@ -17,3 +17,9 @@ aws = "^24.0.0"
 
 [[depends-on]]
 gnatcoll = "^24.0.0"
+
+[[depends-on]]
+ayacc = "^1.4.1"
+
+[[depends-on]]
+aflex = "^1.7.0"
