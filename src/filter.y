@@ -162,8 +162,6 @@ grouped__ValueZips : ValueZip | ONLY ValueZipList | ALL ValueZipList | ANY Value
 ;
 zero_or_more__Colons_1 : Colon Property | zero_or_more__Colons_1 Colon Property | 
 ;
-optional__Spaces_1 : Spaces | 
-;
 grouped__OrderedConstants_1 : OrderedConstant ValueOpRhs | UnorderedConstant ValueEqRhs
 ;
 grouped__terminals : '<' | '>'
@@ -198,13 +196,7 @@ zero_or_more__LowercaseLetters : LowercaseLetter | Digit | zero_or_more__Lowerca
 ;
 zero_or_more__Colons : Colon ValueListEntry | zero_or_more__Colons Colon ValueListEntry | 
 ;
-optional__Spaces_19 : Spaces | 
-;
-optional__Spaces_17 : Spaces | 
-;
 optional__AND : AND ExpressionClause | 
-;
-optional__Spaces_18 : Spaces | 
 ;
 grouped__KNOWNs : KNOWN | UNKNOWN
 ;
@@ -214,25 +206,11 @@ grouped__UnorderedConstants : UnorderedConstant | OrderedValue
 ;
 optional__NOT : NOT | 
 ;
-optional__Spaces_11 : Spaces | 
-;
 grouped__OrderedConstants : OrderedConstant | Property
-;
-optional__Spaces_12 : Spaces | 
 ;
 zero_or_more__Dots : Dot Identifier | zero_or_more__Dots Dot Identifier | 
 ;
-optional__Spaces_10 : Spaces | 
-;
-optional__Spaces_15 : Spaces | 
-;
-optional__Spaces_16 : Spaces | 
-;
-optional__Spaces_13 : Spaces | 
-;
 zero_or_more__Spaces : Space | zero_or_more__Spaces Space | 
-;
-optional__Spaces_14 : Spaces | 
 ;
 grouped__Comparisons : Comparison | OpeningBrace Expression ClosingBrace
 ;
