@@ -1,0 +1,284 @@
+with Text_IO, Lex, YYErrors; use Text_IO, Lex, YYErrors;
+
+with Filter_Goto, Filter_Tokens, Filter_Shift_Reduce;
+use Filter_Goto, Filter_Tokens, Filter_Shift_Reduce;
+package body Filter is
+
+   procedure YYParse is
+      --  Rename User Defined Packages to Internal Names.
+      package yy_goto_tables renames
+         Filter_Goto;
+      package yy_shift_reduce_tables renames
+         Filter_Shift_Reduce;
+      package yy_tokens renames
+         Filter_Tokens;
+
+      use yy_tokens, yy_goto_tables, yy_shift_reduce_tables;
+
+      procedure yyerrok;
+      procedure yyclearin;
+      procedure handle_error;
+
+      subtype goto_row is yy_goto_tables.Row;
+      subtype reduce_row is yy_shift_reduce_tables.Row;
+
+      package yy is
+
+         --  the size of the value and state stacks
+         --  Affects error 'Stack size exceeded on state_stack'
+         stack_size : constant Natural :=  8192;
+
+         --  subtype rule         is Natural;
+         subtype parse_state is Natural;
+         --  subtype nonterminal  is Integer;
+
+         --  encryption constants
+         default           : constant := -1;
+         first_shift_entry : constant := 0;
+         accept_code       : constant := -3001;
+         error_code        : constant := -3000;
+
+         --  stack data used by the parser
+         tos                : Natural := 0;
+         value_stack        : array (0 .. stack_size) of yy_tokens.YYSType;
+         state_stack        : array (0 .. stack_size) of parse_state;
+
+         --  current input symbol and action the parser is on
+         action             : Integer;
+         rule_id            : Rule;
+         input_symbol       : yy_tokens.Token := ERROR;
+
+         --  error recovery flag
+         error_flag : Natural := 0;
+         --  indicates  3 - (number of valid shifts after an error occurs)
+
+         look_ahead : Boolean := True;
+         index      : reduce_row;
+
+         --  Is Debugging option on or off
+         debug : constant Boolean := False;
+      end yy;
+
+      procedure shift_debug (state_id : yy.parse_state; lexeme : yy_tokens.Token);
+      procedure reduce_debug (rule_id : Rule; state_id : yy.parse_state);
+
+      function goto_state
+         (state : yy.parse_state;
+          sym   : Nonterminal) return yy.parse_state;
+
+      function parse_action
+         (state : yy.parse_state;
+          t     : yy_tokens.Token) return Integer;
+
+      pragma Inline (goto_state, parse_action);
+
+      function goto_state (state : yy.parse_state;
+                           sym   : Nonterminal) return yy.parse_state is
+         index : goto_row;
+      begin
+         index := Goto_Offset (state);
+         while Goto_Matrix (index).Nonterm /= sym loop
+            index := index + 1;
+         end loop;
+         return Integer (Goto_Matrix (index).Newstate);
+      end goto_state;
+
+      function parse_action (state : yy.parse_state;
+                             t     : yy_tokens.Token) return Integer is
+         index   : reduce_row;
+         tok_pos : Integer;
+         default : constant Integer := -1;
+      begin
+         tok_pos := yy_tokens.Token'Pos (t);
+         index   := Shift_Reduce_Offset (state);
+         while Integer (Shift_Reduce_Matrix (index).T) /= tok_pos
+           and then Integer (Shift_Reduce_Matrix (index).T) /= default
+         loop
+            index := index + 1;
+         end loop;
+         return Integer (Shift_Reduce_Matrix (index).Act);
+      end parse_action;
+
+      --  error recovery stuff
+
+      procedure handle_error is
+         temp_action : Integer;
+      begin
+
+         if yy.error_flag = 3 then --  no shift yet, clobber input.
+            if yy.debug then
+               Text_IO.Put_Line ("  -- Ayacc.YYParse: Error Recovery Clobbers "
+                                 & yy_tokens.Token'Image (yy.input_symbol));
+            end if;
+            if yy.input_symbol = yy_tokens.END_OF_INPUT then  -- don't discard,
+               if yy.debug then
+                  Text_IO.Put_Line ("  -- Ayacc.YYParse: Can't discard END_OF_INPUT, quiting...");
+               end if;
+               raise yy_tokens.Syntax_Error;
+            end if;
+
+            yy.look_ahead := True;   --  get next token
+            return;                  --  and try again...
+         end if;
+
+         if yy.error_flag = 0 then --  brand new error
+            yyerror ("Syntax Error");
+         end if;
+
+         yy.error_flag := 3;
+
+         --  find state on stack where error is a valid shift --
+
+         if yy.debug then
+            Text_IO.Put_Line ("  -- Ayacc.YYParse: Looking for state with error as valid shift");
+         end if;
+
+         loop
+            if yy.debug then
+               Text_IO.Put_Line ("  -- Ayacc.YYParse: Examining State "
+                                 & yy.parse_state'Image (yy.state_stack (yy.tos)));
+            end if;
+            temp_action := parse_action (yy.state_stack (yy.tos), ERROR);
+
+            if temp_action >= yy.first_shift_entry then
+               if yy.tos = yy.stack_size then
+                  Text_IO.Put_Line ("  -- Ayacc.YYParse: Stack size exceeded on state_stack");
+                  raise yy_tokens.Syntax_Error;
+               end if;
+               yy.tos                  := yy.tos + 1;
+               yy.state_stack (yy.tos) := temp_action;
+               exit;
+            end if;
+
+            if yy.tos /= 0 then
+               yy.tos := yy.tos - 1;
+            end if;
+
+            if yy.tos = 0 then
+               if yy.debug then
+                  Text_IO.Put_Line
+                     ("  -- Ayacc.YYParse: Error recovery popped entire stack, aborting...");
+               end if;
+               raise yy_tokens.Syntax_Error;
+            end if;
+         end loop;
+
+         if yy.debug then
+            Text_IO.Put_Line ("  -- Ayacc.YYParse: Shifted error token in state "
+                              & yy.parse_state'Image (yy.state_stack (yy.tos)));
+         end if;
+
+      end handle_error;
+
+      --  print debugging information for a shift operation
+      procedure shift_debug (state_id : yy.parse_state; lexeme : yy_tokens.Token) is
+      begin
+         Text_IO.Put_Line ("  -- Ayacc.YYParse: Shift "
+                           & yy.parse_state'Image (state_id) & " on input symbol "
+                           & yy_tokens.Token'Image (lexeme));
+      end shift_debug;
+
+      --  print debugging information for a reduce operation
+      procedure reduce_debug (rule_id : Rule; state_id : yy.parse_state) is
+      begin
+         Text_IO.Put_Line ("  -- Ayacc.YYParse: Reduce by rule "
+                           & Rule'Image (rule_id) & " goto state "
+                           & yy.parse_state'Image (state_id));
+      end reduce_debug;
+
+      --  make the parser believe that 3 valid shifts have occured.
+      --  used for error recovery.
+      procedure yyerrok is
+      begin
+         yy.error_flag := 0;
+      end yyerrok;
+
+      --  called to clear input symbol that caused an error.
+      procedure yyclearin is
+      begin
+         --  yy.input_symbol := YYLex;
+         yy.look_ahead := True;
+      end yyclearin;
+
+   begin
+      --  initialize by pushing state 0 and getting the first input symbol
+      yy.state_stack (yy.tos) := 0;
+
+      loop
+         yy.index := Shift_Reduce_Offset (yy.state_stack (yy.tos));
+         if Integer (Shift_Reduce_Matrix (yy.index).T) = yy.default then
+            yy.action := Integer (Shift_Reduce_Matrix (yy.index).Act);
+         else
+            if yy.look_ahead then
+               yy.look_ahead := False;
+               yy.input_symbol := YYLex;
+            end if;
+            yy.action := parse_action (yy.state_stack (yy.tos), yy.input_symbol);
+         end if;
+
+         if yy.action >= yy.first_shift_entry then  --  SHIFT
+
+            if yy.debug then
+               shift_debug (yy.action, yy.input_symbol);
+            end if;
+
+            --  Enter new state
+            if yy.tos = yy.stack_size then
+               Text_IO.Put_Line (" Stack size exceeded on state_stack");
+               raise yy_tokens.Syntax_Error;
+            end if;
+            yy.tos                  := yy.tos + 1;
+            yy.state_stack (yy.tos) := yy.action;
+            yy.value_stack (yy.tos) := YYLVal;
+
+            if yy.error_flag > 0 then  --  indicate a valid shift
+               yy.error_flag := yy.error_flag - 1;
+            end if;
+
+            --  Advance lookahead
+            yy.look_ahead := True;
+
+         elsif yy.action = yy.error_code then       -- ERROR
+            handle_error;
+
+         elsif yy.action = yy.accept_code then
+            if yy.debug then
+               Text_IO.Put_Line ("  --  Ayacc.YYParse: Accepting Grammar...");
+            end if;
+            exit;
+
+         else --  Reduce Action
+
+            --  Convert action into a rule
+            yy.rule_id := Rule (-1 * yy.action);
+
+            --  Execute User Action
+            --  user_action(yy.rule_id);
+            case yy.rule_id is
+               pragma Style_Checks (Off);
+               pragma Style_Checks (On);
+
+               when others => null;
+            end case;
+
+            --  Pop RHS states and goto next state
+            yy.tos := yy.tos - Rule_Length (yy.rule_id) + 1;
+            if yy.tos > yy.stack_size then
+               Text_IO.Put_Line (" Stack size exceeded on state_stack");
+               raise yy_tokens.Syntax_Error;
+            end if;
+            yy.state_stack (yy.tos) := goto_state (yy.state_stack (yy.tos - 1),
+                                                   Get_LHS_Rule (yy.rule_id));
+
+            yy.value_stack (yy.tos) := YYVal;
+            if yy.debug then
+               reduce_debug (yy.rule_id,
+                  goto_state (yy.state_stack (yy.tos - 1),
+                              Get_LHS_Rule (yy.rule_id)));
+            end if;
+
+         end if;
+      end loop;
+
+   end YYParse;
+end Filter;

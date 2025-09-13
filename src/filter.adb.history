@@ -1,0 +1,2 @@
+  724  gnatchop filter.ada 
+  747  cat filter.adb.header filter.adb | uniq | sponge filter.adb
