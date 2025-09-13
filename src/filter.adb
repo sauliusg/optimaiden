@@ -1,4 +1,4 @@
-with Text_IO, Lex, YYErrors; use Text_IO, Lex, YYErrors;
+with Text_IO, Filter_Lex, YYErrors; use Text_IO, Filter_Lex, YYErrors;
 
 with Filter_Goto, Filter_Tokens, Filter_Shift_Reduce;
 use Filter_Goto, Filter_Tokens, Filter_Shift_Reduce;
