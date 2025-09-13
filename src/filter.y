@@ -91,35 +91,35 @@ Comma : ',' optional__Spaces
 ;
 Colon : ':' optional__Spaces
 ;
-AND : 'AND' optional__Spaces
+AND : AND_TOKEN optional__Spaces
 ;
-NOT : 'NOT' optional__Spaces
+NOT : NOT_TOKEN optional__Spaces
 ;
-OR : 'OR' optional__Spaces
+OR : OR_TOKEN optional__Spaces
 ;
-IS : 'IS' optional__Spaces
+IS : IS_TOKEN optional__Spaces
 ;
-KNOWN : 'KNOWN' optional__Spaces
+KNOWN : KNOWN_TOKEN optional__Spaces
 ;
-UNKNOWN : 'UNKNOWN' optional__Spaces
+UNKNOWN : UNKNOWN_TOKEN optional__Spaces
 ;
-CONTAINS : 'CONTAINS' optional__Spaces
+CONTAINS : CONTAINS_TOKEN optional__Spaces
 ;
-STARTS : 'STARTS' optional__Spaces
+STARTS : STARTS_TOKEN optional__Spaces
 ;
-ENDS : 'ENDS' optional__Spaces
+ENDS : ENDS_TOKEN optional__Spaces
 ;
-WITH : 'WITH' optional__Spaces
+WITH : WITH_TOKEN optional__Spaces
 ;
-LENGTH : 'LENGTH' optional__Spaces
+LENGTH : LENGTH_TOKEN optional__Spaces
 ;
-HAS : 'HAS' optional__Spaces
+HAS : HAS_TOKEN optional__Spaces
 ;
-ALL : 'ALL' optional__Spaces
+ALL : ALL_TOKEN optional__Spaces
 ;
-ONLY : 'ONLY' optional__Spaces
+ONLY : ONLY_TOKEN optional__Spaces
 ;
-ANY : 'ANY' optional__Spaces
+ANY : ANY_TOKEN optional__Spaces
 ;
 Operator : grouped__EqualityOperators
 ;
@@ -127,9 +127,9 @@ EqualityOperator : optional__terminal '=' optional__Spaces
 ;
 RelativeComparisonOperator : grouped__terminals optional__terminal_1 optional__Spaces
 ;
-TRUE : 'TRUE' optional__Spaces
+TRUE : TRUE_TOKEN optional__Spaces
 ;
-FALSE : 'FALSE' optional__Spaces
+FALSE : FALSE_TOKEN optional__Spaces
 ;
 Identifier : LowercaseLetter zero_or_more__LowercaseLetters optional__Spaces
 ;
