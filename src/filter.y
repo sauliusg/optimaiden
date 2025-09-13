@@ -2,11 +2,11 @@
    subtype YYSType is YYSType_Definition.YYSType;
 }
 %token UNICODE_CHARACTER -- <<[^\x00-\x7F]>>
-%token FF -- <<\f>>
-%token LF -- <<\n>>
-%token CR -- <<\r>>
-%token HT -- <<\t>>
-%token VT -- <<\v>>
+%token FF_TOKEN -- <<\f>>
+%token LF_TOKEN -- <<\n>>
+%token CR_TOKEN -- <<\r>>
+%token HT_TOKEN -- <<\t>>
+%token VT_TOKEN -- <<\v>>
 
 %token AND_TOKEN
 %token NOT_TOKEN
@@ -157,15 +157,15 @@ Digits : Digit zero_or_more__Digits
 ;
 Digit : '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
 ;
-tab : HT
+tab : HT_TOKEN
 ;
-nl : LF
+nl : LF_TOKEN
 ;
-cr : CR
+cr : CR_TOKEN
 ;
-vt : VT
+vt : VT_TOKEN
 ;
-ff : FF
+ff : FF_TOKEN
 ;
 Space : ' ' | tab | nl | cr | vt | ff
 ;
