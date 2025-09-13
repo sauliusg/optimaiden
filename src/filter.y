@@ -8,6 +8,25 @@
 %token HT -- <<\t>>
 %token VT -- <<\v>>
 
+%token AND_TOKEN
+%token NOT_TOKEN
+%token OR_TOKEN
+%token IS_TOKEN
+%token KNOWN_TOKEN
+%token UNKNOWN_TOKEN
+%token CONTAINS_TOKEN
+%token STARTS_TOKEN
+%token ENDS_TOKEN
+%token WITH_TOKEN
+%token LENGTH_TOKEN
+%token HAS_TOKEN
+%token ALL_TOKEN
+%token ONLY_TOKEN
+%token ANY_TOKEN
+
+%token TRUE_TOKEN
+%token FALSE_TOKEN
+
 %start Filter
 
 %%
