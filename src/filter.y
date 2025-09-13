@@ -2,13 +2,16 @@
    subtype YYSType is YYSType_Definition.YYSType;
 }
 %token <<[^\x00-\x7F]>>
-%token <<\f>>
-%token <<\n>>
-%token <<\r>>
-%token <<\t>>
-%token <<\v>>
+%token FF -- <<\f>>
+%token NL -- <<\n>>
+%token CR -- <<\r>>
+%token HT -- <<\t>>
+%token VT -- <<\v>>
+
 %start Filter
+
 %%
+
 Filter : optional__Spaces Expression
 ;
 OrderedConstant : String | Number
@@ -239,45 +242,13 @@ optional__Sign : Sign |
 ;
 grouped__EqualityOperators : EqualityOperator | RelativeComparisonOperator
 ;
-optional__Spaces_8 : Spaces | 
-;
-optional__Spaces_9 : Spaces | 
-;
-optional__Spaces_6 : Spaces | 
-;
-optional__Spaces_7 : Spaces | 
-;
-optional__Spaces_4 : Spaces | 
-;
-optional__Spaces_5 : Spaces | 
-;
 optional__terminal_1 : '=' | 
-;
-optional__Spaces_2 : Spaces | 
-;
-optional__Spaces_3 : Spaces | 
-;
-optional__Spaces_22 : Spaces | 
-;
-optional__Spaces_23 : Spaces | 
 ;
 grouped__terminals_1 : 'e' | 'E'
 ;
 optional__WITH : WITH | 
 ;
-optional__Spaces_20 : Spaces | 
-;
-optional__Spaces_21 : Spaces | 
-;
-optional__Spaces_26 : Spaces | 
-;
-optional__Spaces_27 : Spaces | 
-;
-optional__Spaces_24 : Spaces | 
-;
 optional__Spaces : Spaces | 
-;
-optional__Spaces_25 : Spaces | 
 ;
 -----------------------------
 
