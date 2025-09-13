@@ -1,9 +1,9 @@
 {
    subtype YYSType is YYSType_Definition.YYSType;
 }
-%token <<[^\x00-\x7F]>>
+%token UNICODE_CHARACTER -- <<[^\x00-\x7F]>>
 %token FF -- <<\f>>
-%token NL -- <<\n>>
+%token LF -- <<\n>>
 %token CR -- <<\r>>
 %token HT -- <<\t>>
 %token VT -- <<\v>>
@@ -138,21 +138,21 @@ Digits : Digit zero_or_more__Digits
 ;
 Digit : '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
 ;
-tab : SPECIAL_0
+tab : HT
 ;
-nl : SPECIAL_1
+nl : LF
 ;
-cr : SPECIAL_2
+cr : CR
 ;
-vt : SPECIAL_3
+vt : VT
 ;
-ff : SPECIAL_4
+ff : FF
 ;
 Space : ' ' | tab | nl | cr | vt | ff
 ;
 Spaces : Space zero_or_more__Spaces
 ;
-UnicodeHighChar : SPECIAL_5
+UnicodeHighChar : UNICODE_CHARACTER
 ;
 
 -----------------------------
