@@ -62,57 +62,57 @@ LengthOpRhs : LENGTH optional__Operator Value
 ;
 Property : Identifier zero_or_more__Dots
 ;
-OpeningBrace : '(' optional__Spaces_1
+OpeningBrace : '(' optional__Spaces
 ;
-ClosingBrace : ')' optional__Spaces_2
+ClosingBrace : ')' optional__Spaces
 ;
-Dot : '.' optional__Spaces_3
+Dot : '.' optional__Spaces
 ;
-Comma : ',' optional__Spaces_4
+Comma : ',' optional__Spaces
 ;
-Colon : ':' optional__Spaces_5
+Colon : ':' optional__Spaces
 ;
-AND : 'AND' optional__Spaces_6
+AND : 'AND' optional__Spaces
 ;
-NOT : 'NOT' optional__Spaces_7
+NOT : 'NOT' optional__Spaces
 ;
-OR : 'OR' optional__Spaces_8
+OR : 'OR' optional__Spaces
 ;
-IS : 'IS' optional__Spaces_9
+IS : 'IS' optional__Spaces
 ;
-KNOWN : 'KNOWN' optional__Spaces_10
+KNOWN : 'KNOWN' optional__Spaces
 ;
-UNKNOWN : 'UNKNOWN' optional__Spaces_11
+UNKNOWN : 'UNKNOWN' optional__Spaces
 ;
-CONTAINS : 'CONTAINS' optional__Spaces_12
+CONTAINS : 'CONTAINS' optional__Spaces
 ;
-STARTS : 'STARTS' optional__Spaces_13
+STARTS : 'STARTS' optional__Spaces
 ;
-ENDS : 'ENDS' optional__Spaces_14
+ENDS : 'ENDS' optional__Spaces
 ;
-WITH : 'WITH' optional__Spaces_15
+WITH : 'WITH' optional__Spaces
 ;
-LENGTH : 'LENGTH' optional__Spaces_16
+LENGTH : 'LENGTH' optional__Spaces
 ;
-HAS : 'HAS' optional__Spaces_17
+HAS : 'HAS' optional__Spaces
 ;
-ALL : 'ALL' optional__Spaces_18
+ALL : 'ALL' optional__Spaces
 ;
-ONLY : 'ONLY' optional__Spaces_19
+ONLY : 'ONLY' optional__Spaces
 ;
-ANY : 'ANY' optional__Spaces_20
+ANY : 'ANY' optional__Spaces
 ;
 Operator : grouped__EqualityOperators
 ;
-EqualityOperator : optional__terminal '=' optional__Spaces_21
+EqualityOperator : optional__terminal '=' optional__Spaces
 ;
-RelativeComparisonOperator : grouped__terminals optional__terminal_1 optional__Spaces_22
+RelativeComparisonOperator : grouped__terminals optional__terminal_1 optional__Spaces
 ;
-TRUE : 'TRUE' optional__Spaces_23
+TRUE : 'TRUE' optional__Spaces
 ;
-FALSE : 'FALSE' optional__Spaces_24
+FALSE : 'FALSE' optional__Spaces
 ;
-Identifier : LowercaseLetter zero_or_more__LowercaseLetters optional__Spaces_25
+Identifier : LowercaseLetter zero_or_more__LowercaseLetters optional__Spaces
 ;
 Letter : UppercaseLetter | LowercaseLetter
 ;
@@ -120,7 +120,7 @@ UppercaseLetter : 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K
 ;
 LowercaseLetter : 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' | 'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z' | '_'
 ;
-String : '"' zero_or_more__EscapedChars '"' optional__Spaces_26
+String : '"' zero_or_more__EscapedChars '"' optional__Spaces
 ;
 EscapedChar : UnescapedChar | '\' '"' | '\' '\'
 ;
@@ -128,7 +128,7 @@ UnescapedChar : Letter | Digit | Space | Punctuator | UnicodeHighChar
 ;
 Punctuator : '!' | '#' | '$' | '%' | '&' | ''' | '(' | ')' | '*' | '+' | ',' | '-' | '.' | '/' | ':' | ';' | '<' | '=' | '>' | '?' | '@' | '[' | ']' | '^' | '`' | '{' | '|' | '}' | '~'
 ;
-Number : optional__Sign grouped__Digits optional__Exponent optional__Spaces_27
+Number : optional__Sign grouped__Digits optional__Exponent optional__Spaces
 ;
 Exponent : grouped__terminals_1 optional__Sign_1 Digits
 ;
