@@ -46,7 +46,7 @@ package body Filter_Lex is
    
    procedure Start_Parsing (S : String) is
    begin
-      if Buffer_Ptr /= Lex.Buffer_Data'Access then
+      if Buffer_Ptr /= Filter_Lex.Buffer_Data'Access then
          Free (Buffer_Ptr);
       end if;
       Buffer_Ptr := new String'(S);
