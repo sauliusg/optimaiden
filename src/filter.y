@@ -150,7 +150,7 @@ ff : FF
 ;
 Space : ' ' | tab | nl | cr | vt | ff
 ;
-Spaces : Space zero_or_more__Spaces
+Spaces : Space | Spaces Space
 ;
 UnicodeHighChar : UNICODE_CHARACTER
 ;
@@ -209,8 +209,6 @@ optional__NOT : NOT |
 grouped__OrderedConstants : OrderedConstant | Property
 ;
 zero_or_more__Dots : Dot Identifier | zero_or_more__Dots Dot Identifier | 
-;
-zero_or_more__Spaces : Space | zero_or_more__Spaces Space | 
 ;
 grouped__Comparisons : Comparison | OpeningBrace Expression ClosingBrace
 ;
