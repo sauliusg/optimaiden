@@ -6,7 +6,24 @@ REAL           ({FIXED}|{INTEGER})([eE]([-+]?)[0-9]+)?
 
 %% 
 
-"AND"       { yylval.C := '&'; yylval.S := To_Unbounded_String ("AND"); return AND_TOKEN; }
+"AND"       { yylval.C := '&'; return AND_TOKEN; }
+"NOT"       { yylval.C := '!'; return NOT_TOKEN; }
+"OR"        { yylval.C := '|'; return OR_TOKEN; }
+"IS"        { yylval.C := 'I'; return IS_TOKEN; }
+"KNOWN"     { yylval.C := 'U'; return KNOWN_TOKEN; }
+"UNKNOWN"   { yylval.C := '?'; return UNKNOWN_TOKEN; }
+"CONTAINS"  { yylval.C := 'C'; return CONTAINS_TOKEN; }
+"STARTS"    { yylval.C := 'S'; return STARTS_TOKEN; }
+"ENDS"      { yylval.C := 'E'; return ENDS_TOKEN; }
+"WITH"      { yylval.C := 'W'; return WITH_TOKEN; }
+"LENGTH"    { yylval.C := 'L'; return LENGTH_TOKEN; }
+"HAS"       { yylval.C := 'H'; return HAS_TOKEN; }
+"ALL"       { yylval.C := 'A'; return ALL_TOKEN; }
+"ONLY"      { yylval.C := 'O'; return ONLY_TOKEN; }
+"ANY"       { yylval.C := 'N'; return ANY_TOKEN; }
+
+"TRUE"      { yylval.C := 'T'; return TRUE_TOKEN; }
+"FALSE"     { yylval.C := 'F'; return FALSE_TOKEN; }
             
 [A-Z]+      {
               yylval.S := To_Unbounded_String (filter_lexer_dfa.yytext);
