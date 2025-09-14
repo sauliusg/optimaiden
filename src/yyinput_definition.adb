@@ -8,7 +8,8 @@ package body YYInput_Definition is
       Result   : out Integer;
       Max_Size : in  Integer
      ) is
-      Remaining_Input_Length : Integer := Buffer_Ptr.all'Last - YYInput_Definition.Pos + 1;
+      Remaining_Input_Length : constant Integer := 
+        Buffer_Ptr.all'Last - YYInput_Definition.Pos + 1;
    begin
       if Max_Size >= Remaining_Input_Length then
          -- All remaining characters fit into the output buffer:
