@@ -7,15 +7,15 @@ REAL           ({FIXED}|{INTEGER})([eE]([-+]?)[0-9]+)?
 %% 
 
 [A-Z]+      {
-              yylval.S := To_Unbounded_String (lexer_dfa.yytext);
+              yylval.S := To_Unbounded_String (filter_lexer_dfa.yytext);
               return KEYWORD_TOKEN;
             }
 [a-z]+      {
-              yylval.S := To_Unbounded_String (lexer_dfa.yytext);
+              yylval.S := To_Unbounded_String (filter_lexer_dfa.yytext);
               return IDENTIFIER_TOKEN;
             }
 {REAL}      {
-              yylval.N := Float'Value (lexer_dfa.yytext);
+              yylval.N := Float'Value (filter_lexer_dfa.yytext);
               return NUMBER_TOKEN;
             }
 "**"        { return EXP; }
@@ -30,8 +30,8 @@ REAL           ({FIXED}|{INTEGER})([eE]([-+]?)[0-9]+)?
 \n          { return LF_TOKEN; }
 %%
 
-with filter_tokens; 
-use  filter_tokens;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with filter_tokens; use filter_tokens;
 
 package filter_lexer is
   function YYLex return Token;

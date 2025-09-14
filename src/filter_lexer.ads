@@ -8,8 +8,8 @@ with filter_lexer_IO; use filter_lexer_IO;
 --# line 7 "filter_lexer.l"
 
 
-with filter_tokens; 
-use  filter_tokens;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with filter_tokens; use filter_tokens;
 
 package filter_lexer is
   function YYLex return Token;

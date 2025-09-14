@@ -1,13 +1,6 @@
 
 package body filter_lexer is
 
- procedure YY_INPUT (buf      : out unbounded_character_array;
-                     result   : out Integer;
-                     max_size : in Integer) is
- begin
-    null;
- end;
-
 
    function YYLex return Token is
       subtype Short is Integer range -32768 .. 32767;
@@ -253,21 +246,21 @@ package body filter_lexer is
          when 1 =>
 --# line 9 "filter_lexer.l"
             
-              yylval.S := To_Unbounded_String (lexer_dfa.yytext);
+              yylval.S := To_Unbounded_String (filter_lexer_dfa.yytext);
               return KEYWORD_TOKEN;
             
 
          when 2 =>
 --# line 13 "filter_lexer.l"
             
-              yylval.S := To_Unbounded_String (lexer_dfa.yytext);
+              yylval.S := To_Unbounded_String (filter_lexer_dfa.yytext);
               return IDENTIFIER_TOKEN;
             
 
          when 3 =>
 --# line 17 "filter_lexer.l"
             
-              yylval.N := Float'Value (lexer_dfa.yytext);
+              yylval.N := Float'Value (filter_lexer_dfa.yytext);
               return NUMBER_TOKEN;
             
 

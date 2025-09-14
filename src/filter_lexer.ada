@@ -8,8 +8,8 @@ with filter_lexer_IO; use filter_lexer_IO;
 --# line 7 "filter_lexer.l"
 
 
-with filter_tokens; 
-use  filter_tokens;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with filter_tokens; use filter_tokens;
 
 package filter_lexer is
   function YYLex return Token;
@@ -262,21 +262,21 @@ package body filter_lexer is
          when 1 =>
 --# line 9 "filter_lexer.l"
             
-              yylval.S := To_Unbounded_String (lexer_dfa.yytext);
+              yylval.S := To_Unbounded_String (filter_lexer_dfa.yytext);
               return KEYWORD_TOKEN;
             
 
          when 2 =>
 --# line 13 "filter_lexer.l"
             
-              yylval.S := To_Unbounded_String (lexer_dfa.yytext);
+              yylval.S := To_Unbounded_String (filter_lexer_dfa.yytext);
               return IDENTIFIER_TOKEN;
             
 
          when 3 =>
 --# line 17 "filter_lexer.l"
             
-              yylval.N := Float'Value (lexer_dfa.yytext);
+              yylval.N := Float'Value (filter_lexer_dfa.yytext);
               return NUMBER_TOKEN;
             
 
