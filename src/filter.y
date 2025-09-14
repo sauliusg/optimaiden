@@ -73,7 +73,7 @@ ValueRelCompRhs : RelativeComparisonOperator OrderedValue
 ;
 KnownOpRhs : IS grouped__KNOWNs
 ;
-FuzzyStringOpRhs : CONTAINS Value | STARTS optional__WITH Value | ENDS optional__WITH_1 Value
+FuzzyStringOpRhs : CONTAINS Value | STARTS optional__WITH Value | ENDS optional__WITH Value
 ;
 SetOpRhs : HAS grouped__nones
 ;
@@ -206,8 +206,6 @@ optional__ValueOpRhs : ValueOpRhs | KnownOpRhs | FuzzyStringOpRhs | SetOpRhs | S
 optional__Sign_1 : Sign | 
 ;
 zero_or_more__Digits : Digit | zero_or_more__Digits Digit | 
-;
-optional__WITH_1 : WITH | 
 ;
 grouped__TRUEs : TRUE | FALSE
 ;
