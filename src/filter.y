@@ -30,6 +30,7 @@
 %token IDENTIFIER_TOKEN
 %token NUMBER_TOKEN
 %token STRING_TOKEN
+%token KEYWORD_TOKEN
 
 %start Filter
 
