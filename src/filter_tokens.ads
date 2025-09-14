@@ -13,6 +13,7 @@ package Filter_Tokens is
          ENDS_TOKEN, WITH_TOKEN, LENGTH_TOKEN,
          HAS_TOKEN, ALL_TOKEN, ONLY_TOKEN,
          ANY_TOKEN, TRUE_TOKEN, FALSE_TOKEN,
+         IDENTIFIER_TOKEN, NUMBER_TOKEN, STRING_TOKEN,
          '(', ')', '.',
          ',', ':', '=',
          'A', 'B', 'C',
