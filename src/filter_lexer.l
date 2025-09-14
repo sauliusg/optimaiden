@@ -6,6 +6,8 @@ REAL           ({FIXED}|{INTEGER})([eE]([-+]?)[0-9]+)?
 
 %% 
 
+"AND"       { yylval.C := '&'; yylval.S := To_Unbounded_String ("AND"); return AND_TOKEN; }
+            
 [A-Z]+      {
               yylval.S := To_Unbounded_String (filter_lexer_dfa.yytext);
               Put_Line (">>> Token: KEYWORD_TOKEN, """ & To_String (yylval.S) & """");
@@ -18,15 +20,19 @@ REAL           ({FIXED}|{INTEGER})([eE]([-+]?)[0-9]+)?
             }
 [-+]?{REAL} {
               yylval.N := Float'Value (filter_lexer_dfa.yytext);
-              Put_Line (">>> Token: NUMBER_TOKEN, """ & yylval.N'Image & """");
+              Put_Line (">>> Token: NUMBER_TOKEN, """ &
+              filter_lexer_dfa.yytext & """" & " (" & yylval.N'Image & ")");
               return NUMBER_TOKEN;
             }
 "("         { yylval.C := filter_lexer_dfa.yytext(1); return '('; }
 ")"         { yylval.C := filter_lexer_dfa.yytext(1); return ')'; }
 "+"         { yylval.C := filter_lexer_dfa.yytext(1); return '+'; }
 "="         { yylval.C := filter_lexer_dfa.yytext(1); return '='; }
+">"         { yylval.C := filter_lexer_dfa.yytext(1); return '>'; }
+"<"         { yylval.C := filter_lexer_dfa.yytext(1); return '<'; }
 "-"         { yylval.C := filter_lexer_dfa.yytext(1); return '-'; }
 " "         { yylval.C := filter_lexer_dfa.yytext(1); return ' '; }
+
 \n          { return LF_TOKEN; }
 \r          { return CR_TOKEN; }
 \t          { return HT_TOKEN; }
