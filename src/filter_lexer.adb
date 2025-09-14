@@ -10,28 +10,28 @@ package body filter_lexer is
       subtype yy_state_type is Integer;
       YY_END_OF_BUFFER : constant := 15;
       INITIAL : constant := 0;
-      yy_accept : constant array (0 .. 22) of Short :=
+      yy_accept : constant array (0 .. 28) of Short :=
           (0,
         0,    0,   15,   14,   13,   12,    5,    6,    9,    7,
-       11,    8,    3,   10,    1,    2,   13,    4,    3,    1,
-        2,    0
+       11,   14,    8,    3,   10,    1,    2,    4,    3,    3,
+        3,    0,    1,    2,    3,    0,    3,    0
        );
 
       yy_ec : constant array (ASCII.NUL .. Character'Last) of Short := (0,
-        1,    1,    1,    1,    1,    1,    1,    1,    2,    3,
+        1,    1,    1,    1,    1,    1,    1,    1,    1,    2,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    2,    1,    1,    1,    1,    1,    1,    1,    4,
-        5,    6,    7,    1,    8,    1,    9,   10,   10,   10,
-       10,   10,   10,   10,   10,   10,   10,    1,    1,    1,
-       11,    1,    1,    1,   12,   12,   12,   12,   12,   12,
-       12,   12,   12,   12,   12,   12,   12,   12,   12,   12,
-       12,   12,   12,   12,   12,   12,   12,   12,   12,   12,
-        1,    1,    1,    1,    1,    1,   13,   13,   13,   13,
+        1,    3,    1,    1,    1,    1,    1,    1,    1,    4,
+        5,    6,    7,    1,    8,    9,   10,   11,   11,   11,
+       11,   11,   11,   11,   11,   11,   11,    1,    1,    1,
+       12,    1,    1,    1,   13,   13,   13,   13,   14,   13,
+       13,   13,   13,   13,   13,   13,   13,   13,   13,   13,
+       13,   13,   13,   13,   13,   13,   13,   13,   13,   13,
+        1,    1,    1,    1,    1,    1,   15,   15,   15,   15,
 
-       13,   13,   13,   13,   13,   13,   13,   13,   13,   13,
-       13,   13,   13,   13,   13,   13,   13,   13,   13,   13,
-       13,   13,    1,    1,    1,    1,    1,    1,    1,    1,
+       16,   15,   15,   15,   15,   15,   15,   15,   15,   15,
+       15,   15,   15,   15,   15,   15,   15,   15,   15,   15,
+       15,   15,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -49,40 +49,44 @@ package body filter_lexer is
 
        );
 
-      yy_meta : constant array (0 .. 13) of Short :=
+      yy_meta : constant array (0 .. 16) of Short :=
           (0,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1
+        1,    1,    1,    1,    1,    1,    2,    2,    1,    1,
+        3,    1,    1,    4,    1,    4
        );
 
-      yy_base : constant array (0 .. 22) of Short :=
+      yy_base : constant array (0 .. 30) of Short :=
           (0,
-        0,    0,   23,   24,   20,   24,   24,   24,   15,   24,
-       24,   24,   10,   24,    7,    5,   15,   24,    6,    3,
-        1,   24
+        0,    0,   40,   41,   41,   41,   41,   41,   33,   41,
+       41,   27,   41,    8,   41,    7,   10,   41,   26,   25,
+        0,   24,   14,   14,    0,   12,    7,   41,   28,   31
        );
 
-      yy_def : constant array (0 .. 22) of Short :=
+      yy_def : constant array (0 .. 30) of Short :=
           (0,
-       22,    1,   22,   22,   22,   22,   22,   22,   22,   22,
-       22,   22,   22,   22,   22,   22,   22,   22,   22,   22,
-       22,    0
+       28,    1,   28,   28,   28,   28,   28,   28,   28,   28,
+       28,   28,   28,   28,   28,   28,   28,   28,   29,   29,
+       14,   30,   28,   28,   20,   28,   28,    0,   28,   28
        );
 
-      yy_nxt : constant array (0 .. 37) of Short :=
+      yy_nxt : constant array (0 .. 57) of Short :=
           (0,
         4,    5,    6,    7,    8,    9,   10,   11,   12,   13,
-       14,   15,   16,   21,   20,   19,   17,   21,   20,   19,
-       18,   17,   22,    3,   22,   22,   22,   22,   22,   22,
-       22,   22,   22,   22,   22,   22,   22
+       14,   15,   16,   16,   17,   17,   20,   27,   21,   23,
+       23,   22,   27,   22,   24,   24,   23,   23,   24,   24,
+       22,   22,   26,   26,   27,   25,   19,   19,   18,   28,
+        3,   28,   28,   28,   28,   28,   28,   28,   28,   28,
+       28,   28,   28,   28,   28,   28,   28
        );
 
-      yy_chk : constant array (0 .. 37) of Short :=
+      yy_chk : constant array (0 .. 57) of Short :=
           (0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,   21,   20,   19,   17,   16,   15,   13,
-        9,    5,    3,   22,   22,   22,   22,   22,   22,   22,
-       22,   22,   22,   22,   22,   22,   22
+        1,    1,    1,    1,    1,    1,   14,   27,   14,   16,
+       16,   14,   26,   14,   17,   17,   23,   23,   24,   24,
+       29,   29,   30,   30,   22,   20,   19,   12,    9,    3,
+       28,   28,   28,   28,   28,   28,   28,   28,   28,   28,
+       28,   28,   28,   28,   28,   28,   28
        );
 
       yy_act : Integer;
@@ -139,7 +143,7 @@ package body filter_lexer is
             end if;
             while yy_chk (yy_base (yy_current_state) + yy_c) /= yy_current_state loop
                yy_current_state := yy_def (yy_current_state);
-               if yy_current_state >= 23 then
+               if yy_current_state >= 29 then
                   yy_c := yy_meta (yy_c);
                end if;
             end loop;
@@ -204,13 +208,13 @@ package body filter_lexer is
                end if;
                while yy_chk (yy_base (yy_current_state) + yy_c) /= yy_current_state loop
                   yy_current_state := yy_def (yy_current_state);
-                  if yy_current_state >= 23 then
+                  if yy_current_state >= 29 then
                      yy_c := yy_meta (yy_c);
                   end if;
                end loop;
                yy_current_state := yy_nxt (yy_base (yy_current_state) + yy_c);
             yy_cp := yy_cp + 1;
-            if yy_current_state = 22 then
+            if yy_current_state = 28 then
                 exit;
             end if;
          end loop;
@@ -238,63 +242,70 @@ package body filter_lexer is
             goto next_action;
 
 
+
          when 1 =>
---# line 2 "filter_lexer.l"
-             return IDENTIFIER; 
+--# line 9 "filter_lexer.l"
+            
+              yylval.S := To_Unbounded_String (lexer_dfa.yytext);
+              return KEYWORD_TOKEN;
+            
 
          when 2 =>
---# line 3 "filter_lexer.l"
-             return IDENTIFIER; 
+--# line 13 "filter_lexer.l"
+            
+              yylval.S := To_Unbounded_String (lexer_dfa.yytext);
+              return IDENTIFIER_TOKEN;
+            
 
          when 3 =>
---# line 4 "filter_lexer.l"
+--# line 17 "filter_lexer.l"
             
-              yylval.value := Integer'Value (lexer_dfa.yytext);
-              return NUMBER;
+              yylval.N := Float'Value (lexer_dfa.yytext);
+              return NUMBER_TOKEN;
             
 
          when 4 =>
---# line 8 "filter_lexer.l"
+--# line 21 "filter_lexer.l"
              return EXP; 
 
          when 5 =>
---# line 9 "filter_lexer.l"
+--# line 22 "filter_lexer.l"
              return '('; 
 
          when 6 =>
---# line 10 "filter_lexer.l"
+--# line 23 "filter_lexer.l"
              return ')'; 
 
          when 7 =>
---# line 11 "filter_lexer.l"
+--# line 24 "filter_lexer.l"
              return '+'; 
 
          when 8 =>
---# line 12 "filter_lexer.l"
+--# line 25 "filter_lexer.l"
              return '/'; 
 
          when 9 =>
---# line 13 "filter_lexer.l"
+--# line 26 "filter_lexer.l"
              return '*'; 
 
          when 10 =>
---# line 14 "filter_lexer.l"
+--# line 27 "filter_lexer.l"
              return '='; 
 
          when 11 =>
---# line 15 "filter_lexer.l"
+--# line 28 "filter_lexer.l"
              return '-'; 
 
          when 12 =>
---# line 16 "filter_lexer.l"
-             return NEW_LINE; 
+--# line 29 "filter_lexer.l"
+             return ' '; 
 
          when 13 =>
---# line 17 "filter_lexer.l"
-             null; 
+--# line 30 "filter_lexer.l"
+             return LF_TOKEN; 
 
          when 14 =>
---# line 18 "filter_lexer.l"
+--# line 31 "filter_lexer.l"
             ECHO;
          when YY_END_OF_BUFFER + INITIAL + 1 =>
             return End_Of_Input;
@@ -348,7 +359,7 @@ package body filter_lexer is
       end loop; --  end of loop waiting for end of file
    end YYLex;
 
---# line 18 "filter_lexer.l"
+--# line 31 "filter_lexer.l"
 
 end filter_lexer;
 

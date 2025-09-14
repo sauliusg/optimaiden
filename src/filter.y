@@ -27,6 +27,10 @@
 %token TRUE_TOKEN
 %token FALSE_TOKEN
 
+%token IDENTIFIER_TOKEN
+%token NUMBER_TOKEN
+%token STRING_TOKEN
+
 %start Filter
 
 %%

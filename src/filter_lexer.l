@@ -1,9 +1,22 @@
+
+DECIMAL_DIGIT  [0-9]
+INTEGER	       {DECIMAL_DIGIT}+
+FIXED	       ({DECIMAL_DIGIT}+"."{DECIMAL_DIGIT}*)|("."{DECIMAL_DIGIT}+)
+REAL           ({FIXED}|{INTEGER})([eE]([-+]?)[0-9]+)?
+
 %% 
-[A-Z]+      { return IDENTIFIER; }
-[a-z]+      { return IDENTIFIER; }
-[0-9]+      {
-              yylval.value := Integer'Value (lexer_dfa.yytext);
-              return NUMBER;
+
+[A-Z]+      {
+              yylval.S := To_Unbounded_String (lexer_dfa.yytext);
+              return KEYWORD_TOKEN;
+            }
+[a-z]+      {
+              yylval.S := To_Unbounded_String (lexer_dfa.yytext);
+              return IDENTIFIER_TOKEN;
+            }
+{REAL}      {
+              yylval.N := Float'Value (lexer_dfa.yytext);
+              return NUMBER_TOKEN;
             }
 "**"        { return EXP; }
 "("         { return '('; }
@@ -13,8 +26,8 @@
 "*"         { return '*'; }
 "="         { return '='; }
 "-"         { return '-'; }
-\n          { return NEW_LINE; }
-[\t ]+      { null;} 
+" "         { return ' '; }
+\n          { return LF_TOKEN; }
 %%
 
 with filter_tokens; 
