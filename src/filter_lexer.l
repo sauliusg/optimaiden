@@ -25,6 +25,10 @@ REAL           ({FIXED}|{INTEGER})([eE]([-+]?)[0-9]+)?
 "-"         { return '-'; }
 " "         { return ' '; }
 \n          { return LF_TOKEN; }
+\r          { return CR_TOKEN; }
+\t          { return HT_TOKEN; }
+\v          { return VT_TOKEN; }
+\f          { return FF_TOKEN; }
 %%
 
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
