@@ -21,6 +21,7 @@ package body YYInput_Definition is
          -- Max_Size < remaining characters – will copy Max_Size and
          --  advance the Pos for the next chunk:
          Buf := Unbounded_Character_Array (Buffer_Ptr (Pos .. Pos + Max_Size - 1));
+         Result := Max_Size;
          Pos := Pos + Max_Size;
       end if;
    end;
