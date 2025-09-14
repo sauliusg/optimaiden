@@ -265,7 +265,7 @@ package body Filter is
 
 when 51 => -- #line 132
 
-    Put_Line (">>> Getting equality operator: """ & yy.value_stack (yy.tos-1)'Image & """");
+    Put_Line (">>> Getting equality operator: " & yy.value_stack (yy.tos-1).C'Image);
                pragma Style_Checks (On);
 
                when others => null;

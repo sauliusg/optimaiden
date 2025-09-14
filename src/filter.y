@@ -130,7 +130,7 @@ Operator : grouped__EqualityOperators
 ;
 EqualityOperator : optional__terminal '=' optional__Spaces
 {
-    Put_Line (">>> Getting equality operator: """ & $2'Image & """");
+    Put_Line (">>> Getting equality operator: " & $2.C'Image);
 }
 ;
 RelativeComparisonOperator : grouped__terminals optional__terminal_1 optional__Spaces

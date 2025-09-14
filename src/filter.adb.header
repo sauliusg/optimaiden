@@ -1,1 +1,1 @@
-pragma Ada_2022; with Text_IO, Filter_Lexer, YYErrors; use Text_IO, Filter_Lexer, YYErrors;
+with Text_IO, Filter_Lexer, YYErrors; use Text_IO, Filter_Lexer, YYErrors;
