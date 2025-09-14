@@ -1,4 +1,4 @@
-with Text_IO, Filter_Lexer, YYErrors; use Text_IO, Filter_Lexer, YYErrors;
+pragma Ada_2022; with Text_IO, Filter_Lexer, YYErrors; use Text_IO, Filter_Lexer, YYErrors;
 
 with Filter_Goto, Filter_Tokens, Filter_Shift_Reduce;
 use Filter_Goto, Filter_Tokens, Filter_Shift_Reduce;
@@ -256,6 +256,10 @@ package body Filter is
             --  user_action(yy.rule_id);
             case yy.rule_id is
                pragma Style_Checks (Off);
+
+when 51 => -- #line 132
+
+    Put_Line (">>> Getting equality operator: """ & yy.value_stack (yy.tos-1)'Image & """");
                pragma Style_Checks (On);
 
                when others => null;

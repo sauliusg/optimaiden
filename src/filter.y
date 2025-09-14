@@ -129,6 +129,9 @@ ANY : ANY_TOKEN optional__Spaces
 Operator : grouped__EqualityOperators
 ;
 EqualityOperator : optional__terminal '=' optional__Spaces
+{
+    Put_Line (">>> Getting equality operator: """ & $2'Image & """");
+}
 ;
 RelativeComparisonOperator : grouped__terminals optional__terminal_1 optional__Spaces
 ;
@@ -136,7 +139,8 @@ TRUE : TRUE_TOKEN optional__Spaces
 ;
 FALSE : FALSE_TOKEN optional__Spaces
 ;
-Identifier : LowercaseLetter zero_or_more__LowercaseLetters optional__Spaces
+-- Identifier : LowercaseLetter zero_or_more__LowercaseLetters optional__Spaces
+Identifier : IDENTIFIER_TOKEN optional__Spaces
 ;
 Letter : UppercaseLetter | LowercaseLetter
 ;

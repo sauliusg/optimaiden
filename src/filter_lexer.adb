@@ -249,69 +249,72 @@ package body filter_lexer is
 --# line 9 "filter_lexer.l"
             
               yylval.S := To_Unbounded_String (filter_lexer_dfa.yytext);
+              Put_Line (">>> Token: KEYWORD_TOKEN, """ & To_String (yylval.S) & """");
               return KEYWORD_TOKEN;
             
 
          when 2 =>
---# line 13 "filter_lexer.l"
+--# line 14 "filter_lexer.l"
             
               yylval.S := To_Unbounded_String (filter_lexer_dfa.yytext);
+              Put_Line (">>> Token: IDENTIFIER_TOKEN, """ & To_String (yylval.S) & """");
               return IDENTIFIER_TOKEN;
             
 
          when 3 =>
---# line 17 "filter_lexer.l"
+--# line 19 "filter_lexer.l"
             
               yylval.N := Float'Value (filter_lexer_dfa.yytext);
+              Put_Line (">>> Token: NUMBER_TOKEN, """ & yylval.N'Image & """");
               return NUMBER_TOKEN;
             
 
          when 4 =>
---# line 21 "filter_lexer.l"
-             return '('; 
+--# line 24 "filter_lexer.l"
+             yylval.C := filter_lexer_dfa.yytext(1); return '('; 
 
          when 5 =>
---# line 22 "filter_lexer.l"
-             return ')'; 
+--# line 25 "filter_lexer.l"
+             yylval.C := filter_lexer_dfa.yytext(1); return ')'; 
 
          when 6 =>
---# line 23 "filter_lexer.l"
-             return '+'; 
+--# line 26 "filter_lexer.l"
+             yylval.C := filter_lexer_dfa.yytext(1); return '+'; 
 
          when 7 =>
---# line 24 "filter_lexer.l"
-             return '='; 
+--# line 27 "filter_lexer.l"
+             yylval.C := filter_lexer_dfa.yytext(1); return '='; 
 
          when 8 =>
---# line 25 "filter_lexer.l"
-             return '-'; 
+--# line 28 "filter_lexer.l"
+             yylval.C := filter_lexer_dfa.yytext(1); return '-'; 
 
          when 9 =>
---# line 26 "filter_lexer.l"
-             return ' '; 
+--# line 29 "filter_lexer.l"
+             yylval.C := filter_lexer_dfa.yytext(1); return ' '; 
 
          when 10 =>
---# line 27 "filter_lexer.l"
+--# line 30 "filter_lexer.l"
              return LF_TOKEN; 
 
          when 11 =>
---# line 28 "filter_lexer.l"
+--# line 31 "filter_lexer.l"
              return CR_TOKEN; 
 
          when 12 =>
---# line 29 "filter_lexer.l"
+--# line 32 "filter_lexer.l"
              return HT_TOKEN; 
 
          when 13 =>
---# line 30 "filter_lexer.l"
+--# line 33 "filter_lexer.l"
              return VT_TOKEN; 
 
          when 14 =>
---# line 31 "filter_lexer.l"
+--# line 34 "filter_lexer.l"
              return FF_TOKEN; 
 
          when 15 =>
---# line 32 "filter_lexer.l"
+--# line 35 "filter_lexer.l"
             ECHO;
          when YY_END_OF_BUFFER + INITIAL + 1 =>
             return End_Of_Input;
@@ -365,7 +368,7 @@ package body filter_lexer is
       end loop; --  end of loop waiting for end of file
    end YYLex;
 
---# line 32 "filter_lexer.l"
+--# line 35 "filter_lexer.l"
 
 end filter_lexer;
 
