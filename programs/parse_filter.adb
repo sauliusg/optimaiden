@@ -1,4 +1,6 @@
+with Ada.Characters.Handling; use Ada.Characters.Handling;
 with Ada.Command_Line; use Ada.Command_Line;
+with Ada.Environment_Variables; use Ada.Environment_Variables;
 with Ada.Text_IO; use Ada.Text_IO;
 
 with Filter_Lexer;
@@ -10,7 +12,14 @@ procedure Parse_Filter is
 
 begin
    
-   Filter_Lexer_DFA.AFlex_Debug := True;
+   if 
+     Exists ("PARSE_FILTER_AFLEX_DEBUG") and then
+     (Value ("PARSE_FILTER_AFLEX_DEBUG") = "1" or else
+        To_Lower (Value ("PARSE_FILTER_AFLEX_DEBUG")) = "true" or else
+        To_Lower (Value ("PARSE_FILTER_AFLEX_DEBUG")) = "t")
+   then
+        Filter_Lexer_DFA.AFlex_Debug := True;
+   end if;
    
    if Argument_Count = 0 then
       Put_Line ("Parsing default string: """ & Buffer & """");
