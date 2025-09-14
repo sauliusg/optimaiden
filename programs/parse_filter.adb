@@ -10,7 +10,7 @@ procedure Parse_Filter is
 
 begin
    
-   Filter_Lexer_DFA.AFlex_Debug := False;
+   Filter_Lexer_DFA.AFlex_Debug := True;
    
    if Argument_Count = 0 then
       Put_Line ("Parsing default string: """ & Buffer & """");
