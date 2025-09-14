@@ -16,8 +16,8 @@ package YYInput_Definition is
    
    procedure Start_Parsing (S : String);
    
-   -- Return thw whole string buffer that was set prviously (or the
-   --  default):
+   -- Return the whole string buffer that was set previously for
+   --  parsing (or the default string set at the compile time):
    
    function Buffer return String;
    
@@ -25,7 +25,7 @@ private
    
    type Access_String is access all String;
    
-   Buffer_Data : aliased String := "+0.123";
+   Buffer_Data : aliased String := "property = +0.123";
    
    Buffer_Ptr : Access_String := Buffer_Data'Access;
    
