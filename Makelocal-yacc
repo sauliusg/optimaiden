@@ -1,0 +1,15 @@
+#--*- Makefile -*--
+
+BIN_DIR ?= bin
+SRC_DIR ?= src
+
+AYACC    ?= ayacc
+GNATCHOP ?= gnatchop
+
+${BIN_DIR}/optimaiden: ${SRC_DIR}/filter.adb
+
+${SRC_DIR}/%.adb: ${SRC_DIR}/%.y
+	cd $(dir $@); ${AYACC} -k $(notdir $<)
+	cd $(dir $@); ${GNATCHOP} -w $*.ada
+	cd $(dir $@); cat $*.adb.header $*.adb | uniq | sponge $*.adb
+	cd $(dir $@); cat $*_tokens.ads.header $*_tokens.ads | uniq | sponge $*_tokens.ads
