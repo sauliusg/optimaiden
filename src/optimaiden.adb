@@ -12,6 +12,8 @@ with Optimaiden_Info_Handler; use Optimaiden_Info_Handler;
 with Optimaiden_Structure_Handler; use Optimaiden_Structure_Handler;
 with Optimaiden_Record_Handler; use Optimaiden_Record_Handler;
 
+with Filter;
+
 -- with JSON;
 -- with JSON.Streams;
 -- with JSON.Parsers;
