@@ -5,7 +5,8 @@ with Ada.Text_IO; use Ada.Text_IO;
 with filter_lexer_DFA; use filter_lexer_DFA;
 with filter_lexer_IO; use filter_lexer_IO;
 --# line 1 "filter_lexer.l"
---# line 7 "filter_lexer.l"
+-- Double-quoted string:
+--# line 11 "filter_lexer.l"
 
 
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;

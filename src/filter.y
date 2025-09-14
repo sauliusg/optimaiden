@@ -148,7 +148,8 @@ UppercaseLetter : 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K
 ;
 LowercaseLetter : 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' | 'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z' | '_'
 ;
-String : '"' zero_or_more__EscapedChars '"' optional__Spaces
+-- String : '"' zero_or_more__EscapedChars '"' optional__Spaces
+String : STRING_TOKEN optional__Spaces
 ;
 EscapedChar : UnescapedChar | '\' '"' | '\' '\'
 ;

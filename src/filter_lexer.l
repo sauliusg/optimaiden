@@ -4,6 +4,10 @@ INTEGER	       {DECIMAL_DIGIT}+
 FIXED	       ({DECIMAL_DIGIT}+"."{DECIMAL_DIGIT}*)|("."{DECIMAL_DIGIT}+)
 REAL           ({FIXED}|{INTEGER})([eE]([-+]?)[0-9]+)?
 
+-- Double-quoted string:
+
+STRING         \"(([^\"\n]|\\\")*)*\"
+
 %% 
 
 "AND"       { yylval.C := '&'; return AND_TOKEN; }
@@ -40,6 +44,10 @@ REAL           ({FIXED}|{INTEGER})([eE]([-+]?)[0-9]+)?
               Put_Line (">>> Token: NUMBER_TOKEN, """ &
               filter_lexer_dfa.yytext & """" & " (" & yylval.N'Image & ")");
               return NUMBER_TOKEN;
+            }
+{STRING}    {
+              yylval.S := To_Unbounded_String (yytext (yytext'First+1 .. yytext'Last-1));
+              return STRING_TOKEN;
             }
 "("         { yylval.C := filter_lexer_dfa.yytext(1); return '('; }
 ")"         { yylval.C := filter_lexer_dfa.yytext(1); return ')'; }

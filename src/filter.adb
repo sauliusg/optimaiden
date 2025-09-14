@@ -261,7 +261,7 @@ when 51 => -- #line 132
 
     Put_Line (">>> Getting equality operator: " & yy.value_stack (yy.tos-1).C'Image);
 
-when 149 => -- #line 161
+when 149 => -- #line 162
 
     Put_Line (">>> Getting number: " & yy.value_stack (yy.tos-1).N'Image);
                pragma Style_Checks (On);

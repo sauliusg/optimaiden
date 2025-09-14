@@ -5,7 +5,8 @@ with Ada.Text_IO; use Ada.Text_IO;
 with filter_lexer_DFA; use filter_lexer_DFA;
 with filter_lexer_IO; use filter_lexer_IO;
 --# line 1 "filter_lexer.l"
---# line 7 "filter_lexer.l"
+-- Double-quoted string:
+--# line 11 "filter_lexer.l"
 
 
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
@@ -24,38 +25,39 @@ package body filter_lexer is
       --  returned upon end-of-file
       YY_END_TOK : constant Integer := 0;
       subtype yy_state_type is Integer;
-      YY_END_OF_BUFFER : constant := 35;
+      YY_END_OF_BUFFER : constant := 36;
       INITIAL : constant := 0;
-      yy_accept : constant array (0 .. 100) of Short :=
+      yy_accept : constant array (0 .. 105) of Short :=
           (0,
-        0,    0,   35,   34,   31,   29,   32,   33,   30,   28,
-       21,   22,   23,   27,   34,   20,   26,   24,   25,   18,
+        0,    0,   36,   35,   32,   30,   33,   34,   31,   29,
+       35,   22,   23,   24,   28,   35,   20,   27,   25,   26,
        18,   18,   18,   18,   18,   18,   18,   18,   18,   18,
-       18,   18,   18,   18,   19,    0,   20,   20,   20,    0,
-       18,   18,   18,   18,   18,   18,   18,    4,   18,   18,
-       18,   18,    3,   18,   18,   18,   18,   19,   20,    0,
-       20,   13,    1,   15,   18,   18,   18,   12,   18,   18,
-        2,   18,   18,   18,   18,   18,   18,    9,   18,   18,
-       18,   14,   18,   16,   18,   10,   18,   17,    5,   18,
-       18,   18,   18,   11,    8,   18,   18,    6,    7,    0
+       18,   18,   18,   18,   18,   19,    0,   21,    0,    0,
+       20,   20,   20,    0,   18,   18,   18,   18,   18,   18,
+       18,    4,   18,   18,   18,   18,    3,   18,   18,   18,
+       18,   19,   21,   20,    0,   20,   13,    1,   15,   18,
+       18,   18,   12,   18,   18,    2,   18,   18,   18,   18,
+       18,   18,    9,   18,   18,   18,   14,   18,   16,   18,
+       10,   18,   17,    5,   18,   18,   18,   18,   11,    8,
 
+       18,   18,    6,    7,    0
        );
 
       yy_ec : constant array (ASCII.NUL .. Character'Last) of Short := (0,
         1,    1,    1,    1,    1,    1,    1,    1,    2,    3,
         4,    5,    6,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    7,    1,    1,    1,    1,    1,    1,    1,    8,
-        9,    1,   10,    1,   11,   12,    1,   13,   13,   13,
-       13,   13,   13,   13,   13,   13,   13,    1,    1,   14,
-       15,   16,    1,    1,   17,   18,   19,   20,   21,   22,
-       23,   24,   25,   18,   26,   27,   18,   28,   29,   18,
-       18,   30,   31,   32,   33,   18,   34,   18,   35,   18,
-        1,    1,    1,    1,    1,    1,   36,   36,   36,   36,
+        1,    7,    1,    8,    1,    1,    1,    1,    1,    9,
+       10,    1,   11,    1,   12,   13,    1,   14,   14,   14,
+       14,   14,   14,   14,   14,   14,   14,    1,    1,   15,
+       16,   17,    1,    1,   18,   19,   20,   21,   22,   23,
+       24,   25,   26,   19,   27,   28,   19,   29,   30,   19,
+       19,   31,   32,   33,   34,   19,   35,   19,   36,   19,
+        1,   37,    1,    1,    1,    1,   38,   38,   38,   38,
 
-       37,   36,   36,   36,   36,   36,   36,   36,   36,   36,
-       36,   36,   36,   36,   36,   36,   36,   36,   36,   36,
-       36,   36,    1,    1,    1,    1,    1,    1,    1,    1,
+       39,   38,   38,   38,   38,   38,   38,   38,   38,   38,
+       38,   38,   38,   38,   38,   38,   38,   38,   38,   38,
+       38,   38,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -73,88 +75,90 @@ package body filter_lexer is
 
        );
 
-      yy_meta : constant array (0 .. 37) of Short :=
+      yy_meta : constant array (0 .. 39) of Short :=
           (0,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    2,    2,    2,    2,
-        2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
-        2,    2,    2,    2,    2,    1,    1
+        1,    1,    2,    1,    1,    1,    1,    1,    1,    1,
+        1,    1,    1,    1,    1,    1,    1,    3,    3,    3,
+        3,    3,    3,    3,    3,    3,    3,    3,    3,    3,
+        3,    3,    3,    3,    3,    3,    1,    1,    1
        );
 
-      yy_base : constant array (0 .. 101) of Short :=
+      yy_base : constant array (0 .. 107) of Short :=
           (0,
-        0,    0,  125,  126,  126,  126,  126,  126,  126,  126,
-      126,  126,   26,   28,  111,   30,  126,  126,  126,   17,
-        0,   94,   94,  104,  103,   88,   90,   96,   87,   18,
-       83,   84,   85,   87,   13,   98,   40,   34,   41,   46,
-        0,   83,   38,   81,   88,   80,   75,    0,   76,   76,
-       71,   75,    0,   84,   67,   73,   66,   27,   47,   84,
-       83,    0,    0,    0,   63,   63,   62,    0,   58,   68,
-        0,   55,   59,   67,   59,   62,   68,    0,   62,   54,
-       49,    0,   48,    0,   50,    0,   51,    0,    0,   51,
-       43,   38,   42,    0,    0,   41,   35,    0,    0,  126,
+        0,    0,  137,  138,  138,  138,  138,  138,  138,  138,
+       32,  138,  138,   28,   30,  122,   32,  138,  138,  138,
+       19,    0,  105,  105,  115,  114,   99,  101,  107,   98,
+       20,   94,   95,   96,   98,   14,   42,  138,   47,  109,
+       43,   44,   46,   50,    0,   94,   38,   92,   99,   91,
+       86,    0,   87,   87,   82,   86,    0,   95,   78,   84,
+       77,   34,   55,   56,   95,   94,    0,    0,    0,   74,
+       74,   73,    0,   69,   79,    0,   66,   70,   78,   70,
+       72,   76,    0,   71,   62,   57,    0,   56,    0,   58,
+        0,   61,    0,    0,   61,   49,   45,   48,    0,    0,
 
-       63
+       47,   43,    0,    0,  138,   95,   64
        );
 
-      yy_def : constant array (0 .. 101) of Short :=
+      yy_def : constant array (0 .. 107) of Short :=
           (0,
-      100,    1,  100,  100,  100,  100,  100,  100,  100,  100,
-      100,  100,  100,  100,  100,  100,  100,  100,  100,  101,
-      101,  101,  101,  101,  101,  101,  101,  101,  101,  101,
-      101,  101,  101,  101,  100,  100,  100,  100,  100,  100,
-      101,  101,  101,  101,  101,  101,  101,  101,  101,  101,
-      101,  101,  101,  101,  101,  101,  101,  100,  100,  100,
-      100,  101,  101,  101,  101,  101,  101,  101,  101,  101,
-      101,  101,  101,  101,  101,  101,  101,  101,  101,  101,
-      101,  101,  101,  101,  101,  101,  101,  101,  101,  101,
-      101,  101,  101,  101,  101,  101,  101,  101,  101,    0,
+      105,    1,  105,  105,  105,  105,  105,  105,  105,  105,
+      106,  105,  105,  105,  105,  105,  105,  105,  105,  105,
+      107,  107,  107,  107,  107,  107,  107,  107,  107,  107,
+      107,  107,  107,  107,  107,  105,  106,  105,  106,  105,
+      105,  105,  105,  105,  107,  107,  107,  107,  107,  107,
+      107,  107,  107,  107,  107,  107,  107,  107,  107,  107,
+      107,  105,  106,  105,  105,  105,  107,  107,  107,  107,
+      107,  107,  107,  107,  107,  107,  107,  107,  107,  107,
+      107,  107,  107,  107,  107,  107,  107,  107,  107,  107,
+      107,  107,  107,  107,  107,  107,  107,  107,  107,  107,
 
-      100
+      107,  107,  107,  107,    0,  105,  105
        );
 
-      yy_nxt : constant array (0 .. 163) of Short :=
+      yy_nxt : constant array (0 .. 177) of Short :=
           (0,
         4,    5,    6,    7,    8,    9,   10,   11,   12,   13,
-       14,   15,   16,   17,   18,   19,   20,   21,   22,   21,
-       23,   24,   21,   25,   26,   27,   28,   29,   30,   21,
-       31,   32,   33,   34,   21,   35,   35,   36,   37,   36,
-       37,   39,   37,   42,   43,   52,   38,   53,   58,   58,
-       40,   39,   37,   59,   40,   60,   60,   63,   61,   59,
-       40,   40,   58,   58,   41,   99,   40,   40,   98,   97,
-       40,   96,   64,   95,   94,   93,   40,   40,   92,   91,
-       90,   89,   88,   40,   87,   86,   85,   84,   83,   82,
-       81,   80,   79,   78,   77,   61,   61,   76,   75,   74,
+       14,   15,   16,   17,   18,   19,   20,   21,   22,   23,
+       22,   24,   25,   22,   26,   27,   28,   29,   30,   31,
+       22,   32,   33,   34,   35,   22,    4,   36,   36,   38,
+       40,   41,   40,   41,   43,   41,   46,   47,   56,   38,
+       57,   62,   62,   44,   63,   43,   41,   42,   68,   64,
+       65,   65,   38,   66,   44,   44,   45,   44,   39,   64,
+       44,   62,   62,   69,  104,  103,  102,   44,   39,  101,
+      100,   44,   44,   39,   44,   99,   98,   97,   96,   95,
+       94,   39,   93,   92,   44,   37,   91,   37,   90,   89,
 
-       73,   72,   71,   70,   69,   68,   67,   66,   65,   62,
-       38,   57,   56,   55,   54,   51,   50,   49,   48,   47,
-       46,   45,   44,   38,  100,    3,  100,  100,  100,  100,
-      100,  100,  100,  100,  100,  100,  100,  100,  100,  100,
-      100,  100,  100,  100,  100,  100,  100,  100,  100,  100,
-      100,  100,  100,  100,  100,  100,  100,  100,  100,  100,
-      100,  100,  100
+       88,   87,   86,   85,   84,   83,   82,   66,   66,   81,
+       80,   79,   78,   77,   76,   75,   74,   73,   72,   71,
+       70,   67,   42,   61,   60,   59,   58,   55,   54,   53,
+       52,   51,   50,   49,   48,   42,  105,    3,  105,  105,
+      105,  105,  105,  105,  105,  105,  105,  105,  105,  105,
+      105,  105,  105,  105,  105,  105,  105,  105,  105,  105,
+      105,  105,  105,  105,  105,  105,  105,  105,  105,  105,
+      105,  105,  105,  105,  105,  105,  105
        );
 
-      yy_chk : constant array (0 .. 163) of Short :=
+      yy_chk : constant array (0 .. 177) of Short :=
           (0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,   13,   13,   14,
-       14,   16,   16,   20,   20,   30,   38,   30,   35,   35,
-       16,   37,   37,   39,   38,   40,   40,   43,   40,   59,
-       37,   39,   58,   58,  101,   97,   16,   59,   96,   93,
-       38,   92,   43,   91,   90,   87,   37,   39,   85,   83,
-       81,   80,   79,   59,   77,   76,   75,   74,   73,   72,
-       70,   69,   67,   66,   65,   61,   60,   57,   56,   55,
+        1,    1,    1,    1,    1,    1,    1,    1,    1,   11,
+       14,   14,   15,   15,   17,   17,   21,   21,   31,   37,
+       31,   36,   36,   17,   39,   41,   41,   42,   47,   43,
+       44,   44,   63,   44,   41,   42,  107,   43,   11,   64,
+       17,   62,   62,   47,  102,  101,   98,   64,   37,   97,
+       96,   41,   42,   39,   43,   95,   92,   90,   88,   86,
+       85,   63,   84,   82,   64,  106,   81,  106,   80,   79,
 
-       54,   52,   51,   50,   49,   47,   46,   45,   44,   42,
-       36,   34,   33,   32,   31,   29,   28,   27,   26,   25,
-       24,   23,   22,   15,    3,  100,  100,  100,  100,  100,
-      100,  100,  100,  100,  100,  100,  100,  100,  100,  100,
-      100,  100,  100,  100,  100,  100,  100,  100,  100,  100,
-      100,  100,  100,  100,  100,  100,  100,  100,  100,  100,
-      100,  100,  100
+       78,   77,   75,   74,   72,   71,   70,   66,   65,   61,
+       60,   59,   58,   56,   55,   54,   53,   51,   50,   49,
+       48,   46,   40,   35,   34,   33,   32,   30,   29,   28,
+       27,   26,   25,   24,   23,   16,    3,  105,  105,  105,
+      105,  105,  105,  105,  105,  105,  105,  105,  105,  105,
+      105,  105,  105,  105,  105,  105,  105,  105,  105,  105,
+      105,  105,  105,  105,  105,  105,  105,  105,  105,  105,
+      105,  105,  105,  105,  105,  105,  105
        );
 
       yy_act : Integer;
@@ -211,7 +215,7 @@ package body filter_lexer is
             end if;
             while yy_chk (yy_base (yy_current_state) + yy_c) /= yy_current_state loop
                yy_current_state := yy_def (yy_current_state);
-               if yy_current_state >= 101 then
+               if yy_current_state >= 106 then
                   yy_c := yy_meta (yy_c);
                end if;
             end loop;
@@ -276,13 +280,13 @@ package body filter_lexer is
                end if;
                while yy_chk (yy_base (yy_current_state) + yy_c) /= yy_current_state loop
                   yy_current_state := yy_def (yy_current_state);
-                  if yy_current_state >= 101 then
+                  if yy_current_state >= 106 then
                      yy_c := yy_meta (yy_c);
                   end if;
                end loop;
                yy_current_state := yy_nxt (yy_base (yy_current_state) + yy_c);
             yy_cp := yy_cp + 1;
-            if yy_current_state = 100 then
+            if yy_current_state = 105 then
                 exit;
             end if;
          end loop;
@@ -312,75 +316,75 @@ package body filter_lexer is
 
 
          when 1 =>
---# line 9 "filter_lexer.l"
+--# line 13 "filter_lexer.l"
              yylval.C := '&'; return AND_TOKEN; 
 
          when 2 =>
---# line 10 "filter_lexer.l"
+--# line 14 "filter_lexer.l"
              yylval.C := '!'; return NOT_TOKEN; 
 
          when 3 =>
---# line 11 "filter_lexer.l"
+--# line 15 "filter_lexer.l"
              yylval.C := '|'; return OR_TOKEN; 
 
          when 4 =>
---# line 12 "filter_lexer.l"
+--# line 16 "filter_lexer.l"
              yylval.C := 'I'; return IS_TOKEN; 
 
          when 5 =>
---# line 13 "filter_lexer.l"
+--# line 17 "filter_lexer.l"
              yylval.C := 'U'; return KNOWN_TOKEN; 
 
          when 6 =>
---# line 14 "filter_lexer.l"
+--# line 18 "filter_lexer.l"
              yylval.C := '?'; return UNKNOWN_TOKEN; 
 
          when 7 =>
---# line 15 "filter_lexer.l"
+--# line 19 "filter_lexer.l"
              yylval.C := 'C'; return CONTAINS_TOKEN; 
 
          when 8 =>
---# line 16 "filter_lexer.l"
+--# line 20 "filter_lexer.l"
              yylval.C := 'S'; return STARTS_TOKEN; 
 
          when 9 =>
---# line 17 "filter_lexer.l"
+--# line 21 "filter_lexer.l"
              yylval.C := 'E'; return ENDS_TOKEN; 
 
          when 10 =>
---# line 18 "filter_lexer.l"
+--# line 22 "filter_lexer.l"
              yylval.C := 'W'; return WITH_TOKEN; 
 
          when 11 =>
---# line 19 "filter_lexer.l"
+--# line 23 "filter_lexer.l"
              yylval.C := 'L'; return LENGTH_TOKEN; 
 
          when 12 =>
---# line 20 "filter_lexer.l"
+--# line 24 "filter_lexer.l"
              yylval.C := 'H'; return HAS_TOKEN; 
 
          when 13 =>
---# line 21 "filter_lexer.l"
+--# line 25 "filter_lexer.l"
              yylval.C := 'A'; return ALL_TOKEN; 
 
          when 14 =>
---# line 22 "filter_lexer.l"
+--# line 26 "filter_lexer.l"
              yylval.C := 'O'; return ONLY_TOKEN; 
 
          when 15 =>
---# line 23 "filter_lexer.l"
+--# line 27 "filter_lexer.l"
              yylval.C := 'N'; return ANY_TOKEN; 
 
          when 16 =>
---# line 25 "filter_lexer.l"
+--# line 29 "filter_lexer.l"
              yylval.C := 'T'; return TRUE_TOKEN; 
 
          when 17 =>
---# line 26 "filter_lexer.l"
+--# line 30 "filter_lexer.l"
              yylval.C := 'F'; return FALSE_TOKEN; 
 
          when 18 =>
---# line 28 "filter_lexer.l"
+--# line 32 "filter_lexer.l"
             
               yylval.S := To_Unbounded_String (filter_lexer_dfa.yytext);
               Put_Line (">>> Token: KEYWORD_TOKEN, """ & To_String (yylval.S) & """");
@@ -388,7 +392,7 @@ package body filter_lexer is
             
 
          when 19 =>
---# line 33 "filter_lexer.l"
+--# line 37 "filter_lexer.l"
             
               yylval.S := To_Unbounded_String (filter_lexer_dfa.yytext);
               Put_Line (">>> Token: IDENTIFIER_TOKEN, """ & To_String (yylval.S) & """");
@@ -396,7 +400,7 @@ package body filter_lexer is
             
 
          when 20 =>
---# line 38 "filter_lexer.l"
+--# line 42 "filter_lexer.l"
             
               yylval.N := Float'Value (filter_lexer_dfa.yytext);
               Put_Line (">>> Token: NUMBER_TOKEN, """ &
@@ -405,59 +409,66 @@ package body filter_lexer is
             
 
          when 21 =>
---# line 44 "filter_lexer.l"
-             yylval.C := filter_lexer_dfa.yytext(1); return '('; 
+--# line 48 "filter_lexer.l"
+            
+              yylval.S := To_Unbounded_String (yytext (yytext'First+1 .. yytext'Last-1));
+              return STRING_TOKEN;
+            
 
          when 22 =>
---# line 45 "filter_lexer.l"
-             yylval.C := filter_lexer_dfa.yytext(1); return ')'; 
+--# line 52 "filter_lexer.l"
+             yylval.C := filter_lexer_dfa.yytext(1); return '('; 
 
          when 23 =>
---# line 46 "filter_lexer.l"
-             yylval.C := filter_lexer_dfa.yytext(1); return '+'; 
+--# line 53 "filter_lexer.l"
+             yylval.C := filter_lexer_dfa.yytext(1); return ')'; 
 
          when 24 =>
---# line 47 "filter_lexer.l"
-             yylval.C := filter_lexer_dfa.yytext(1); return '='; 
+--# line 54 "filter_lexer.l"
+             yylval.C := filter_lexer_dfa.yytext(1); return '+'; 
 
          when 25 =>
---# line 48 "filter_lexer.l"
-             yylval.C := filter_lexer_dfa.yytext(1); return '>'; 
+--# line 55 "filter_lexer.l"
+             yylval.C := filter_lexer_dfa.yytext(1); return '='; 
 
          when 26 =>
---# line 49 "filter_lexer.l"
-             yylval.C := filter_lexer_dfa.yytext(1); return '<'; 
+--# line 56 "filter_lexer.l"
+             yylval.C := filter_lexer_dfa.yytext(1); return '>'; 
 
          when 27 =>
---# line 50 "filter_lexer.l"
-             yylval.C := filter_lexer_dfa.yytext(1); return '-'; 
+--# line 57 "filter_lexer.l"
+             yylval.C := filter_lexer_dfa.yytext(1); return '<'; 
 
          when 28 =>
---# line 51 "filter_lexer.l"
-             yylval.C := filter_lexer_dfa.yytext(1); return ' '; 
+--# line 58 "filter_lexer.l"
+             yylval.C := filter_lexer_dfa.yytext(1); return '-'; 
 
          when 29 =>
---# line 53 "filter_lexer.l"
-             return LF_TOKEN; 
+--# line 59 "filter_lexer.l"
+             yylval.C := filter_lexer_dfa.yytext(1); return ' '; 
 
          when 30 =>
---# line 54 "filter_lexer.l"
-             return CR_TOKEN; 
+--# line 61 "filter_lexer.l"
+             return LF_TOKEN; 
 
          when 31 =>
---# line 55 "filter_lexer.l"
-             return HT_TOKEN; 
+--# line 62 "filter_lexer.l"
+             return CR_TOKEN; 
 
          when 32 =>
---# line 56 "filter_lexer.l"
-             return VT_TOKEN; 
+--# line 63 "filter_lexer.l"
+             return HT_TOKEN; 
 
          when 33 =>
---# line 57 "filter_lexer.l"
-             return FF_TOKEN; 
+--# line 64 "filter_lexer.l"
+             return VT_TOKEN; 
 
          when 34 =>
---# line 58 "filter_lexer.l"
+--# line 65 "filter_lexer.l"
+             return FF_TOKEN; 
+
+         when 35 =>
+--# line 66 "filter_lexer.l"
             ECHO;
          when YY_END_OF_BUFFER + INITIAL + 1 =>
             return End_Of_Input;
@@ -511,7 +522,7 @@ package body filter_lexer is
       end loop; --  end of loop waiting for end of file
    end YYLex;
 
---# line 58 "filter_lexer.l"
+--# line 66 "filter_lexer.l"
 
 end filter_lexer;
 
