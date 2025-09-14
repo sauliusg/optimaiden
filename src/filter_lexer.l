@@ -16,7 +16,7 @@ REAL           ({FIXED}|{INTEGER})([eE]([-+]?)[0-9]+)?
               Put_Line (">>> Token: IDENTIFIER_TOKEN, """ & To_String (yylval.S) & """");
               return IDENTIFIER_TOKEN;
             }
-{REAL}      {
+[-+]?{REAL} {
               yylval.N := Float'Value (filter_lexer_dfa.yytext);
               Put_Line (">>> Token: NUMBER_TOKEN, """ & yylval.N'Image & """");
               return NUMBER_TOKEN;
