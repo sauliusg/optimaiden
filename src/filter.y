@@ -156,7 +156,11 @@ UnescapedChar : Letter | Digit | Space | Punctuator | UnicodeHighChar
 ;
 Punctuator : '!' | '#' | '$' | '%' | '&' | ''' | '(' | ')' | '*' | '+' | ',' | '-' | '.' | '/' | ':' | ';' | '<' | '=' | '>' | '?' | '@' | '[' | ']' | '^' | '`' | '{' | '|' | '}' | '~'
 ;
-Number : optional__Sign grouped__Digits optional__Exponent optional__Spaces
+-- Number : optional__Sign grouped__Digits optional__Exponent optional__Spaces
+Number : NUMBER_TOKEN optional__Spaces
+{
+    Put_Line (">>> Getting number: " & $2.N'Image);
+}
 ;
 Exponent : grouped__terminals_1 optional__Sign_1 Digits
 ;
