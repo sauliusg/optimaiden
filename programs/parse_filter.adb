@@ -9,14 +9,16 @@ with Filter; use Filter;
 with YYInput_Definition; use YYInput_Definition;
 
 procedure Parse_Filter is
-
+   
+   AFlex_Debug_Env_Variable : constant String := "PARSE_FILTER_AFLEX_DEBUG";
+   
 begin
    
    if 
-     Exists ("PARSE_FILTER_AFLEX_DEBUG") and then
-     (Value ("PARSE_FILTER_AFLEX_DEBUG") = "1" or else
-        To_Lower (Value ("PARSE_FILTER_AFLEX_DEBUG")) = "true" or else
-        To_Lower (Value ("PARSE_FILTER_AFLEX_DEBUG")) = "t")
+     Exists (AFlex_Debug_Env_Variable) and then
+     (Value (AFlex_Debug_Env_Variable) = "1" or else
+        To_Lower (Value (AFlex_Debug_Env_Variable)) = "true" or else
+        To_Lower (Value (AFlex_Debug_Env_Variable)) = "t")
    then
         Filter_Lexer_DFA.AFlex_Debug := True;
    end if;
