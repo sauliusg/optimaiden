@@ -29,6 +29,6 @@ private
    
    Buffer_Ptr : Access_String := Buffer_Data'Access;
    
-   Pos : Integer := 0;
+   Pos : Integer := Buffer_Ptr.all'First;
 
 end;
