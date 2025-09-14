@@ -203,8 +203,8 @@ optional__Operator : Operator |
 ;
 optional__Exponent : Exponent | 
 ;
-grouped__Digits : Digits optional__terminal_2 | '.' Digits
-;
+-- grouped__Digits : Digits optional__terminal_2 | '.' Digits
+-- ;
 optional__terminal : '!' | 
 ;
 grouped__Values : Value | ValueEqRhs | ValueRelCompRhs | FuzzyStringOpRhs
@@ -261,15 +261,7 @@ optional__Spaces : Spaces |
 
 
 -----------------------------
-optional__terminal_2 : '.' optional__Digits | 
-;
 grouped__Values_1 : Value | EqualityOperator Value | RelativeComparisonOperator OrderedValue | FuzzyStringOpRhs
-;
------------------------------
-
-
------------------------------
-optional__Digits : Digits | 
 ;
 -----------------------------
 
