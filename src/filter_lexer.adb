@@ -1,6 +1,13 @@
 
 package body filter_lexer is
 
+ procedure YY_INPUT (buf      : out unbounded_character_array;
+                     result   : out Integer;
+                     max_size : in Integer) is
+ begin
+    null;
+ end;
+
 
    function YYLex return Token is
       subtype Short is Integer range -32768 .. 32767;

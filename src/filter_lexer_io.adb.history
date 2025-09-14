@@ -1,0 +1,1 @@
+ 1004  perl -ne 'print unless /^ *procedure YY_INPUT/ .. /^ *end YY_INPUT/' filter_lexer_io.adb | cat filter_lexer_io.adb.header - | uniq | sponge filter_lexer_io.adb 
