@@ -270,7 +270,7 @@ when 51 => -- #line 132
 
 when 149 => -- #line 161
 
-    Put_Line (">>> Getting number: " & yy.value_stack (yy.tos).N'Image);
+    Put_Line (">>> Getting number: " & yy.value_stack (yy.tos-1).N'Image);
                pragma Style_Checks (On);
 
                when others => null;
