@@ -18,12 +18,9 @@ REAL           ({FIXED}|{INTEGER})([eE]([-+]?)[0-9]+)?
               yylval.N := Float'Value (filter_lexer_dfa.yytext);
               return NUMBER_TOKEN;
             }
-"**"        { return EXP; }
 "("         { return '('; }
 ")"         { return ')'; }
 "+"         { return '+'; }
-"/"         { return '/'; }
-"*"         { return '*'; }
 "="         { return '='; }
 "-"         { return '-'; }
 " "         { return ' '; }
