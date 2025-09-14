@@ -60,7 +60,7 @@ package body Filter is
          index      : reduce_row;
 
          --  Is Debugging option on or off
-         debug : constant Boolean := False;
+         debug : constant Boolean := True;
       end yy;
 
       procedure shift_debug (state_id : yy.parse_state; lexeme : yy_tokens.Token);
