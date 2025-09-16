@@ -34,7 +34,7 @@ STRING         \"(([^\"\n]|\\\")*)*\"
               Put_Line (">>> Token: KEYWORD_TOKEN, """ & To_String (yylval.S) & """");
               return KEYWORD_TOKEN;
             }
-[a-z]+      {
+[a-z_]+     {
               yylval.S := To_Unbounded_String (filter_lexer_dfa.yytext);
               Put_Line (">>> Token: IDENTIFIER_TOKEN, """ & To_String (yylval.S) & """");
               return IDENTIFIER_TOKEN;
