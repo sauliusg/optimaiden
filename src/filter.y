@@ -60,8 +60,7 @@ ExpressionClause : ExpressionPhrase optional__AND
 ;
 ExpressionPhrase : optional__NOT grouped__Comparisons
 {
- -- $$ := new_AST ('N', $1);
-   null;
+   $$.AST := new_AST ('N', $1.AST);
 }
 ;
 Comparison : ConstantFirstComparison | PropertyFirstComparison

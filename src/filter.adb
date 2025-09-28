@@ -261,14 +261,13 @@ package body Filter is
 
 when 13 => -- #line 62
 
- -- $$ := new_AST ('N', $1);
-   null;
+   YYVal.AST := new_AST ('N', yy.value_stack (yy.tos-1).AST);
 
-when 51 => -- #line 136
+when 51 => -- #line 135
 
     null;
 
-when 149 => -- #line 166
+when 149 => -- #line 165
 
  YYVal.AST := New_AST (YYVal.N);
  Put_Line (">>> " & Image (YYVal.AST));
