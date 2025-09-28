@@ -280,7 +280,7 @@ when 51 => -- #line 136
 when 149 => -- #line 166
 
  YYVal.AST := New_AST (YYVal.N);
- Put_Line (Image (YYVal.AST));
+ Put_Line (">>> " & Image (YYVal.AST));
                pragma Style_Checks (On);
 
                when others => null;

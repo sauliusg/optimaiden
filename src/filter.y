@@ -165,7 +165,7 @@ Punctuator : '!' | '#' | '$' | '%' | '&' | ''' | '(' | ')' | '*' | '+' | ',' | '
 Number : NUMBER_TOKEN optional__Spaces
 {
  $$.AST := New_AST ($$.N);
- Put_Line (Image ($$.AST));
+ Put_Line (">>> " & Image ($$.AST));
 }
 ;
 Exponent : grouped__terminals_1 optional__Sign_1 Digits
