@@ -8,6 +8,8 @@ with Filter_Lexer_DFA;
 with Filter; use Filter;
 with YYInput_Definition; use YYInput_Definition;
 
+with Filter_AST; use Filter_AST;
+
 procedure Parse_Filter is
    
    AFlex_Debug_Env_Variable : constant String := "PARSE_FILTER_AFLEX_DEBUG";
