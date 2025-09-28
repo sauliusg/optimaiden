@@ -17,8 +17,7 @@ package Filter_Tokens is
          KEYWORD_TOKEN, '(', ')',
          '.', ',', ':',
          '=', ' ', '<',
-         '>', '!', 'e',
-         'E');
+         '>', '!');
 
    Syntax_Error : exception;
 

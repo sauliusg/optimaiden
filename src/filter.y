@@ -233,8 +233,6 @@ grouped__EqualityOperators : EqualityOperator | RelativeComparisonOperator
 ;
 optional__terminal_1 : '=' | 
 ;
-grouped__terminals_1 : 'e' | 'E'
-;
 optional__WITH : WITH | 
 ;
 optional__Spaces : Spaces | 
