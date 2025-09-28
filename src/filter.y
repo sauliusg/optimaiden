@@ -88,8 +88,18 @@ PropertyZipAddon : Colon Property zero_or_more__Colons_1
 ;
 LengthOpRhs : LENGTH optional__Operator Value
 ;
-Property : Identifier zero_or_more__Dots
+Property : Identifier
+{
+ $$ := $1;
+}
+| Property Dot Identifier
+{
+ $$.AST := new_AST ('.', $1.AST, $3.AST);
+ Put_Line (">>> " & Image ($$.AST));    
+}
 ;
+-- zero_or_more__Dots : Dot Identifier | zero_or_more__Dots Dot Identifier | 
+-- ;
 OpeningBrace : '(' optional__Spaces
 ;
 ClosingBrace : ')' optional__Spaces
@@ -236,8 +246,6 @@ grouped__UnorderedConstants : UnorderedConstant | OrderedValue
 optional__NOT : NOT | 
 ;
 grouped__OrderedConstants : OrderedConstant | Property
-;
-zero_or_more__Dots : Dot Identifier | zero_or_more__Dots Dot Identifier | 
 ;
 grouped__Comparisons : Comparison | OpeningBrace Expression ClosingBrace
 ;

@@ -100,8 +100,8 @@ package body Filter_AST is
          when VARIABLE => return To_String (T.AST.Identifier);
          when TEXT     => return """" & To_String (T.AST.Text_Value) & """";
          when OPERATOR =>
-            return " (" & T.AST.Op'Image & 
-              Image (T.AST.Left) & Image (T.AST.Right) & ")";
+            return " (" & T.AST.Op'Image & " " &
+              Image (T.AST.Left) & " " & Image (T.AST.Right) & ")";
       end case;
    end;
    
