@@ -153,29 +153,19 @@ TRUE : TRUE_TOKEN optional__Spaces
 ;
 FALSE : FALSE_TOKEN optional__Spaces
 ;
--- Identifier : LowercaseLetter zero_or_more__LowercaseLetters optional__Spaces
 Identifier : IDENTIFIER_TOKEN optional__Spaces
 {
  $$.AST := New_AST_Identifier ($1.S);
  Put_Line (">>> " & Image ($$.AST));    
 }
 ;
-Letter : UppercaseLetter | LowercaseLetter
-;
-UppercaseLetter : 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M' | 'N' | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z'
-;
-LowercaseLetter : 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' | 'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z' | '_'
-;
--- String : '"' zero_or_more__EscapedChars '"' optional__Spaces
 String : STRING_TOKEN optional__Spaces
 {
  $$.AST := New_AST ($1.S);
  Put_Line (">>> " & Image ($$.AST));
 }
 ;
-EscapedChar : UnescapedChar | '\' '"' | '\' '\'
-;
-UnescapedChar : Letter | Space | Punctuator | UnicodeHighChar
+UnescapedChar : Space | Punctuator | UnicodeHighChar
 ;
 Punctuator : '!' | '#' | '$' | '%' | '&' | ''' | '(' | ')' | '*' | '+' | ',' | '-' | '.' | '/' | ':' | ';' | '<' | '=' | '>' | '?' | '@' | '[' | ']' | '^' | '`' | '{' | '|' | '}' | '~'
 ;
@@ -227,11 +217,7 @@ optional__ValueOpRhs : ValueOpRhs | KnownOpRhs | FuzzyStringOpRhs | SetOpRhs | S
 ;
 grouped__TRUEs : TRUE | FALSE
 ;
-zero_or_more__EscapedChars : EscapedChar | zero_or_more__EscapedChars EscapedChar | 
-;
 grouped__nones : grouped__Values_1 | ALL ValueList | ANY ValueList | ONLY ValueList
-;
-zero_or_more__LowercaseLetters : LowercaseLetter | zero_or_more__LowercaseLetters LowercaseLetter |
 ;
 zero_or_more__Colons : Colon ValueListEntry | zero_or_more__Colons Colon ValueListEntry | 
 ;
