@@ -145,6 +145,10 @@ FALSE : FALSE_TOKEN optional__Spaces
 ;
 -- Identifier : LowercaseLetter zero_or_more__LowercaseLetters optional__Spaces
 Identifier : IDENTIFIER_TOKEN optional__Spaces
+{
+ $$.AST := New_AST_Identifier ($1.S);
+ Put_Line (">>> " & Image ($$.AST));    
+}
 ;
 Letter : UppercaseLetter | LowercaseLetter
 ;

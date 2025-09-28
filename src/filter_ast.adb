@@ -13,13 +13,18 @@ package body Filter_AST is
       
    function New_AST_Identifier (Name : String) return AST_Type is
    begin
+      return New_AST_Identifier (To_Unbounded_String (Name));
+   end;
+   
+   function New_AST_Identifier (Name : Unbounded_String) return AST_Type is
+   begin
       return 
         (
          Ada.Finalization.Controlled with
            AST => new AST_Node_Type'
            (
             Kind => VARIABLE,
-            Identifier => +Name,
+            Identifier => Name,
             others => <>
            )
         );

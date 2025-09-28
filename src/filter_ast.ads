@@ -18,10 +18,11 @@ package Filter_AST is
    --  property):
    function New_AST_Identifier (Name : String) return AST_Type;
   
+   function New_AST_Identifier (Name : Unbounded_String) return AST_Type;
+  
    --  Construct AST leaf representing a string value:
    function New_AST (Value : String) return AST_Type;
   
-   --  Construct AST leaf representing a string value:
    function New_AST (Value : Unbounded_String) return AST_Type;
   
    --  Construct AST leaf representing a numeric constant:
