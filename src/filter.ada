@@ -265,12 +265,12 @@ package body Filter is
 
 when 51 => -- #line 132
 
-    Put_Line (">>> Getting equality operator: " & yy.value_stack (yy.tos-1).C'Image);
+    null;
 
 
 when 149 => -- #line 162
 
-    Put_Line (">>> Getting number: " & yy.value_stack (yy.tos-1).N'Image);
+    null;
                pragma Style_Checks (On);
 
                when others => null;

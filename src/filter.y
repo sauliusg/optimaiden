@@ -130,7 +130,7 @@ Operator : grouped__EqualityOperators
 ;
 EqualityOperator : optional__terminal '=' optional__Spaces
 {
-    Put_Line (">>> Getting equality operator: " & $2.C'Image);
+    null;
 }
 ;
 RelativeComparisonOperator : grouped__terminals optional__terminal_1 optional__Spaces
@@ -160,7 +160,7 @@ Punctuator : '!' | '#' | '$' | '%' | '&' | ''' | '(' | ')' | '*' | '+' | ',' | '
 -- Number : optional__Sign grouped__Digits optional__Exponent optional__Spaces
 Number : NUMBER_TOKEN optional__Spaces
 {
-    Put_Line (">>> Getting number: " & $1.N'Image);
+    null;
 }
 ;
 Exponent : grouped__terminals_1 optional__Sign_1 Digits

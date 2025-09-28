@@ -31,18 +31,14 @@ STRING         \"(([^\"\n]|\\\")*)*\"
             
 [A-Z]+      {
               yylval.S := To_Unbounded_String (filter_lexer_dfa.yytext);
-              Put_Line (">>> Token: KEYWORD_TOKEN, """ & To_String (yylval.S) & """");
               return KEYWORD_TOKEN;
             }
 [a-z_]+     {
               yylval.S := To_Unbounded_String (filter_lexer_dfa.yytext);
-              Put_Line (">>> Token: IDENTIFIER_TOKEN, """ & To_String (yylval.S) & """");
               return IDENTIFIER_TOKEN;
             }
 [-+]?{REAL} {
               yylval.N := Float'Value (filter_lexer_dfa.yytext);
-              Put_Line (">>> Token: NUMBER_TOKEN, """ &
-              filter_lexer_dfa.yytext & """" & " (" & yylval.N'Image & ")");
               return NUMBER_TOKEN;
             }
 {STRING}    {
