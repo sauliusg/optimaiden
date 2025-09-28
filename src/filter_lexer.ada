@@ -394,42 +394,40 @@ package body filter_lexer is
 --# line 40 "filter_lexer.l"
             
               yylval.N := Float'Value (filter_lexer_dfa.yytext);
-              Put_Line ("<<< """ & filter_lexer_dfa.yytext & """");
-              Put_Line ("<<< """ & yylval.N'Image & """");
               return NUMBER_TOKEN;
             
 
          when 21 =>
---# line 46 "filter_lexer.l"
+--# line 44 "filter_lexer.l"
             
               yylval.S := To_Unbounded_String (yytext (yytext'First+1 .. yytext'Last-1));
               return STRING_TOKEN;
             
 
          when 22 =>
---# line 51 "filter_lexer.l"
+--# line 49 "filter_lexer.l"
              return LF_TOKEN; 
 
          when 23 =>
---# line 52 "filter_lexer.l"
+--# line 50 "filter_lexer.l"
              return CR_TOKEN; 
 
          when 24 =>
---# line 53 "filter_lexer.l"
+--# line 51 "filter_lexer.l"
              return HT_TOKEN; 
 
          when 25 =>
---# line 54 "filter_lexer.l"
+--# line 52 "filter_lexer.l"
              return VT_TOKEN; 
 
          when 26 =>
---# line 55 "filter_lexer.l"
+--# line 53 "filter_lexer.l"
              return FF_TOKEN; 
 
 -- The remaining single character tokens are processed in Ada so that
 -- we get compiler error if some character is not covered:
          when 27 =>
---# line 60 "filter_lexer.l"
+--# line 58 "filter_lexer.l"
             
              declare
                  BS : constant Character := '\';
@@ -473,7 +471,7 @@ package body filter_lexer is
 
 
          when 28 =>
---# line 102 "filter_lexer.l"
+--# line 100 "filter_lexer.l"
             ECHO;
          when YY_END_OF_BUFFER + INITIAL + 1 =>
             return End_Of_Input;
@@ -527,7 +525,7 @@ package body filter_lexer is
       end loop; --  end of loop waiting for end of file
    end YYLex;
 
---# line 102 "filter_lexer.l"
+--# line 100 "filter_lexer.l"
 
 end filter_lexer;
 
