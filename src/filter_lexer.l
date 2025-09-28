@@ -57,7 +57,9 @@ STRING         \"(([^\"\n]|\\\")*)*\"
 "<"         { yylval.C := filter_lexer_dfa.yytext(1); return '<'; }
 "-"         { yylval.C := filter_lexer_dfa.yytext(1); return '-'; }
 " "         { yylval.C := filter_lexer_dfa.yytext(1); return ' '; }
+"."         { yylval.C := filter_lexer_dfa.yytext(1); return '.'; }
 ","         { yylval.C := filter_lexer_dfa.yytext(1); return ','; }
+":"         { yylval.C := filter_lexer_dfa.yytext(1); return ':'; }
 
 \n          { return LF_TOKEN; }
 \r          { return CR_TOKEN; }
