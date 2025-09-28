@@ -72,26 +72,6 @@ STRING         \"(([^\"\n]|\\\")*)*\"
                     when '<' => return Token'('<');
                     when '>' => return Token'('>');
                     when '!' => return Token'('!');
-                    when ';' => return Token'(';');
-                    when '#' => return Token'('#');
-                    when '$' => return Token'('$');
-                    when '%' => return Token'('%');
-                    when '&' => return Token'('&');
-                    when ''' => return Token'(''');
-                    when '*' => return Token'('*');
-                    when '+' => return Token'('+');
-                    when '-' => return Token'('-');
-                    when '/' => return Token'('/');
-                    when '?' => return Token'('?');
-                    when '@' => return Token'('@');
-                    when '[' => return Token'('[');
-                    when ']' => return Token'(']');
-                    when '^' => return Token'('^');
-                    when '`' => return Token'('`');
-                    when '{' => return '{';
-                    when '|' => return Token'('|');
-                    when '}' => return '}';
-                    when '~' => return Token'('~');
 
                     -- We list all remaining characters explicitly
                     -- so that if a new token is introduced into the grammar,
@@ -99,6 +79,16 @@ STRING         \"(([^\"\n]|\\\")*)*\"
                     -- error:
 
                     when ASCII.NUL .. ASCII.US |
+                         '#' .. ''' |
+                         '*' .. '+' |
+                         '-'        |
+                         '/'        |
+                         ';'        |
+                         '?' .. '@' |
+                         '['        |
+                         ']' .. '^' |
+                         '`'        |
+                         '{' .. '~' |
                          character'val(127) .. character'val(255) |
                          'A' .. 'Z' | 'a' .. 'z' | '0' .. '9' |
                          BS | '_' | '"'

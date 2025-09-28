@@ -428,26 +428,6 @@ package body filter_lexer is
                     when '<' => return Token'('<');
                     when '>' => return Token'('>');
                     when '!' => return Token'('!');
-                    when ';' => return Token'(';');
-                    when '#' => return Token'('#');
-                    when '$' => return Token'('$');
-                    when '%' => return Token'('%');
-                    when '&' => return Token'('&');
-                    when ''' => return Token'(''');
-                    when '*' => return Token'('*');
-                    when '+' => return Token'('+');
-                    when '-' => return Token'('-');
-                    when '/' => return Token'('/');
-                    when '?' => return Token'('?');
-                    when '@' => return Token'('@');
-                    when '[' => return Token'('[');
-                    when ']' => return Token'(']');
-                    when '^' => return Token'('^');
-                    when '`' => return Token'('`');
-                    when '{' => return '{';
-                    when '|' => return Token'('|');
-                    when '}' => return '}';
-                    when '~' => return Token'('~');
 
                     -- We list all remaining characters explicitly
                     -- so that if a new token is introduced into the grammar,
@@ -455,6 +435,16 @@ package body filter_lexer is
                     -- error:
 
                     when ASCII.NUL .. ASCII.US |
+                         '#' .. ''' |
+                         '*' .. '+' |
+                         '-'        |
+                         '/'        |
+                         ';'        |
+                         '?' .. '@' |
+                         '['        |
+                         ']' .. '^' |
+                         '`'        |
+                         '{' .. '~' |
                          character'val(127) .. character'val(255) |
                          'A' .. 'Z' | 'a' .. 'z' | '0' .. '9' |
                          BS | '_' | '"'
@@ -464,7 +454,7 @@ package body filter_lexer is
 
 
          when 28 =>
---# line 110 "filter_lexer.l"
+--# line 100 "filter_lexer.l"
             ECHO;
          when YY_END_OF_BUFFER + INITIAL + 1 =>
             return End_Of_Input;
@@ -518,7 +508,7 @@ package body filter_lexer is
       end loop; --  end of loop waiting for end of file
    end YYLex;
 
---# line 110 "filter_lexer.l"
+--# line 100 "filter_lexer.l"
 
 end filter_lexer;
 

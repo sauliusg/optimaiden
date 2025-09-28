@@ -16,15 +16,9 @@ package Filter_Tokens is
          IDENTIFIER_TOKEN, NUMBER_TOKEN, STRING_TOKEN,
          KEYWORD_TOKEN, '(', ')',
          '.', ',', ':',
-         '=', '!', '#',
-         '$', '%', '&',
-         ''', '*', '+',
-         '-', '/', ';',
-         '<', '>', '?',
-         '@', '[', ']',
-         '^', '`', '{',
-         '|', '}', '~',
-         ' ', 'e', 'E');
+         '=', ' ', '<',
+         '>', '!', 'e',
+         'E');
 
    Syntax_Error : exception;
 

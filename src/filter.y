@@ -165,10 +165,6 @@ String : STRING_TOKEN optional__Spaces
  Put_Line (">>> " & Image ($$.AST));
 }
 ;
-UnescapedChar : Space | Punctuator | UnicodeHighChar
-;
-Punctuator : '!' | '#' | '$' | '%' | '&' | ''' | '(' | ')' | '*' | '+' | ',' | '-' | '.' | '/' | ':' | ';' | '<' | '=' | '>' | '?' | '@' | '[' | ']' | '^' | '`' | '{' | '|' | '}' | '~'
-;
 Number : NUMBER_TOKEN optional__Spaces
 {
  $$.AST := New_AST ($$.N);
