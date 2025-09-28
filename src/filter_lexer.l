@@ -39,6 +39,8 @@ STRING         \"(([^\"\n]|\\\")*)*\"
             }
 [-+]?{REAL} {
               yylval.N := Float'Value (filter_lexer_dfa.yytext);
+              Put_Line ("<<< """ & filter_lexer_dfa.yytext & """");
+              Put_Line ("<<< """ & yylval.N'Image & """");
               return NUMBER_TOKEN;
             }
 {STRING}    {

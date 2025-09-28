@@ -302,7 +302,8 @@ when 57 => -- #line 161
 
 when 58 => -- #line 167
 
- YYVal.AST := New_AST (YYVal.N);
+ YYVal.AST := New_AST (yy.value_stack (yy.tos-1).N);
+ Put_Line (">>> """ & yy.value_stack (yy.tos-1).N'Image & """");
  Put_Line (">>> " & Image (YYVal.AST));
                pragma Style_Checks (On);
 

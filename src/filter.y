@@ -165,7 +165,8 @@ String : STRING_TOKEN optional__Spaces
 ;
 Number : NUMBER_TOKEN optional__Spaces
 {
- $$.AST := New_AST ($$.N);
+ $$.AST := New_AST ($1.N);
+ Put_Line (">>> """ & $1.N'Image & """");
  Put_Line (">>> " & Image ($$.AST));
 }
 ;
