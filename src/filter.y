@@ -59,6 +59,10 @@ Expression : ExpressionClause optional__OR
 ExpressionClause : ExpressionPhrase optional__AND
 ;
 ExpressionPhrase : optional__NOT grouped__Comparisons
+{
+ -- $$ := new_AST ('N', $1);
+   null;
+}
 ;
 Comparison : ConstantFirstComparison | PropertyFirstComparison
 ;
@@ -160,7 +164,8 @@ Punctuator : '!' | '#' | '$' | '%' | '&' | ''' | '(' | ')' | '*' | '+' | ',' | '
 -- Number : optional__Sign grouped__Digits optional__Exponent optional__Spaces
 Number : NUMBER_TOKEN optional__Spaces
 {
-    null;
+ $$.AST := New_AST ($$.N);
+ Put_Line (Image ($$.AST));
 }
 ;
 Exponent : grouped__terminals_1 optional__Sign_1 Digits
@@ -270,8 +275,11 @@ package Filter is
 procedure yyparse;
 end Filter;
 
-with Filter_Goto, Filter_Tokens, Filter_Shift_Reduce;
-use Filter_Goto, Filter_Tokens, Filter_Shift_Reduce;
+with Filter_Goto, Filter_Tokens, Filter_Shift_Reduce, Filter_AST;
+use Filter_Goto, Filter_Tokens, Filter_Shift_Reduce, Filter_AST;
 package body Filter is
+
+    Parsed_Expression : Filter_AST.AST_Type;
+
 ##
 end Filter;

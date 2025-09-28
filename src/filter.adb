@@ -1,8 +1,10 @@
 with Text_IO, Filter_Lexer, YYErrors; use Text_IO, Filter_Lexer, YYErrors;
 
-with Filter_Goto, Filter_Tokens, Filter_Shift_Reduce;
-use Filter_Goto, Filter_Tokens, Filter_Shift_Reduce;
+with Filter_Goto, Filter_Tokens, Filter_Shift_Reduce, Filter_AST;
+use Filter_Goto, Filter_Tokens, Filter_Shift_Reduce, Filter_AST;
 package body Filter is
+
+    Parsed_Expression : Filter_AST.AST_Type;
 
    procedure YYParse is
       --  Rename User Defined Packages to Internal Names.
@@ -257,13 +259,19 @@ package body Filter is
             case yy.rule_id is
                pragma Style_Checks (Off);
 
-when 51 => -- #line 132
+when 13 => -- #line 62
+
+ -- $$ := new_AST ('N', $1);
+   null;
+
+when 51 => -- #line 136
 
     null;
 
-when 149 => -- #line 162
+when 149 => -- #line 166
 
-    null;
+ YYVal.AST := New_AST (YYVal.N);
+ Put_Line (Image (YYVal.AST));
                pragma Style_Checks (On);
 
                when others => null;

@@ -18,6 +18,9 @@ package Filter_AST is
    --  property):
    function New_AST (Name : String) return AST_Type;
   
+   --  Construct AST leaf representing a numeric constant:
+   function New_AST (X : Float) return AST_Type;
+
    --  Construct AST node for operator with one operand:
    function New_AST (Op : Operator_Type; Arg : AST_Type) return AST_Type;
    
