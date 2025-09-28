@@ -98,8 +98,6 @@ Property : Identifier
  Put_Line (">>> " & Image ($$.AST));    
 }
 ;
--- zero_or_more__Dots : Dot Identifier | zero_or_more__Dots Dot Identifier | 
--- ;
 OpeningBrace : '(' optional__Spaces
 ;
 ClosingBrace : ')' optional__Spaces
