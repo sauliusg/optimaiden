@@ -25,39 +25,38 @@ package body filter_lexer is
       --  returned upon end-of-file
       YY_END_TOK : constant Integer := 0;
       subtype yy_state_type is Integer;
-      YY_END_OF_BUFFER : constant := 40;
+      YY_END_OF_BUFFER : constant := 29;
       INITIAL : constant := 0;
-      yy_accept : constant array (0 .. 107) of Short :=
+      yy_accept : constant array (0 .. 98) of Short :=
           (0,
-        0,    0,   40,   38,   35,   33,   36,   37,   34,   29,
-       38,   22,   23,   24,   31,   28,   30,   20,   32,   27,
-       25,   26,   18,   18,   18,   18,   18,   18,   18,   18,
-       18,   18,   18,   18,   18,   18,   18,   19,    0,   21,
-        0,    0,   20,   20,   20,    0,   18,   18,   18,   18,
-       18,   18,   18,    4,   18,   18,   18,   18,    3,   18,
-       18,   18,   18,   19,   21,   20,    0,   20,   13,    1,
-       15,   18,   18,   18,   12,   18,   18,    2,   18,   18,
-       18,   18,   18,   18,    9,   18,   18,   18,   14,   18,
-       16,   18,   10,   18,   17,    5,   18,   18,   18,   18,
+        0,    0,   29,   27,   24,   22,   25,   26,   23,   27,
+       27,   27,   20,   18,   18,   18,   18,   18,   18,   18,
+       18,   18,   18,   18,   18,   18,   18,   18,   19,    0,
+       21,    0,    0,   20,   20,   20,    0,   18,   18,   18,
+       18,   18,   18,   18,    4,   18,   18,   18,   18,    3,
+       18,   18,   18,   18,   19,   21,   20,    0,   20,   13,
+        1,   15,   18,   18,   18,   12,   18,   18,    2,   18,
+       18,   18,   18,   18,   18,    9,   18,   18,   18,   14,
+       18,   16,   18,   10,   18,   17,    5,   18,   18,   18,
+       18,   11,    8,   18,   18,    6,    7,    0
 
-       11,    8,   18,   18,    6,    7,    0
        );
 
       yy_ec : constant array (ASCII.NUL .. Character'Last) of Short := (0,
         1,    1,    1,    1,    1,    1,    1,    1,    2,    3,
         4,    5,    6,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    7,    1,    8,    1,    1,    1,    1,    1,    9,
-       10,    1,   11,   12,   13,   14,    1,   15,   15,   15,
-       15,   15,   15,   15,   15,   15,   15,   16,    1,   17,
-       18,   19,    1,    1,   20,   21,   22,   23,   24,   25,
-       26,   27,   28,   21,   29,   30,   21,   31,   32,   21,
-       21,   33,   34,   35,   36,   21,   37,   21,   38,   21,
-        1,   39,    1,    1,   40,    1,   40,   40,   40,   40,
+        1,    1,    1,    7,    1,    1,    1,    1,    1,    1,
+        1,    1,    8,    1,    8,    9,    1,   10,   10,   10,
+       10,   10,   10,   10,   10,   10,   10,    1,    1,    1,
+        1,    1,    1,    1,   11,   12,   13,   14,   15,   16,
+       17,   18,   19,   12,   20,   21,   12,   22,   23,   12,
+       12,   24,   25,   26,   27,   12,   28,   12,   29,   12,
+        1,   30,    1,    1,   31,    1,   31,   31,   31,   31,
 
-       41,   40,   40,   40,   40,   40,   40,   40,   40,   40,
-       40,   40,   40,   40,   40,   40,   40,   40,   40,   40,
-       40,   40,    1,    1,    1,    1,    1,    1,    1,    1,
+       32,   31,   31,   31,   31,   31,   31,   31,   31,   31,
+       31,   31,   31,   31,   31,   31,   31,   31,   31,   31,
+       31,   31,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -75,93 +74,84 @@ package body filter_lexer is
 
        );
 
-      yy_meta : constant array (0 .. 41) of Short :=
+      yy_meta : constant array (0 .. 32) of Short :=
           (0,
         1,    1,    2,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    3,
         3,    3,    3,    3,    3,    3,    3,    3,    3,    3,
-        3,    3,    3,    3,    3,    3,    3,    3,    1,    1,
-        1
+        3,    3,    3,    3,    3,    3,    3,    3,    3,    1,
+        1,    1
        );
 
-      yy_base : constant array (0 .. 109) of Short :=
+      yy_base : constant array (0 .. 100) of Short :=
           (0,
-        0,    0,  139,  140,  140,  140,  140,  140,  140,  140,
-       34,  140,  140,   29,  140,   31,  123,   33,  140,  140,
-      140,  140,   19,    0,  105,  105,  115,  114,   99,  101,
-      107,   98,   20,   94,   95,   96,   98,   14,   44,  140,
-       48,  110,   44,   45,   47,   50,    0,   94,   41,   92,
-       99,   91,   86,    0,   87,   87,   82,   86,    0,   95,
-       78,   84,   77,   26,   62,   57,   96,   95,    0,    0,
-        0,   74,   74,   73,    0,   69,   79,    0,   65,   67,
-       75,   66,   69,   75,    0,   70,   62,   57,    0,   56,
-        0,   58,    0,   61,    0,    0,   57,   48,   43,   47,
+        0,    0,  127,  128,  128,  128,  128,  128,  128,   26,
+       25,  116,   27,   17,    0,  102,  102,  112,  111,   96,
+       98,  104,   95,   19,   91,   92,   93,   95,   13,   33,
+      128,   39,  103,   38,   39,   40,   50,    0,   91,   37,
+       89,   96,   88,   83,    0,   84,   84,   79,   83,    0,
+       92,   75,   81,   74,   30,   45,   58,   89,   88,    0,
+        0,    0,   71,   71,   70,    0,   66,   75,    0,   60,
+       64,   72,   64,   67,   73,    0,   68,   60,   55,    0,
+       54,    0,   56,    0,   59,    0,    0,   59,   51,   46,
+       45,    0,    0,   43,   39,    0,    0,  128,   90,   54
 
-        0,    0,   46,   42,    0,    0,  140,  101,   72
        );
 
-      yy_def : constant array (0 .. 109) of Short :=
+      yy_def : constant array (0 .. 100) of Short :=
           (0,
-      107,    1,  107,  107,  107,  107,  107,  107,  107,  107,
-      108,  107,  107,  107,  107,  107,  107,  107,  107,  107,
-      107,  107,  109,  109,  109,  109,  109,  109,  109,  109,
-      109,  109,  109,  109,  109,  109,  109,  107,  108,  107,
-      108,  107,  107,  107,  107,  107,  109,  109,  109,  109,
-      109,  109,  109,  109,  109,  109,  109,  109,  109,  109,
-      109,  109,  109,  107,  108,  107,  107,  107,  109,  109,
-      109,  109,  109,  109,  109,  109,  109,  109,  109,  109,
-      109,  109,  109,  109,  109,  109,  109,  109,  109,  109,
-      109,  109,  109,  109,  109,  109,  109,  109,  109,  109,
+       98,    1,   98,   98,   98,   98,   98,   98,   98,   99,
+       98,   98,   98,  100,  100,  100,  100,  100,  100,  100,
+      100,  100,  100,  100,  100,  100,  100,  100,   98,   99,
+       98,   99,   98,   98,   98,   98,   98,  100,  100,  100,
+      100,  100,  100,  100,  100,  100,  100,  100,  100,  100,
+      100,  100,  100,  100,   98,   99,   98,   98,   98,  100,
+      100,  100,  100,  100,  100,  100,  100,  100,  100,  100,
+      100,  100,  100,  100,  100,  100,  100,  100,  100,  100,
+      100,  100,  100,  100,  100,  100,  100,  100,  100,  100,
+      100,  100,  100,  100,  100,  100,  100,    0,   98,   98
 
-      109,  109,  109,  109,  109,  109,    0,  107,  107
        );
 
-      yy_nxt : constant array (0 .. 181) of Short :=
+      yy_nxt : constant array (0 .. 160) of Short :=
           (0,
         4,    5,    6,    7,    8,    9,   10,   11,   12,   13,
-       14,   15,   16,   17,   18,   19,   20,   21,   22,   23,
-       24,   25,   24,   26,   27,   24,   28,   29,   30,   31,
-       32,   33,   24,   34,   35,   36,   37,   24,    4,   38,
-       38,   40,   42,   43,   42,   43,   45,   43,   48,   49,
-       58,   40,   59,   64,   64,   65,   46,   45,   43,   44,
-       67,   66,   67,   70,   68,   64,   64,   46,   46,   40,
-       46,   66,   41,   46,   47,  106,  105,  104,   71,  103,
-       46,  102,   41,  101,   46,   46,   41,   46,  100,   99,
-       98,   97,   96,   95,   94,   93,   92,   46,   91,   90,
+       14,   15,   16,   15,   17,   18,   15,   19,   20,   21,
+       22,   23,   24,   15,   25,   26,   27,   28,   15,    4,
+       29,   29,   31,   33,   34,   36,   34,   39,   40,   31,
+       49,   37,   50,   55,   55,   56,   36,   34,   35,   57,
+       61,   31,   37,   37,   37,   32,   38,   58,   37,   59,
+       55,   55,   32,   97,   96,   62,   95,   57,   32,   37,
+       37,   37,   37,   94,   32,   93,   92,   91,   90,   89,
+       88,   87,   86,   85,   84,   83,   82,   81,   80,   37,
+       30,   79,   30,   78,   77,   76,   75,   59,   59,   74,
 
-       41,   39,   89,   39,   88,   87,   86,   85,   84,   68,
-       68,   83,   82,   81,   80,   79,   78,   77,   76,   75,
-       74,   73,   72,   69,   44,   63,   62,   61,   60,   57,
-       56,   55,   54,   53,   52,   51,   50,   44,  107,    3,
-      107,  107,  107,  107,  107,  107,  107,  107,  107,  107,
-      107,  107,  107,  107,  107,  107,  107,  107,  107,  107,
-      107,  107,  107,  107,  107,  107,  107,  107,  107,  107,
-      107,  107,  107,  107,  107,  107,  107,  107,  107,  107,
-      107
+       73,   72,   71,   70,   69,   68,   67,   66,   65,   64,
+       63,   60,   35,   54,   53,   52,   51,   48,   47,   46,
+       45,   44,   43,   42,   41,   35,   98,    3,   98,   98,
+       98,   98,   98,   98,   98,   98,   98,   98,   98,   98,
+       98,   98,   98,   98,   98,   98,   98,   98,   98,   98,
+       98,   98,   98,   98,   98,   98,   98,   98,   98,   98
        );
 
-      yy_chk : constant array (0 .. 181) of Short :=
+      yy_chk : constant array (0 .. 160) of Short :=
           (0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,   11,   14,   14,   16,   16,   18,   18,   23,   23,
-       33,   39,   33,   38,   38,   41,   18,   43,   43,   44,
-       46,   45,   46,   49,   46,   64,   64,   43,   44,   65,
-       45,   66,   11,   18,  109,  104,  103,  100,   49,   99,
-       66,   98,   39,   97,   43,   44,   41,   45,   94,   92,
-       90,   88,   87,   86,   84,   83,   82,   66,   81,   80,
+        1,    1,   10,   11,   11,   13,   13,   14,   14,   30,
+       24,   13,   24,   29,   29,   32,   34,   34,   35,   36,
+       40,   56,   34,   35,   36,   10,  100,   37,   13,   37,
+       55,   55,   30,   95,   94,   40,   91,   57,   32,   34,
+       35,   36,   57,   90,   56,   89,   88,   85,   83,   81,
+       79,   78,   77,   75,   74,   73,   72,   71,   70,   57,
+       99,   68,   99,   67,   65,   64,   63,   59,   58,   54,
 
-       65,  108,   79,  108,   77,   76,   74,   73,   72,   68,
-       67,   63,   62,   61,   60,   58,   57,   56,   55,   53,
-       52,   51,   50,   48,   42,   37,   36,   35,   34,   32,
-       31,   30,   29,   28,   27,   26,   25,   17,    3,  107,
-      107,  107,  107,  107,  107,  107,  107,  107,  107,  107,
-      107,  107,  107,  107,  107,  107,  107,  107,  107,  107,
-      107,  107,  107,  107,  107,  107,  107,  107,  107,  107,
-      107,  107,  107,  107,  107,  107,  107,  107,  107,  107,
-      107
+       53,   52,   51,   49,   48,   47,   46,   44,   43,   42,
+       41,   39,   33,   28,   27,   26,   25,   23,   22,   21,
+       20,   19,   18,   17,   16,   12,    3,   98,   98,   98,
+       98,   98,   98,   98,   98,   98,   98,   98,   98,   98,
+       98,   98,   98,   98,   98,   98,   98,   98,   98,   98,
+       98,   98,   98,   98,   98,   98,   98,   98,   98,   98
        );
 
       yy_act : Integer;
@@ -218,7 +208,7 @@ package body filter_lexer is
             end if;
             while yy_chk (yy_base (yy_current_state) + yy_c) /= yy_current_state loop
                yy_current_state := yy_def (yy_current_state);
-               if yy_current_state >= 108 then
+               if yy_current_state >= 99 then
                   yy_c := yy_meta (yy_c);
                end if;
             end loop;
@@ -283,13 +273,13 @@ package body filter_lexer is
                end if;
                while yy_chk (yy_base (yy_current_state) + yy_c) /= yy_current_state loop
                   yy_current_state := yy_def (yy_current_state);
-                  if yy_current_state >= 108 then
+                  if yy_current_state >= 99 then
                      yy_c := yy_meta (yy_c);
                   end if;
                end loop;
                yy_current_state := yy_nxt (yy_base (yy_current_state) + yy_c);
             yy_cp := yy_cp + 1;
-            if yy_current_state = 107 then
+            if yy_current_state = 98 then
                 exit;
             end if;
          end loop;
@@ -415,75 +405,83 @@ package body filter_lexer is
             
 
          when 22 =>
---# line 48 "filter_lexer.l"
-             yylval.C := filter_lexer_dfa.yytext(1); return '('; 
-
-         when 23 =>
 --# line 49 "filter_lexer.l"
-             yylval.C := filter_lexer_dfa.yytext(1); return ')'; 
-
-         when 24 =>
---# line 50 "filter_lexer.l"
-             yylval.C := filter_lexer_dfa.yytext(1); return '+'; 
-
-         when 25 =>
---# line 51 "filter_lexer.l"
-             yylval.C := filter_lexer_dfa.yytext(1); return '='; 
-
-         when 26 =>
---# line 52 "filter_lexer.l"
-             yylval.C := filter_lexer_dfa.yytext(1); return '>'; 
-
-         when 27 =>
---# line 53 "filter_lexer.l"
-             yylval.C := filter_lexer_dfa.yytext(1); return '<'; 
-
-         when 28 =>
---# line 54 "filter_lexer.l"
-             yylval.C := filter_lexer_dfa.yytext(1); return '-'; 
-
-         when 29 =>
---# line 55 "filter_lexer.l"
-             yylval.C := filter_lexer_dfa.yytext(1); return ' '; 
-
-         when 30 =>
---# line 56 "filter_lexer.l"
-             yylval.C := filter_lexer_dfa.yytext(1); return '.'; 
-
-         when 31 =>
---# line 57 "filter_lexer.l"
-             yylval.C := filter_lexer_dfa.yytext(1); return ','; 
-
-         when 32 =>
---# line 58 "filter_lexer.l"
-             yylval.C := filter_lexer_dfa.yytext(1); return ':'; 
-
-         when 33 =>
---# line 60 "filter_lexer.l"
              return LF_TOKEN; 
 
-         when 34 =>
---# line 61 "filter_lexer.l"
+         when 23 =>
+--# line 50 "filter_lexer.l"
              return CR_TOKEN; 
 
-         when 35 =>
---# line 62 "filter_lexer.l"
+         when 24 =>
+--# line 51 "filter_lexer.l"
              return HT_TOKEN; 
 
-         when 36 =>
---# line 63 "filter_lexer.l"
+         when 25 =>
+--# line 52 "filter_lexer.l"
              return VT_TOKEN; 
 
-         when 37 =>
---# line 64 "filter_lexer.l"
+         when 26 =>
+--# line 53 "filter_lexer.l"
              return FF_TOKEN; 
 
-         when 38 =>
---# line 66 "filter_lexer.l"
-             yylval.C := filter_lexer_dfa.yytext(1); return ERROR; 
+-- The remaining single character tokens are processed in Ada so that
+-- we get compiler error if some character is not covered:
+         when 27 =>
+--# line 58 "filter_lexer.l"
+            
+             declare
+                 BS : constant Character := '\';
+                 C  : Character := filter_lexer_dfa.yytext(1);
+             begin
+                yylval.C := C;
+                case C is
+                    when ' ' => return Token'(' ');
+                    when '(' => return Token'('(');
+                    when ')' => return Token'(')');
+                    when '.' => return Token'('.');
+                    when ',' => return Token'(',');
+                    when ':' => return Token'(':');
+                    when '=' => return Token'('=');
+                    when '<' => return Token'('<');
+                    when '>' => return Token'('>');
+                    when '!' => return Token'('!');
+                    when ';' => return Token'(';');
+                    when '#' => return Token'('#');
+                    when '$' => return Token'('$');
+                    when '%' => return Token'('%');
+                    when '&' => return Token'('&');
+                    when ''' => return Token'(''');
+                    when '*' => return Token'('*');
+                    when '+' => return Token'('+');
+                    when '-' => return Token'('-');
+                    when '/' => return Token'('/');
+                    when '?' => return Token'('?');
+                    when '@' => return Token'('@');
+                    when '[' => return Token'('[');
+                    when ']' => return Token'(']');
+                    when '^' => return Token'('^');
+                    when '`' => return Token'('`');
+                    when '{' => return '{';
+                    when '|' => return Token'('|');
+                    when '}' => return '}';
+                    when '~' => return Token'('~');
 
-         when 39 =>
---# line 68 "filter_lexer.l"
+                    -- We list all remaining characters explicitly
+                    -- so that if a new token is introduced into the grammar,
+                    -- or removed from it, we get an Ada compiler
+                    -- error:
+
+                    when ASCII.NUL .. ASCII.US |
+                         character'val(127) .. character'val(255) |
+                         'A' .. 'Z' | 'a' .. 'z' | '0' .. '9' |
+                         BS | '_' | '"'
+                        => return ERROR;
+                 end case;
+             end;
+
+
+         when 28 =>
+--# line 110 "filter_lexer.l"
             ECHO;
          when YY_END_OF_BUFFER + INITIAL + 1 =>
             return End_Of_Input;
@@ -537,7 +535,7 @@ package body filter_lexer is
       end loop; --  end of loop waiting for end of file
    end YYLex;
 
---# line 68 "filter_lexer.l"
+--# line 110 "filter_lexer.l"
 
 end filter_lexer;
 

@@ -45,17 +45,6 @@ STRING         \"(([^\"\n]|\\\")*)*\"
               yylval.S := To_Unbounded_String (yytext (yytext'First+1 .. yytext'Last-1));
               return STRING_TOKEN;
             }
-"("         { yylval.C := filter_lexer_dfa.yytext(1); return '('; }
-")"         { yylval.C := filter_lexer_dfa.yytext(1); return ')'; }
-"+"         { yylval.C := filter_lexer_dfa.yytext(1); return '+'; }
-"="         { yylval.C := filter_lexer_dfa.yytext(1); return '='; }
-">"         { yylval.C := filter_lexer_dfa.yytext(1); return '>'; }
-"<"         { yylval.C := filter_lexer_dfa.yytext(1); return '<'; }
-"-"         { yylval.C := filter_lexer_dfa.yytext(1); return '-'; }
-" "         { yylval.C := filter_lexer_dfa.yytext(1); return ' '; }
-"."         { yylval.C := filter_lexer_dfa.yytext(1); return '.'; }
-","         { yylval.C := filter_lexer_dfa.yytext(1); return ','; }
-":"         { yylval.C := filter_lexer_dfa.yytext(1); return ':'; }
 
 \n          { return LF_TOKEN; }
 \r          { return CR_TOKEN; }
@@ -63,7 +52,60 @@ STRING         \"(([^\"\n]|\\\")*)*\"
 \v          { return VT_TOKEN; }
 \f          { return FF_TOKEN; }
 
-.           { yylval.C := filter_lexer_dfa.yytext(1); return ERROR; }
+-- The remaining single character tokens are processed in Ada so that
+-- we get compiler error if some character is not covered:
+
+.           {
+             declare
+                 BS : constant Character := '\';
+                 C  : Character := filter_lexer_dfa.yytext(1);
+             begin
+                yylval.C := C;
+                case C is
+                    when ' ' => return Token'(' ');
+                    when '(' => return Token'('(');
+                    when ')' => return Token'(')');
+                    when '.' => return Token'('.');
+                    when ',' => return Token'(',');
+                    when ':' => return Token'(':');
+                    when '=' => return Token'('=');
+                    when '<' => return Token'('<');
+                    when '>' => return Token'('>');
+                    when '!' => return Token'('!');
+                    when ';' => return Token'(';');
+                    when '#' => return Token'('#');
+                    when '$' => return Token'('$');
+                    when '%' => return Token'('%');
+                    when '&' => return Token'('&');
+                    when ''' => return Token'(''');
+                    when '*' => return Token'('*');
+                    when '+' => return Token'('+');
+                    when '-' => return Token'('-');
+                    when '/' => return Token'('/');
+                    when '?' => return Token'('?');
+                    when '@' => return Token'('@');
+                    when '[' => return Token'('[');
+                    when ']' => return Token'(']');
+                    when '^' => return Token'('^');
+                    when '`' => return Token'('`');
+                    when '{' => return '{';
+                    when '|' => return Token'('|');
+                    when '}' => return '}';
+                    when '~' => return Token'('~');
+
+                    -- We list all remaining characters explicitly
+                    -- so that if a new token is introduced into the grammar,
+                    -- or removed from it, we get an Ada compiler
+                    -- error:
+
+                    when ASCII.NUL .. ASCII.US |
+                         character'val(127) .. character'val(255) |
+                         'A' .. 'Z' | 'a' .. 'z' | '0' .. '9' |
+                         BS | '_' | '"'
+                        => return ERROR;
+                 end case;
+             end;
+}
 
 %%
 
