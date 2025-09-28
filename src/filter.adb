@@ -273,21 +273,21 @@ when 30 => -- #line 96
  YYVal.AST := new_AST ('.', yy.value_stack (yy.tos-2).AST, yy.value_stack (yy.tos).AST);
  Put_Line (">>> " & Image (YYVal.AST));
 
-when 52 => -- #line 146
+when 52 => -- #line 144
 
     null;
 
-when 56 => -- #line 157
+when 56 => -- #line 155
 
  YYVal.AST := New_AST_Identifier (yy.value_stack (yy.tos-1).S);
  Put_Line (">>> " & Image (YYVal.AST));
 
-when 57 => -- #line 163
+when 57 => -- #line 161
 
  YYVal.AST := New_AST (yy.value_stack (yy.tos-1).S);
  Put_Line (">>> " & Image (YYVal.AST));
 
-when 58 => -- #line 169
+when 58 => -- #line 167
 
  YYVal.AST := New_AST (YYVal.N);
  Put_Line (">>> " & Image (YYVal.AST));
