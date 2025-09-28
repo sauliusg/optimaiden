@@ -199,8 +199,6 @@ grouped__terminals : '<' | '>'
 ;
 optional__Operator : Operator | 
 ;
--- grouped__Digits : Digits optional__terminal_2 | '.' Digits
--- ;
 optional__terminal : '!' | 
 ;
 grouped__Values : Value | ValueEqRhs | ValueRelCompRhs | FuzzyStringOpRhs
