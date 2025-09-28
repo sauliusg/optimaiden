@@ -57,12 +57,16 @@ STRING         \"(([^\"\n]|\\\")*)*\"
 "<"         { yylval.C := filter_lexer_dfa.yytext(1); return '<'; }
 "-"         { yylval.C := filter_lexer_dfa.yytext(1); return '-'; }
 " "         { yylval.C := filter_lexer_dfa.yytext(1); return ' '; }
+","         { yylval.C := filter_lexer_dfa.yytext(1); return ','; }
 
 \n          { return LF_TOKEN; }
 \r          { return CR_TOKEN; }
 \t          { return HT_TOKEN; }
 \v          { return VT_TOKEN; }
 \f          { return FF_TOKEN; }
+
+.           { yylval.C := filter_lexer_dfa.yytext(1); return ERROR; }
+
 %%
 
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
