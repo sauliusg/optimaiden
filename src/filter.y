@@ -60,7 +60,8 @@ ExpressionClause : ExpressionPhrase optional__AND
 ;
 ExpressionPhrase : optional__NOT grouped__Comparisons
 {
-   $$.AST := new_AST ('N', $1.AST);
+ $$.AST := new_AST ('N', $1.AST);
+ Put_Line (">>> " & Image ($$.AST));
 }
 ;
 Comparison : ConstantFirstComparison | PropertyFirstComparison

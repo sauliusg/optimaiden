@@ -68,13 +68,15 @@ package body Filter_AST is
    
    function Image (T : AST_Type) return String is
    begin
+      if T.AST = null then
+         return "";
+      end if;
       case T.AST.Kind is
          when NUMBER => return T.AST.Value'Image;
          when VARIABLE => return To_String (T.AST.Identifier);
          when OPERATOR =>
             return " (" & T.AST.Op'Image & 
-              Image (T.AST.Left) & 
-              (if T.AST.Right.AST /= null then Image (T.AST.Right) else "");
+              Image (T.AST.Left) & Image (T.AST.Right) & ")";
       end case;
    end;
    
