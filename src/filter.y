@@ -161,24 +161,15 @@ String : STRING_TOKEN optional__Spaces
 ;
 EscapedChar : UnescapedChar | '\' '"' | '\' '\'
 ;
-UnescapedChar : Letter | Digit | Space | Punctuator | UnicodeHighChar
+UnescapedChar : Letter | Space | Punctuator | UnicodeHighChar
 ;
 Punctuator : '!' | '#' | '$' | '%' | '&' | ''' | '(' | ')' | '*' | '+' | ',' | '-' | '.' | '/' | ':' | ';' | '<' | '=' | '>' | '?' | '@' | '[' | ']' | '^' | '`' | '{' | '|' | '}' | '~'
 ;
--- Number : optional__Sign grouped__Digits optional__Exponent optional__Spaces
 Number : NUMBER_TOKEN optional__Spaces
 {
  $$.AST := New_AST ($$.N);
  Put_Line (">>> " & Image ($$.AST));
 }
-;
-Exponent : grouped__terminals_1 optional__Sign_1 Digits
-;
-Sign : '+' | '-'
-;
-Digits : Digit zero_or_more__Digits
-;
-Digit : '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
 ;
 tab : HT_TOKEN
 ;
@@ -210,8 +201,6 @@ grouped__terminals : '<' | '>'
 ;
 optional__Operator : Operator | 
 ;
-optional__Exponent : Exponent | 
-;
 -- grouped__Digits : Digits optional__terminal_2 | '.' Digits
 -- ;
 optional__terminal : '!' | 
@@ -222,17 +211,13 @@ zero_or_more__Commas : Comma ValueListEntry | zero_or_more__Commas Comma ValueLi
 ;
 optional__ValueOpRhs : ValueOpRhs | KnownOpRhs | FuzzyStringOpRhs | SetOpRhs | SetZipOpRhs | LengthOpRhs | 
 ;
-optional__Sign_1 : Sign | 
-;
-zero_or_more__Digits : Digit | zero_or_more__Digits Digit | 
-;
 grouped__TRUEs : TRUE | FALSE
 ;
 zero_or_more__EscapedChars : EscapedChar | zero_or_more__EscapedChars EscapedChar | 
 ;
 grouped__nones : grouped__Values_1 | ALL ValueList | ANY ValueList | ONLY ValueList
 ;
-zero_or_more__LowercaseLetters : LowercaseLetter | Digit | zero_or_more__LowercaseLetters LowercaseLetter | Digit | 
+zero_or_more__LowercaseLetters : LowercaseLetter | zero_or_more__LowercaseLetters LowercaseLetter |
 ;
 zero_or_more__Colons : Colon ValueListEntry | zero_or_more__Colons Colon ValueListEntry | 
 ;
@@ -253,8 +238,6 @@ zero_or_more__Dots : Dot Identifier | zero_or_more__Dots Dot Identifier |
 grouped__Comparisons : Comparison | OpeningBrace Expression ClosingBrace
 ;
 grouped__ValueEqRhs : ValueEqRhs | ValueRelCompRhs
-;
-optional__Sign : Sign | 
 ;
 grouped__EqualityOperators : EqualityOperator | RelativeComparisonOperator
 ;
