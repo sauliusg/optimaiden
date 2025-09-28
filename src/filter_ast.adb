@@ -11,7 +11,7 @@ package body Filter_AST is
       
    pragma Inline ("+");
       
-   function New_AST (Name : String) return AST_Type is
+   function New_AST_Identifier (Name : String) return AST_Type is
    begin
       return 
         (
@@ -20,6 +20,20 @@ package body Filter_AST is
            (
             Kind => VARIABLE,
             Identifier => +Name,
+            others => <>
+           )
+        );
+   end;
+   
+   function New_AST (Value : String) return AST_Type is
+   begin
+      return 
+        (
+         Ada.Finalization.Controlled with
+           AST => new AST_Node_Type'
+           (
+            Kind => TEXT,
+            Text_Value => +Value,
             others => <>
            )
         );
@@ -72,8 +86,9 @@ package body Filter_AST is
          return "";
       end if;
       case T.AST.Kind is
-         when NUMBER => return T.AST.Value'Image;
+         when NUMBER   => return T.AST.Value'Image;
          when VARIABLE => return To_String (T.AST.Identifier);
+         when TEXT     => return To_String (T.AST.Text_Value);
          when OPERATOR =>
             return " (" & T.AST.Op'Image & 
               Image (T.AST.Left) & Image (T.AST.Right) & ")";

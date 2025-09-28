@@ -4,7 +4,7 @@ with Ada.Finalization;
 
 -- Abstract Syntax Tree (AST) for the OPTIMADE Filter language.
 --
--- Loosely based on th eexample in:
+-- Loosely based on the example in:
 --
 -- https://www.cs.fsu.edu/~baker/ada/examples/ast2.ads
 
@@ -16,7 +16,10 @@ package Filter_AST is
    
    --  Construct AST leaf representing a variable (i.e. an OPTIMADE
    --  property):
-   function New_AST (Name : String) return AST_Type;
+   function New_AST_Identifier (Name : String) return AST_Type;
+  
+   --  Construct AST leaf representing a string value:
+   function New_AST (Value : String) return AST_Type;
   
    --  Construct AST leaf representing a numeric constant:
    function New_AST (X : Float) return AST_Type;
@@ -32,13 +35,15 @@ package Filter_AST is
    
 private
    
-   type AST_Kind is (NUMBER, VARIABLE, OPERATOR);
+   type AST_Kind is (NUMBER, TEXT, VARIABLE, OPERATOR);
    
    type AST_Node_Type (Kind : AST_Kind) is record
       Count : Integer := 1;
       case Kind is
          when NUMBER =>
             Value : Float;
+         when TEXT =>
+            Text_Value : Unbounded_String;
          when VARIABLE =>
             Identifier : Unbounded_String;
          when OPERATOR =>
