@@ -21,6 +21,9 @@ package Filter_AST is
    --  Construct AST leaf representing a string value:
    function New_AST (Value : String) return AST_Type;
   
+   --  Construct AST leaf representing a string value:
+   function New_AST (Value : Unbounded_String) return AST_Type;
+  
    --  Construct AST leaf representing a numeric constant:
    function New_AST (X : Float) return AST_Type;
 

@@ -268,7 +268,12 @@ when 51 => -- #line 136
 
     null;
 
-when 149 => -- #line 166
+when 111 => -- #line 157
+
+ YYVal.AST := New_AST (yy.value_stack (yy.tos-1).S);
+ Put_Line (">>> " & Image (YYVal.AST));
+
+when 149 => -- #line 170
 
  YYVal.AST := New_AST (YYVal.N);
  Put_Line (">>> " & Image (YYVal.AST));

@@ -154,6 +154,10 @@ LowercaseLetter : 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k
 ;
 -- String : '"' zero_or_more__EscapedChars '"' optional__Spaces
 String : STRING_TOKEN optional__Spaces
+{
+ $$.AST := New_AST ($1.S);
+ Put_Line (">>> " & Image ($$.AST));
+}
 ;
 EscapedChar : UnescapedChar | '\' '"' | '\' '\'
 ;
