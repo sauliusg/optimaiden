@@ -95,14 +95,25 @@ package body Filter_AST is
       if T.AST = null then
          return "";
       end if;
-      case T.AST.Kind is
-         when NUMBER   => return T.AST.Value'Image;
-         when VARIABLE => return To_String (T.AST.Identifier);
-         when TEXT     => return """" & To_String (T.AST.Text_Value) & """";
-         when OPERATOR =>
-            return " (" & T.AST.Op'Image & " " &
-              Image (T.AST.Left) & " " & Image (T.AST.Right) & ")";
-      end case;
+      declare
+         Node_Value : String :=
+           (
+            case T.AST.Kind is
+               when NUMBER   => T.AST.Value'Image,
+               when VARIABLE => To_String (T.AST.Identifier),
+               when TEXT     => """" & To_String (T.AST.Text_Value) & """",
+               when OPERATOR => T.AST.Op'Image & " " &
+                                Image (T.AST.Left) & " " & 
+                                Image (T.AST.Right)
+           );
+      begin
+         case T.AST.Kind is
+            when OPERATOR => 
+               return "(" & T.AST.Kind'Image & ": " & Node_Value & ")";
+            when others =>
+               return T.AST.Kind'Image & ": " & Node_Value;
+         end case;
+      end;
    end;
    
    procedure Adjust (T : in out AST_Type) is
