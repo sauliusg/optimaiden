@@ -272,38 +272,55 @@ when 13 => -- #line 62
  Put_Line (">>> " & Image (YYVal.AST));
 
 
-when 29 => -- #line 92
+when 19 => -- #line 76
+
+ YYVal.AST := new_AST ('=', yy.value_stack (yy.tos-1).AST);
+
+
+when 29 => -- #line 95
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 30 => -- #line 96
+when 30 => -- #line 99
 
  YYVal.AST := new_AST ('.', yy.value_stack (yy.tos-2).AST, yy.value_stack (yy.tos).AST);
  Put_Line (">>> " & Image (YYVal.AST));
 
 
-when 52 => -- #line 144
+when 52 => -- #line 147
 
     null;
 
 
-when 56 => -- #line 155
+when 56 => -- #line 158
 
  YYVal.AST := New_AST_Identifier (yy.value_stack (yy.tos-1).S);
  Put_Line (">>> " & Image (YYVal.AST));
 
 
-when 57 => -- #line 161
+when 57 => -- #line 164
 
  YYVal.AST := New_AST (yy.value_stack (yy.tos-1).S);
  Put_Line (">>> " & Image (YYVal.AST));
 
 
-when 58 => -- #line 167
+when 58 => -- #line 170
 
  YYVal.AST := New_AST (yy.value_stack (yy.tos-1).N);
  Put_Line (">>> " & Image (YYVal.AST));
+
+
+when 82 => -- #line 200
+
+ -- $$.AST := New_AST ('O', $1.AST);
+ null;
+
+
+when 83 => -- #line 205
+
+ -- $$.AST := New_AST ('U', $1.AST);
+ null;
                pragma Style_Checks (On);
 
                when others => null;

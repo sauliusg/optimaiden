@@ -73,6 +73,9 @@ PropertyFirstComparison : Property optional__ValueOpRhs
 ValueOpRhs : grouped__ValueEqRhs
 ;
 ValueEqRhs : EqualityOperator Value
+{
+ $$.AST := new_AST ('=', $1.AST);
+}
 ;
 ValueRelCompRhs : RelativeComparisonOperator OrderedValue
 ;
@@ -193,7 +196,16 @@ grouped__ValueZips : ValueZip | ONLY ValueZipList | ALL ValueZipList | ANY Value
 ;
 zero_or_more__Colons_1 : Colon Property | zero_or_more__Colons_1 Colon Property | 
 ;
-grouped__OrderedConstants_1 : OrderedConstant ValueOpRhs | UnorderedConstant ValueEqRhs
+grouped__OrderedConstants_1 : OrderedConstant ValueOpRhs
+{
+ -- $$.AST := New_AST ('O', $1.AST);
+ null;
+}
+| UnorderedConstant ValueEqRhs
+{
+ -- $$.AST := New_AST ('U', $1.AST);
+ null;
+}
 ;
 grouped__terminals : '<' | '>'
 ;
