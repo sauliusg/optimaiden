@@ -10,7 +10,17 @@ package body Filter_AST is
       (To_Unbounded_String (S));
       
    pragma Inline ("+");
-      
+   
+   function Null_AST return AST_Type is
+   begin
+     return (Ada.Finalization.Controlled with AST => null);
+   end;
+   
+   function Is_Null (A : AST_Type) return Boolean is
+   begin
+      return A.AST = null;
+   end;
+   
    function Left (A : AST_Type) return AST_Type is
    begin
       return A.AST.Left;

@@ -266,66 +266,100 @@ package body Filter is
             case yy.rule_id is
                pragma Style_Checks (Off);
 
-when 13 => -- #line 62
+when 11 => -- #line 58
 
- YYVal.AST := new_AST ('N', yy.value_stack (yy.tos-1).AST);
+ YYVal.AST := New_AST ('|', yy.value_stack (yy.tos-1).AST, Right (yy.value_stack (yy.tos).AST));
+
+
+when 12 => -- #line 63
+
+ YYVal.AST := New_AST ('&', yy.value_stack (yy.tos-1).AST, Right (yy.value_stack (yy.tos).AST));
+
+
+when 13 => -- #line 68
+
+ if Is_Null (yy.value_stack (yy.tos-1).AST) then
+     YYVal.AST := yy.value_stack (yy.tos).AST;
+ else
+     YYVal.AST := new_AST ('N', yy.value_stack (yy.tos).AST);
+ end if;
  Put_Line (">>> " & Image (YYVal.AST));
 
 
-when 16 => -- #line 70
+when 16 => -- #line 80
 
  YYVal.AST := New_AST ('O', yy.value_stack (yy.tos-1).AST, yy.value_stack (yy.tos).AST);
 
 
-when 17 => -- #line 74
+when 17 => -- #line 84
 
  Put (">>>> 1 "); Put_Line (Image (yy.value_stack (yy.tos-1).AST));
  Put (">>>> 2 "); Put_Line (Image (yy.value_stack (yy.tos).AST));
  YYVal.AST := New_AST ('U', yy.value_stack (yy.tos-1).AST, yy.value_stack (yy.tos).AST);
 
 
-when 20 => -- #line 85
+when 18 => -- #line 91
+
+ YYVal.AST := New_AST ('P', yy.value_stack (yy.tos-1).AST, yy.value_stack (yy.tos).AST);
+
+
+when 20 => -- #line 98
 
  YYVal.AST := new_AST ('=', yy.value_stack (yy.tos-1).AST);
 
 
-when 21 => -- #line 90
+when 21 => -- #line 103
 
  Put_Line (">>>>>>> " & Image (yy.value_stack (yy.tos).AST));
 
 
-when 30 => -- #line 107
+when 30 => -- #line 120
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 31 => -- #line 111
+when 31 => -- #line 124
 
  YYVal.AST := new_AST ('.', yy.value_stack (yy.tos-2).AST, yy.value_stack (yy.tos).AST);
  Put_Line (">>> " & Image (YYVal.AST));
 
 
-when 53 => -- #line 159
+when 53 => -- #line 172
 
     null;
 
 
-when 57 => -- #line 170
+when 57 => -- #line 183
 
  YYVal.AST := New_AST_Identifier (yy.value_stack (yy.tos-1).S);
  Put_Line (">>> " & Image (YYVal.AST));
 
 
-when 58 => -- #line 176
+when 58 => -- #line 189
 
  YYVal.AST := New_AST (yy.value_stack (yy.tos-1).S);
  Put_Line (">>> " & Image (YYVal.AST));
 
 
-when 59 => -- #line 182
+when 59 => -- #line 195
 
  YYVal.AST := New_AST (yy.value_stack (yy.tos-1).N);
  Put_Line (">>> " & Image (YYVal.AST));
+
+
+when 113 => -- #line 243
+
+ YYVal.AST := New_AST ('&', Null_AST, yy.value_stack (yy.tos).AST);
+
+
+when 122 => -- #line 254
+
+ YYVal.AST := New_AST ('!', Null_AST);
+
+
+when 126 => -- #line 261
+
+ YYVal := yy.value_stack (yy.tos-1);
                pragma Style_Checks (On);
 
                when others => null;

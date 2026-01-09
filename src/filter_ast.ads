@@ -14,6 +14,13 @@ package Filter_AST is
    
    type AST_Type is private;
    
+   -- Return empty AST, to be used as a placeholder:
+   function Null_AST return AST_Type;
+   
+   -- Check whether the AST has not node (and thus pepresents an empty
+   --  dummy node):
+   function Is_Null (A : AST_Type) return Boolean;
+   
    -- Return left and right subtree of an expression:
    function Left (A : AST_Type) return AST_Type;
    

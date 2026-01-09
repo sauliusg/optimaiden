@@ -55,12 +55,22 @@ ValueZip : ValueListEntry Colon ValueListEntry zero_or_more__Colons
 ValueZipList : ValueZip zero_or_more__Commas_1
 ;
 Expression : ExpressionClause optional__OR
+{
+ $$.AST := New_AST ('|', $1.AST, Right ($2.AST));
+}
 ;
 ExpressionClause : ExpressionPhrase optional__AND
+{
+ $$.AST := New_AST ('&', $1.AST, Right ($2.AST));
+}
 ;
 ExpressionPhrase : optional__NOT grouped__Comparisons
 {
- $$.AST := new_AST ('N', $1.AST);
+ if Is_Null ($1.AST) then
+     $$.AST := $2.AST;
+ else
+     $$.AST := new_AST ('N', $2.AST);
+ end if;
  Put_Line (">>> " & Image ($$.AST));
 }
 ;
@@ -78,6 +88,9 @@ ConstantFirstComparison : OrderedConstant ValueOpRhs
 }
 ;
 PropertyFirstComparison : Property optional__ValueOpRhs
+{
+ $$.AST := New_AST ('P', $1.AST, $2.AST);
+}
 ;
 ValueOpRhs : grouped__ValueEqRhs
 ;
@@ -226,7 +239,10 @@ grouped__nones : grouped__Values_1 | ALL ValueList | ANY ValueList | ONLY ValueL
 ;
 zero_or_more__Colons : Colon ValueListEntry | zero_or_more__Colons Colon ValueListEntry | 
 ;
-optional__AND : AND ExpressionClause | 
+optional__AND : | AND ExpressionClause
+{
+ $$.AST := New_AST ('&', Null_AST, $2.AST);
+}
 ;
 grouped__KNOWNs : KNOWN | UNKNOWN
 ;
@@ -234,11 +250,17 @@ zero_or_more__Commas_1 : Comma ValueZip | zero_or_more__Commas_1 Comma ValueZip 
 ;
 grouped__UnorderedConstants : UnorderedConstant | OrderedValue
 ;
-optional__NOT : NOT | 
+optional__NOT : | NOT
+{
+ $$.AST := New_AST ('!', Null_AST);
+}
 ;
 grouped__OrderedConstants : OrderedConstant | Property
 ;
 grouped__Comparisons : Comparison | OpeningBrace Expression ClosingBrace
+{
+ $$ := $2;
+}
 ;
 grouped__ValueEqRhs : ValueEqRhs | ValueRelCompRhs
 ;
