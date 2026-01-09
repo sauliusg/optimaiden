@@ -96,7 +96,7 @@ package body Filter_AST is
          return "";
       end if;
       declare
-         Node_Value : String :=
+         Node_Value : constant String :=
            (
             case T.AST.Kind is
                when NUMBER   => T.AST.Value'Image,
