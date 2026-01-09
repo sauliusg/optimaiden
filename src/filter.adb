@@ -279,64 +279,74 @@ when 13 => -- #line 68
 when 16 => -- #line 80
 
  YYVal.AST := New_AST ('O', yy.value_stack (yy.tos-1).AST, yy.value_stack (yy.tos).AST);
+ Put (">>> "); Put_Line (Image (YYVal.AST));
 
-when 17 => -- #line 84
+when 17 => -- #line 85
 
  Put (">>>> 1 "); Put_Line (Image (yy.value_stack (yy.tos-1).AST));
  Put (">>>> 2 "); Put_Line (Image (yy.value_stack (yy.tos).AST));
  YYVal.AST := New_AST ('U', yy.value_stack (yy.tos-1).AST, yy.value_stack (yy.tos).AST);
+ Put (">>> "); Put_Line (Image (YYVal.AST));
 
-when 18 => -- #line 91
+when 18 => -- #line 93
 
  YYVal.AST := New_AST ('P', yy.value_stack (yy.tos-1).AST, yy.value_stack (yy.tos).AST);
 
-when 20 => -- #line 98
+when 20 => -- #line 100
 
- YYVal.AST := new_AST ('=', yy.value_stack (yy.tos-1).AST);
+ YYVal.AST := new_AST ('=', yy.value_stack (yy.tos).AST);
 
-when 21 => -- #line 103
+when 21 => -- #line 105
 
  Put_Line (">>>>>>> " & Image (yy.value_stack (yy.tos).AST));
 
-when 30 => -- #line 120
+when 30 => -- #line 122
 
  YYVal := yy.value_stack (yy.tos);
 
-when 31 => -- #line 124
+when 31 => -- #line 126
 
  YYVal.AST := new_AST ('.', yy.value_stack (yy.tos-2).AST, yy.value_stack (yy.tos).AST);
  Put_Line (">>> " & Image (YYVal.AST));
 
-when 53 => -- #line 172
+when 53 => -- #line 174
 
     null;
 
-when 57 => -- #line 183
+when 57 => -- #line 185
 
  YYVal.AST := New_AST_Identifier (yy.value_stack (yy.tos-1).S);
  Put_Line (">>> " & Image (YYVal.AST));
 
-when 58 => -- #line 189
+when 58 => -- #line 191
 
  YYVal.AST := New_AST (yy.value_stack (yy.tos-1).S);
  Put_Line (">>> " & Image (YYVal.AST));
 
-when 59 => -- #line 195
+when 59 => -- #line 197
 
  YYVal.AST := New_AST (yy.value_stack (yy.tos-1).N);
  Put_Line (">>> " & Image (YYVal.AST));
 
-when 113 => -- #line 243
+when 113 => -- #line 245
 
  YYVal.AST := New_AST ('&', Null_AST, yy.value_stack (yy.tos).AST);
 
-when 122 => -- #line 254
+when 122 => -- #line 256
 
  YYVal.AST := New_AST ('!', Null_AST);
 
-when 126 => -- #line 261
+when 126 => -- #line 263
 
  YYVal := yy.value_stack (yy.tos-1);
+
+when 138 => -- #line 283
+
+ YYVal.AST := New_Ast ('@', yy.value_stack (yy.tos).AST);
+
+when 139 => -- #line 287
+
+ YYVal.AST := New_Ast ('?', yy.value_stack (yy.tos).AST);
                pragma Style_Checks (On);
 
                when others => null;

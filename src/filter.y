@@ -79,12 +79,14 @@ Comparison : ConstantFirstComparison | PropertyFirstComparison
 ConstantFirstComparison : OrderedConstant ValueOpRhs
 {
  $$.AST := New_AST ('O', $1.AST, $2.AST);
+ Put (">>> "); Put_Line (Image ($$.AST));
 }
 | UnorderedConstant ValueEqRhs
 {
  Put (">>>> 1 "); Put_Line (Image ($1.AST));
  Put (">>>> 2 "); Put_Line (Image ($2.AST));
  $$.AST := New_AST ('U', $1.AST, $2.AST);
+ Put (">>> "); Put_Line (Image ($$.AST));
 }
 ;
 PropertyFirstComparison : Property optional__ValueOpRhs
@@ -96,7 +98,7 @@ ValueOpRhs : grouped__ValueEqRhs
 ;
 ValueEqRhs : EqualityOperator Value
 {
- $$.AST := new_AST ('=', $1.AST);
+ $$.AST := new_AST ('=', $2.AST);
 }
 ;
 ValueRelCompRhs : RelativeComparisonOperator OrderedValue
@@ -276,7 +278,16 @@ optional__Spaces : Spaces |
 
 
 -----------------------------
-grouped__Values_1 : Value | EqualityOperator Value | RelativeComparisonOperator OrderedValue | FuzzyStringOpRhs
+grouped__Values_1 : Value
+| EqualityOperator Value
+{
+ $$.AST := New_Ast ('@', $2.AST);
+}
+| RelativeComparisonOperator OrderedValue
+{
+ $$.AST := New_Ast ('?', $2.AST);
+}
+| FuzzyStringOpRhs
 ;
 -----------------------------
 
