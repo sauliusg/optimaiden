@@ -294,7 +294,7 @@ when 18 => -- #line 93
 
 when 20 => -- #line 100
 
- YYVal.AST := new_AST ('=', yy.value_stack (yy.tos).AST);
+ YYVal.AST := new_AST ('=', Null_AST, yy.value_stack (yy.tos).AST);
 
 when 21 => -- #line 105
 

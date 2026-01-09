@@ -98,7 +98,7 @@ ValueOpRhs : grouped__ValueEqRhs
 ;
 ValueEqRhs : EqualityOperator Value
 {
- $$.AST := new_AST ('=', $2.AST);
+ $$.AST := new_AST ('=', Null_AST, $2.AST);
 }
 ;
 ValueRelCompRhs : RelativeComparisonOperator OrderedValue
