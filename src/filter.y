@@ -154,7 +154,7 @@ FALSE : FALSE_TOKEN optional__Spaces
 Identifier : IDENTIFIER_TOKEN optional__Spaces
 {
  $$.AST := New_AST_Identifier ($1.S);
- Put_Line (">>> " & Image ($$.AST));    
+ Put_Line (">>> " & Image ($$.AST));
 }
 ;
 String : STRING_TOKEN optional__Spaces
