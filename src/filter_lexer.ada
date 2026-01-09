@@ -6,7 +6,7 @@ with filter_lexer_DFA; use filter_lexer_DFA;
 with filter_lexer_IO; use filter_lexer_IO;
 --# line 1 "filter_lexer.l"
 -- Double-quoted string:
---# line 11 "filter_lexer.l"
+--# line 12 "filter_lexer.l"
 
 
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
@@ -84,16 +84,16 @@ package body filter_lexer is
 
       yy_base : constant array (0 .. 100) of Short :=
           (0,
-        0,    0,  127,  128,  128,  128,  128,  128,  128,   26,
-       25,  116,   27,   17,    0,  102,  102,  112,  111,   96,
-       98,  104,   95,   19,   91,   92,   93,   95,   13,   33,
-      128,   39,  103,   38,   39,   40,   50,    0,   91,   37,
-       89,   96,   88,   83,    0,   84,   84,   79,   83,    0,
-       92,   75,   81,   74,   30,   45,   58,   89,   88,    0,
-        0,    0,   71,   71,   70,    0,   66,   75,    0,   60,
-       64,   72,   64,   67,   73,    0,   68,   60,   55,    0,
-       54,    0,   56,    0,   59,    0,    0,   59,   51,   46,
-       45,    0,    0,   43,   39,    0,    0,  128,   90,   54
+        0,    0,  129,  130,  130,  130,  130,  130,  130,   26,
+       25,  118,   27,   17,    0,  104,  104,  114,  113,   98,
+      100,  106,   97,   19,   93,   94,   95,   97,   30,   37,
+      130,   38,  105,   37,   38,   39,   47,    0,   93,   36,
+       91,   98,   90,   85,    0,   86,   86,   81,   85,    0,
+       94,   77,   83,   76,   41,   51,   64,   91,   90,    0,
+        0,    0,   72,   70,   69,    0,   65,   75,    0,   62,
+       66,   74,   66,   69,   75,    0,   70,   62,   57,    0,
+       56,    0,   57,    0,   59,    0,    0,   59,   51,   47,
+       44,    0,    0,   42,   38,    0,    0,  130,   96,   57
 
        );
 
@@ -112,46 +112,48 @@ package body filter_lexer is
 
        );
 
-      yy_nxt : constant array (0 .. 160) of Short :=
+      yy_nxt : constant array (0 .. 162) of Short :=
           (0,
         4,    5,    6,    7,    8,    9,   10,   11,   12,   13,
        14,   15,   16,   15,   17,   18,   15,   19,   20,   21,
        22,   23,   24,   15,   25,   26,   27,   28,   15,    4,
-       29,   29,   31,   33,   34,   36,   34,   39,   40,   31,
-       49,   37,   50,   55,   55,   56,   36,   34,   35,   57,
-       61,   31,   37,   37,   37,   32,   38,   58,   37,   59,
-       55,   55,   32,   97,   96,   62,   95,   57,   32,   37,
-       37,   37,   37,   94,   32,   93,   92,   91,   90,   89,
-       88,   87,   86,   85,   84,   83,   82,   81,   80,   37,
-       30,   79,   30,   78,   77,   76,   75,   59,   59,   74,
+       29,   29,   31,   33,   34,   36,   34,   39,   40,   55,
+       49,   37,   50,   31,   56,   36,   34,   35,   57,   61,
+       55,   37,   37,   37,   58,   32,   59,   31,   37,   38,
+       55,   55,   97,   96,   62,   95,   32,   32,   37,   37,
+       37,   55,   55,   57,   94,   93,   92,   91,   37,   90,
+       32,   89,   88,   87,   86,   85,   84,   83,   82,   81,
+       80,   79,   78,   77,   76,   37,   30,   75,   30,   59,
 
-       73,   72,   71,   70,   69,   68,   67,   66,   65,   64,
-       63,   60,   35,   54,   53,   52,   51,   48,   47,   46,
-       45,   44,   43,   42,   41,   35,   98,    3,   98,   98,
+       59,   74,   73,   72,   71,   70,   69,   68,   67,   66,
+       65,   64,   63,   60,   35,   54,   53,   52,   51,   48,
+       47,   46,   45,   44,   43,   42,   41,   35,   98,    3,
        98,   98,   98,   98,   98,   98,   98,   98,   98,   98,
        98,   98,   98,   98,   98,   98,   98,   98,   98,   98,
-       98,   98,   98,   98,   98,   98,   98,   98,   98,   98
+       98,   98,   98,   98,   98,   98,   98,   98,   98,   98,
+       98,   98
        );
 
-      yy_chk : constant array (0 .. 160) of Short :=
+      yy_chk : constant array (0 .. 162) of Short :=
           (0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,   10,   11,   11,   13,   13,   14,   14,   30,
-       24,   13,   24,   29,   29,   32,   34,   34,   35,   36,
-       40,   56,   34,   35,   36,   10,  100,   37,   13,   37,
-       55,   55,   30,   95,   94,   40,   91,   57,   32,   34,
-       35,   36,   57,   90,   56,   89,   88,   85,   83,   81,
-       79,   78,   77,   75,   74,   73,   72,   71,   70,   57,
-       99,   68,   99,   67,   65,   64,   63,   59,   58,   54,
+        1,    1,   10,   11,   11,   13,   13,   14,   14,   29,
+       24,   13,   24,   30,   32,   34,   34,   35,   36,   40,
+       55,   34,   35,   36,   37,   10,   37,   56,   13,  100,
+       29,   29,   95,   94,   40,   91,   30,   32,   34,   35,
+       36,   55,   55,   57,   90,   89,   88,   85,   57,   83,
+       56,   81,   79,   78,   77,   75,   74,   73,   72,   71,
+       70,   68,   67,   65,   64,   57,   99,   63,   99,   59,
 
-       53,   52,   51,   49,   48,   47,   46,   44,   43,   42,
-       41,   39,   33,   28,   27,   26,   25,   23,   22,   21,
-       20,   19,   18,   17,   16,   12,    3,   98,   98,   98,
+       58,   54,   53,   52,   51,   49,   48,   47,   46,   44,
+       43,   42,   41,   39,   33,   28,   27,   26,   25,   23,
+       22,   21,   20,   19,   18,   17,   16,   12,    3,   98,
        98,   98,   98,   98,   98,   98,   98,   98,   98,   98,
        98,   98,   98,   98,   98,   98,   98,   98,   98,   98,
-       98,   98,   98,   98,   98,   98,   98,   98,   98,   98
+       98,   98,   98,   98,   98,   98,   98,   98,   98,   98,
+       98,   98
        );
 
       yy_act : Integer;
@@ -309,169 +311,169 @@ package body filter_lexer is
 
 
          when 1 =>
---# line 13 "filter_lexer.l"
+--# line 14 "filter_lexer.l"
              yylval.C := '&'; return AND_TOKEN; 
 
          when 2 =>
---# line 14 "filter_lexer.l"
+--# line 15 "filter_lexer.l"
              yylval.C := '!'; return NOT_TOKEN; 
 
          when 3 =>
---# line 15 "filter_lexer.l"
+--# line 16 "filter_lexer.l"
              yylval.C := '|'; return OR_TOKEN; 
 
          when 4 =>
---# line 16 "filter_lexer.l"
+--# line 17 "filter_lexer.l"
              yylval.C := 'I'; return IS_TOKEN; 
 
          when 5 =>
---# line 17 "filter_lexer.l"
+--# line 18 "filter_lexer.l"
              yylval.C := 'U'; return KNOWN_TOKEN; 
 
          when 6 =>
---# line 18 "filter_lexer.l"
+--# line 19 "filter_lexer.l"
              yylval.C := '?'; return UNKNOWN_TOKEN; 
 
          when 7 =>
---# line 19 "filter_lexer.l"
+--# line 20 "filter_lexer.l"
              yylval.C := 'C'; return CONTAINS_TOKEN; 
 
          when 8 =>
---# line 20 "filter_lexer.l"
+--# line 21 "filter_lexer.l"
              yylval.C := 'S'; return STARTS_TOKEN; 
 
          when 9 =>
---# line 21 "filter_lexer.l"
+--# line 22 "filter_lexer.l"
              yylval.C := 'E'; return ENDS_TOKEN; 
 
          when 10 =>
---# line 22 "filter_lexer.l"
+--# line 23 "filter_lexer.l"
              yylval.C := 'W'; return WITH_TOKEN; 
 
          when 11 =>
---# line 23 "filter_lexer.l"
+--# line 24 "filter_lexer.l"
              yylval.C := 'L'; return LENGTH_TOKEN; 
 
          when 12 =>
---# line 24 "filter_lexer.l"
+--# line 25 "filter_lexer.l"
              yylval.C := 'H'; return HAS_TOKEN; 
 
          when 13 =>
---# line 25 "filter_lexer.l"
+--# line 26 "filter_lexer.l"
              yylval.C := 'A'; return ALL_TOKEN; 
 
          when 14 =>
---# line 26 "filter_lexer.l"
+--# line 27 "filter_lexer.l"
              yylval.C := 'O'; return ONLY_TOKEN; 
 
          when 15 =>
---# line 27 "filter_lexer.l"
+--# line 28 "filter_lexer.l"
              yylval.C := 'N'; return ANY_TOKEN; 
 
          when 16 =>
---# line 29 "filter_lexer.l"
+--# line 30 "filter_lexer.l"
              yylval.C := 'T'; return TRUE_TOKEN; 
 
          when 17 =>
---# line 30 "filter_lexer.l"
+--# line 31 "filter_lexer.l"
              yylval.C := 'F'; return FALSE_TOKEN; 
 
          when 18 =>
---# line 32 "filter_lexer.l"
+--# line 33 "filter_lexer.l"
             
-              yylval.S := To_Unbounded_String (filter_lexer_dfa.yytext);
-              return KEYWORD_TOKEN;
-            
+               yylval.S := To_Unbounded_String (filter_lexer_dfa.yytext);
+               return KEYWORD_TOKEN;
+             
 
          when 19 =>
---# line 36 "filter_lexer.l"
+--# line 37 "filter_lexer.l"
             
-              yylval.S := To_Unbounded_String (filter_lexer_dfa.yytext);
-              return IDENTIFIER_TOKEN;
-            
+               yylval.S := To_Unbounded_String (filter_lexer_dfa.yytext);
+               return IDENTIFIER_TOKEN;
+             
 
          when 20 =>
---# line 40 "filter_lexer.l"
+--# line 41 "filter_lexer.l"
             
-              yylval.N := Float'Value (filter_lexer_dfa.yytext);
-              return NUMBER_TOKEN;
-            
+               yylval.N := Float'Value (filter_lexer_dfa.yytext);
+               return NUMBER_TOKEN;
+             
 
          when 21 =>
---# line 44 "filter_lexer.l"
+--# line 45 "filter_lexer.l"
             
-              yylval.S := To_Unbounded_String (yytext (yytext'First+1 .. yytext'Last-1));
-              return STRING_TOKEN;
-            
+               yylval.S := To_Unbounded_String (yytext (yytext'First+1 .. yytext'Last-1));
+               return STRING_TOKEN;
+             
 
          when 22 =>
---# line 49 "filter_lexer.l"
+--# line 50 "filter_lexer.l"
              return LF_TOKEN; 
 
          when 23 =>
---# line 50 "filter_lexer.l"
+--# line 51 "filter_lexer.l"
              return CR_TOKEN; 
 
          when 24 =>
---# line 51 "filter_lexer.l"
+--# line 52 "filter_lexer.l"
              return HT_TOKEN; 
 
          when 25 =>
---# line 52 "filter_lexer.l"
+--# line 53 "filter_lexer.l"
              return VT_TOKEN; 
 
          when 26 =>
---# line 53 "filter_lexer.l"
+--# line 54 "filter_lexer.l"
              return FF_TOKEN; 
 
 -- The remaining single character tokens are processed in Ada so that
 -- we get compiler error if some character is not covered:
          when 27 =>
---# line 58 "filter_lexer.l"
+--# line 59 "filter_lexer.l"
             
-             declare
-                 BS : constant Character := '\';
-                 C  : Character := filter_lexer_dfa.yytext(1);
-             begin
-                yylval.C := C;
-                case C is
-                    when ' ' => return Token'(' ');
-                    when '(' => return Token'('(');
-                    when ')' => return Token'(')');
-                    when '.' => return Token'('.');
-                    when ',' => return Token'(',');
-                    when ':' => return Token'(':');
-                    when '=' => return Token'('=');
-                    when '<' => return Token'('<');
-                    when '>' => return Token'('>');
-                    when '!' => return Token'('!');
-
-                    -- We list all remaining characters explicitly
-                    -- so that if a new token is introduced into the grammar,
-                    -- or removed from it, we get an Ada compiler
-                    -- error:
-
-                    when ASCII.NUL .. ASCII.US |
-                         '#' .. ''' |
-                         '*' .. '+' |
-                         '-'        |
-                         '/'        |
-                         ';'        |
-                         '?' .. '@' |
-                         '['        |
-                         ']' .. '^' |
-                         '`'        |
-                         '{' .. '~' |
-                         character'val(127) .. character'val(255) |
-                         'A' .. 'Z' | 'a' .. 'z' | '0' .. '9' |
-                         BS | '_' | '"'
-                        => return ERROR;
+              declare
+                  BS : constant Character := '\';
+                  C  : Character := filter_lexer_dfa.yytext(1);
+              begin
+                 yylval.C := C;
+                 case C is
+                     when ' ' => return Token'(' ');
+                     when '(' => return Token'('(');
+                     when ')' => return Token'(')');
+                     when '.' => return Token'('.');
+                     when ',' => return Token'(',');
+                     when ':' => return Token'(':');
+                     when '=' => return Token'('=');
+                     when '<' => return Token'('<');
+                     when '>' => return Token'('>');
+                     when '!' => return Token'('!');
+             
+                     -- We list all remaining characters explicitly
+                     -- so that if a new token is introduced into the grammar,
+                     -- or removed from it, we get an Ada compiler
+                     -- error:
+             
+                     when ASCII.NUL .. ASCII.US |
+                          '#' .. ''' |
+                          '*' .. '+' |
+                          '-'        |
+                          '/'        |
+                          ';'        |
+                          '?' .. '@' |
+                          '['        |
+                          ']' .. '^' |
+                          '`'        |
+                          '{' .. '~' |
+                          character'val(127) .. character'val(255) |
+                          'A' .. 'Z' | 'a' .. 'z' | '0' .. '9' |
+                          BS | '_' | '"'
+                         => return ERROR;
                  end case;
-             end;
+              end;
 
 
          when 28 =>
---# line 100 "filter_lexer.l"
+--# line 101 "filter_lexer.l"
             ECHO;
          when YY_END_OF_BUFFER + INITIAL + 1 =>
             return End_Of_Input;
@@ -525,7 +527,7 @@ package body filter_lexer is
       end loop; --  end of loop waiting for end of file
    end YYLex;
 
---# line 100 "filter_lexer.l"
+--# line 101 "filter_lexer.l"
 
 end filter_lexer;
 
