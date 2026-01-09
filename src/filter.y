@@ -98,12 +98,13 @@ ValueOpRhs : grouped__ValueEqRhs
 ;
 ValueEqRhs : EqualityOperator Value
 {
- $$.AST := new_AST ('=', Null_AST, $2.AST);
+ $$.AST := new_AST (Operator ($1.AST), Null_AST, $2.AST);
 }
 ;
 ValueRelCompRhs : RelativeComparisonOperator OrderedValue
 {
- Put_Line (">>>>>>> " & Image ($2.AST));
+ $$.AST := new_AST (Operator ($1.AST), Left ($1.AST), $2.AST);
+ Put_Line (">>>>>>> " & Image ($$.AST));
 }
 ;
 KnownOpRhs : IS grouped__KNOWNs
@@ -170,12 +171,29 @@ ANY : ANY_TOKEN optional__Spaces
 ;
 Operator : grouped__EqualityOperators
 ;
-EqualityOperator : optional__terminal '=' optional__Spaces
+EqualityOperator : optional__exclamation_mark '=' optional__Spaces
 {
-    null;
+    if $1.C = ' ' then
+        $$.AST := New_Ast ('=', Null_AST);
+    else
+        $$.AST := New_Ast ('N', Null_AST);
+    end if;
 }
 ;
-RelativeComparisonOperator : grouped__terminals optional__terminal_1 optional__Spaces
+RelativeComparisonOperator : less_or_more optional__equals optional__Spaces
+{
+ Put_Line (">>><<<< 1 " & $1.C'Image);
+ Put_Line (">>><<<< 2 " & $2.C'Image);
+ if $2.C = ' ' then
+     $$.AST := New_AST (Operator_Type ($1.C), Null_AST);
+ else
+     if $1.C = '<' then
+         $$.AST := New_AST ('L', Null_AST);
+     else
+         $$.AST := New_AST ('G', Null_AST);
+     end if;
+ end if;
+}
 ;
 TRUE : TRUE_TOKEN optional__Spaces
 ;
@@ -223,11 +241,23 @@ grouped__ValueZips : ValueZip | ONLY ValueZipList | ALL ValueZipList | ANY Value
 ;
 zero_or_more__Colons_1 : Colon Property | zero_or_more__Colons_1 Colon Property | 
 ;
-grouped__terminals : '<' | '>'
+less_or_more : '<'
+{
+    Put_Line ("<<<< " & $1.C'Image);
+    $$.C := '<';
+}
+| '>'
+{
+    Put_Line ("<<<< " & $1.C'Image);
+    $$.C := '>';
+}
 ;
 optional__Operator : Operator | 
 ;
-optional__terminal : '!' | 
+optional__exclamation_mark : '!' |
+{
+ $$.C := ' ';
+}
 ;
 grouped__Values : Value | ValueEqRhs | ValueRelCompRhs | FuzzyStringOpRhs
 ;
@@ -272,7 +302,14 @@ grouped__ValueEqRhs : ValueEqRhs | ValueRelCompRhs
 ;
 grouped__EqualityOperators : EqualityOperator | RelativeComparisonOperator
 ;
-optional__terminal_1 : '=' | 
+optional__equals : '='
+{
+ $$.C := '=';
+}
+|
+{
+ $$.C := ' ';
+}
 ;
 optional__WITH : WITH | 
 ;
