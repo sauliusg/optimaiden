@@ -254,7 +254,11 @@ less_or_more : '<'
 ;
 optional__Operator : Operator | 
 ;
-optional__exclamation_mark : '!' |
+optional__exclamation_mark : '!'
+{
+ $$.C := '!';
+}
+|
 {
  $$.C := ' ';
 }
