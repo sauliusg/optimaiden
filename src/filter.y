@@ -176,7 +176,7 @@ EqualityOperator : optional__exclamation_mark '=' optional__Spaces
     if $1.C = ' ' then
         $$.AST := New_Ast ('=', Null_AST);
     else
-        $$.AST := New_Ast ('N', Null_AST);
+        $$.AST := New_Ast ('!', Null_AST);
     end if;
 }
 ;
@@ -292,7 +292,7 @@ optional__NOT :
 }
 | NOT
 {
- $$.AST := New_AST ('!', Null_AST);
+ $$.AST := New_AST ('N', Null_AST);
 }
 ;
 grouped__OrderedConstants : OrderedConstant | Property

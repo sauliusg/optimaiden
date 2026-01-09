@@ -332,7 +332,7 @@ when 53 => -- #line 175
     if yy.value_stack (yy.tos-2).C = ' ' then
         YYVal.AST := New_Ast ('=', Null_AST);
     else
-        YYVal.AST := New_Ast ('N', Null_AST);
+        YYVal.AST := New_Ast ('!', Null_AST);
     end if;
 
 
@@ -403,7 +403,7 @@ when 121 => -- #line 290
 
 when 122 => -- #line 294
 
- YYVal.AST := New_AST ('!', Null_AST);
+ YYVal.AST := New_AST ('N', Null_AST);
 
 
 when 126 => -- #line 301
