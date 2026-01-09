@@ -31,6 +31,11 @@ package body Filter_AST is
       return A.AST.Right;
    end;
    
+   function Operator (A : AST_Type) return Operator_Type is
+   begin
+      return A.AST.Op;
+   end;
+   
    function New_AST_Identifier (Name : String) return AST_Type is
    begin
       return New_AST_Identifier (+Name);

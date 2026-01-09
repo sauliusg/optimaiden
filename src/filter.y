@@ -69,9 +69,9 @@ ExpressionPhrase : optional__NOT grouped__Comparisons
  if Is_Null ($1.AST) then
      $$.AST := $2.AST;
  else
-     $$.AST := new_AST ('N', $2.AST);
+     $$.AST := new_AST (Operator ($1.AST), $2.AST);
  end if;
- Put_Line (">>> " & Image ($$.AST));
+ Put_Line ("!>>> " & Image ($$.AST));
 }
 ;
 Comparison : ConstantFirstComparison | PropertyFirstComparison
@@ -252,7 +252,11 @@ zero_or_more__Commas_1 : Comma ValueZip | zero_or_more__Commas_1 Comma ValueZip 
 ;
 grouped__UnorderedConstants : UnorderedConstant | OrderedValue
 ;
-optional__NOT : | NOT
+optional__NOT :
+{
+ $$.AST := Null_AST;
+}
+| NOT
 {
  $$.AST := New_AST ('!', Null_AST);
 }

@@ -272,9 +272,9 @@ when 13 => -- #line 68
  if Is_Null (yy.value_stack (yy.tos-1).AST) then
      YYVal.AST := yy.value_stack (yy.tos).AST;
  else
-     YYVal.AST := new_AST ('N', yy.value_stack (yy.tos).AST);
+     YYVal.AST := new_AST (Operator (yy.value_stack (yy.tos-1).AST), yy.value_stack (yy.tos).AST);
  end if;
- Put_Line (">>> " & Image (YYVal.AST));
+ Put_Line ("!>>> " & Image (YYVal.AST));
 
 when 16 => -- #line 80
 
@@ -332,19 +332,23 @@ when 113 => -- #line 245
 
  YYVal.AST := New_AST ('&', Null_AST, yy.value_stack (yy.tos).AST);
 
-when 122 => -- #line 256
+when 121 => -- #line 256
+
+ YYVal.AST := Null_AST;
+
+when 122 => -- #line 260
 
  YYVal.AST := New_AST ('!', Null_AST);
 
-when 126 => -- #line 263
+when 126 => -- #line 267
 
  YYVal := yy.value_stack (yy.tos-1);
 
-when 138 => -- #line 283
+when 138 => -- #line 287
 
  YYVal.AST := New_Ast ('@', yy.value_stack (yy.tos).AST);
 
-when 139 => -- #line 287
+when 139 => -- #line 291
 
  YYVal.AST := New_Ast ('?', yy.value_stack (yy.tos).AST);
                pragma Style_Checks (On);

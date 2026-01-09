@@ -26,6 +26,9 @@ package Filter_AST is
    
    function Right (A : AST_Type) return AST_Type;
    
+   -- Return the operator of a bionary operator AST node:
+   function Operator (A : AST_Type) return Operator_Type;
+   
    --  Construct AST leaf representing a variable (i.e. an OPTIMADE
    --  property):
    function New_AST_Identifier (Name : String) return AST_Type;
