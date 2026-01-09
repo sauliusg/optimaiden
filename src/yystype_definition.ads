@@ -5,9 +5,9 @@ with Filter_AST; use Filter_AST;
 package YYStype_Definition is
    
    type YYSType is record
-      C : Character;
-      S : Unbounded_String;
-      N : Float;
+      C : Character := ' ';
+      S : Unbounded_String := Null_Unbounded_String;
+      N : Float := 0.0;
       AST : AST_Type;
    end record;
    
