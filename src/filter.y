@@ -91,7 +91,7 @@ ConstantFirstComparison : OrderedConstant ValueOpRhs
 ;
 PropertyFirstComparison : Property optional__ValueOpRhs
 {
- $$.AST := New_AST ('P', $1.AST, $2.AST);
+ $$.AST := New_AST (Operator ($2.AST), $1.AST, Right ($2.AST));
 }
 ;
 ValueOpRhs : grouped__ValueEqRhs

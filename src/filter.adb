@@ -290,7 +290,7 @@ when 17 => -- #line 85
 
 when 18 => -- #line 93
 
- YYVal.AST := New_AST ('P', yy.value_stack (yy.tos-1).AST, yy.value_stack (yy.tos).AST);
+ YYVal.AST := New_AST (Operator (yy.value_stack (yy.tos).AST), yy.value_stack (yy.tos-1).AST, Right (yy.value_stack (yy.tos).AST));
 
 when 20 => -- #line 100
 
