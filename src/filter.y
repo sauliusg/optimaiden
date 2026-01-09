@@ -66,7 +66,16 @@ ExpressionPhrase : optional__NOT grouped__Comparisons
 ;
 Comparison : ConstantFirstComparison | PropertyFirstComparison
 ;
-ConstantFirstComparison : grouped__OrderedConstants_1
+ConstantFirstComparison : OrderedConstant ValueOpRhs
+{
+ $$.AST := New_AST ('O', $1.AST, $2.AST);
+}
+| UnorderedConstant ValueEqRhs
+{
+ Put (">>>> 1 "); Put_Line (Image ($1.AST));
+ Put (">>>> 2 "); Put_Line (Image ($2.AST));
+ $$.AST := New_AST ('U', $1.AST, $2.AST);
+}
 ;
 PropertyFirstComparison : Property optional__ValueOpRhs
 ;
@@ -78,6 +87,9 @@ ValueEqRhs : EqualityOperator Value
 }
 ;
 ValueRelCompRhs : RelativeComparisonOperator OrderedValue
+{
+ Put_Line (">>>>>>> " & Image ($2.AST));
+}
 ;
 KnownOpRhs : IS grouped__KNOWNs
 ;
@@ -195,17 +207,6 @@ optional__OR : OR Expression |
 grouped__ValueZips : ValueZip | ONLY ValueZipList | ALL ValueZipList | ANY ValueZipList
 ;
 zero_or_more__Colons_1 : Colon Property | zero_or_more__Colons_1 Colon Property | 
-;
-grouped__OrderedConstants_1 : OrderedConstant ValueOpRhs
-{
- -- $$.AST := New_AST ('O', $1.AST);
- null;
-}
-| UnorderedConstant ValueEqRhs
-{
- -- $$.AST := New_AST ('U', $1.AST);
- null;
-}
 ;
 grouped__terminals : '<' | '>'
 ;

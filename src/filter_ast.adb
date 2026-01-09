@@ -11,6 +11,16 @@ package body Filter_AST is
       
    pragma Inline ("+");
       
+   function Left (A : AST_Type) return AST_Type is
+   begin
+      return A.AST.Left;
+   end;
+   
+   function Right (A : AST_Type) return AST_Type is
+   begin
+      return A.AST.Right;
+   end;
+   
    function New_AST_Identifier (Name : String) return AST_Type is
    begin
       return New_AST_Identifier (To_Unbounded_String (Name));

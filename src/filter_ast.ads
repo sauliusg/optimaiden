@@ -14,6 +14,11 @@ package Filter_AST is
    
    type AST_Type is private;
    
+   -- Return left and right subtree of an expression:
+   function Left (A : AST_Type) return AST_Type;
+   
+   function Right (A : AST_Type) return AST_Type;
+   
    --  Construct AST leaf representing a variable (i.e. an OPTIMADE
    --  property):
    function New_AST_Identifier (Name : String) return AST_Type;

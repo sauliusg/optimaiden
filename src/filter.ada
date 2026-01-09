@@ -272,55 +272,60 @@ when 13 => -- #line 62
  Put_Line (">>> " & Image (YYVal.AST));
 
 
-when 19 => -- #line 76
+when 16 => -- #line 70
+
+ YYVal.AST := New_AST ('O', yy.value_stack (yy.tos-1).AST, yy.value_stack (yy.tos).AST);
+
+
+when 17 => -- #line 74
+
+ Put (">>>> 1 "); Put_Line (Image (yy.value_stack (yy.tos-1).AST));
+ Put (">>>> 2 "); Put_Line (Image (yy.value_stack (yy.tos).AST));
+ YYVal.AST := New_AST ('U', yy.value_stack (yy.tos-1).AST, yy.value_stack (yy.tos).AST);
+
+
+when 20 => -- #line 85
 
  YYVal.AST := new_AST ('=', yy.value_stack (yy.tos-1).AST);
 
 
-when 29 => -- #line 95
+when 21 => -- #line 90
+
+ Put_Line (">>>>>>> " & Image (yy.value_stack (yy.tos).AST));
+
+
+when 30 => -- #line 107
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 30 => -- #line 99
+when 31 => -- #line 111
 
  YYVal.AST := new_AST ('.', yy.value_stack (yy.tos-2).AST, yy.value_stack (yy.tos).AST);
  Put_Line (">>> " & Image (YYVal.AST));
 
 
-when 52 => -- #line 147
+when 53 => -- #line 159
 
     null;
 
 
-when 56 => -- #line 158
+when 57 => -- #line 170
 
  YYVal.AST := New_AST_Identifier (yy.value_stack (yy.tos-1).S);
  Put_Line (">>> " & Image (YYVal.AST));
 
 
-when 57 => -- #line 164
+when 58 => -- #line 176
 
  YYVal.AST := New_AST (yy.value_stack (yy.tos-1).S);
  Put_Line (">>> " & Image (YYVal.AST));
 
 
-when 58 => -- #line 170
+when 59 => -- #line 182
 
  YYVal.AST := New_AST (yy.value_stack (yy.tos-1).N);
  Put_Line (">>> " & Image (YYVal.AST));
-
-
-when 82 => -- #line 200
-
- -- $$.AST := New_AST ('O', $1.AST);
- null;
-
-
-when 83 => -- #line 205
-
- -- $$.AST := New_AST ('U', $1.AST);
- null;
                pragma Style_Checks (On);
 
                when others => null;
