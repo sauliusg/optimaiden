@@ -33,7 +33,7 @@ package body Filter_AST is
    
    function New_AST_Identifier (Name : String) return AST_Type is
    begin
-      return New_AST_Identifier (To_Unbounded_String (Name));
+      return New_AST_Identifier (+Name);
    end;
    
    function New_AST_Identifier (Name : Unbounded_String) return AST_Type is
@@ -52,7 +52,7 @@ package body Filter_AST is
    
    function New_AST (Value : String) return AST_Type is
    begin
-      return New_AST (To_Unbounded_String (Value));
+      return New_AST (+Value);
    end;
       
    function New_AST (Value : Unbounded_String) return AST_Type is
