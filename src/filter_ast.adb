@@ -122,14 +122,14 @@ package body Filter_AST is
                when NUMBER   => T.AST.Value'Image,
                when VARIABLE => To_String (T.AST.Identifier),
                when TEXT     => """" & To_String (T.AST.Text_Value) & """",
-               when OPERATOR => T.AST.Op'Image & " " &
-                                Image (T.AST.Left) & " " & 
+               when OPERATOR => T.AST.Op'Image & ": " &
+                                Image (T.AST.Left) & ", " & 
                                 Image (T.AST.Right)
            );
       begin
          case T.AST.Kind is
             when OPERATOR => 
-               return "(" & T.AST.Kind'Image & ": " & Node_Value & ")";
+               return "(" & T.AST.Kind'Image & " " & Node_Value & ")";
             when others =>
                return T.AST.Kind'Image & ": " & Node_Value;
          end case;
