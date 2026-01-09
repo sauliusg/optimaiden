@@ -113,7 +113,7 @@ package body Filter_AST is
    function Image (T : AST_Type) return String is
    begin
       if T.AST = null then
-         return "";
+         return "NULL";
       end if;
       declare
          Node_Value : constant String :=
