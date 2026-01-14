@@ -71,7 +71,6 @@ ExpressionPhrase : optional__NOT grouped__Comparisons
  else
      $$.AST := new_AST (Operator ($1.AST), $2.AST);
  end if;
- Put_Line ("!>>> " & Image ($$.AST));
 }
 ;
 Comparison : ConstantFirstComparison | PropertyFirstComparison
@@ -79,14 +78,10 @@ Comparison : ConstantFirstComparison | PropertyFirstComparison
 ConstantFirstComparison : OrderedConstant ValueOpRhs
 {
  $$.AST := New_AST ('O', $1.AST, $2.AST);
- Put (">>> "); Put_Line (Image ($$.AST));
 }
 | UnorderedConstant ValueEqRhs
 {
- Put (">>>> 1 "); Put_Line (Image ($1.AST));
- Put (">>>> 2 "); Put_Line (Image ($2.AST));
  $$.AST := New_AST ('U', $1.AST, $2.AST);
- Put (">>> "); Put_Line (Image ($$.AST));
 }
 ;
 PropertyFirstComparison : Property optional__ValueOpRhs
@@ -104,7 +99,6 @@ ValueEqRhs : EqualityOperator Value
 ValueRelCompRhs : RelativeComparisonOperator OrderedValue
 {
  $$.AST := new_AST (Operator ($1.AST), Left ($1.AST), $2.AST);
- Put_Line (">>>>>>> " & Image ($$.AST));
 }
 ;
 KnownOpRhs : IS grouped__KNOWNs
@@ -126,7 +120,6 @@ Property : Identifier
 | Property Dot Identifier
 {
  $$.AST := new_AST ('.', $1.AST, $3.AST);
- Put_Line (">>> " & Image ($$.AST));    
 }
 ;
 OpeningBrace : '(' optional__Spaces
@@ -182,8 +175,6 @@ EqualityOperator : optional__exclamation_mark '=' optional__Spaces
 ;
 RelativeComparisonOperator : less_or_more optional__equals optional__Spaces
 {
- Put_Line (">>><<<< 1 " & $1.C'Image);
- Put_Line (">>><<<< 2 " & $2.C'Image);
  if $2.C = ' ' then
      $$.AST := New_AST (Operator_Type ($1.C), Null_AST);
  else
@@ -202,19 +193,16 @@ FALSE : FALSE_TOKEN optional__Spaces
 Identifier : IDENTIFIER_TOKEN optional__Spaces
 {
  $$.AST := New_AST_Identifier ($1.S);
- Put_Line (">>> " & Image ($$.AST));
 }
 ;
 String : STRING_TOKEN optional__Spaces
 {
  $$.AST := New_AST ($1.S);
- Put_Line (">>> " & Image ($$.AST));
 }
 ;
 Number : NUMBER_TOKEN optional__Spaces
 {
  $$.AST := New_AST ($1.N);
- Put_Line (">>> " & Image ($$.AST));
 }
 ;
 tab : HT_TOKEN
@@ -243,13 +231,11 @@ zero_or_more__Colons_1 : Colon Property | zero_or_more__Colons_1 Colon Property 
 ;
 less_or_more : '<'
 {
-    Put_Line ("<<<< " & $1.C'Image);
-    $$.C := '<';
+ $$.C := '<';
 }
 | '>'
 {
-    Put_Line ("<<<< " & $1.C'Image);
-    $$.C := '>';
+ $$.C := '>';
 }
 ;
 optional__Operator : Operator | 
