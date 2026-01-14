@@ -352,17 +352,22 @@ when 21 => -- #line 134
  YYVal.AST := new_AST (Operator (yy.value_stack (yy.tos-1).AST), yy.value_stack (yy.tos).AST);
 
 
-when 30 => -- #line 151
+when 22 => -- #line 139
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 31 => -- #line 155
+when 30 => -- #line 154
+
+ YYVal := yy.value_stack (yy.tos);
+
+
+when 31 => -- #line 158
 
  YYVal.AST := new_AST ('.', yy.value_stack (yy.tos-2).AST, yy.value_stack (yy.tos).AST);
 
 
-when 53 => -- #line 202
+when 53 => -- #line 205
 
     if yy.value_stack (yy.tos-2).C = ' ' then
         YYVal.AST := New_Ast ('=', Null_AST);
@@ -371,7 +376,7 @@ when 53 => -- #line 202
     end if;
 
 
-when 54 => -- #line 211
+when 54 => -- #line 214
 
  if yy.value_stack (yy.tos-1).C = ' ' then
      YYVal.AST := New_AST (Operator_Type (yy.value_stack (yy.tos-2).C), Null_AST);
@@ -384,162 +389,172 @@ when 54 => -- #line 211
  end if;
 
 
-when 57 => -- #line 228
+when 57 => -- #line 231
 
  YYVal.AST := New_AST_Identifier (yy.value_stack (yy.tos-1).S);
 
 
-when 58 => -- #line 233
+when 58 => -- #line 236
 
  YYVal.AST := New_AST (yy.value_stack (yy.tos-1).S);
 
 
-when 59 => -- #line 238
+when 59 => -- #line 241
 
  YYVal.AST := New_AST (yy.value_stack (yy.tos-1).N);
 
 
-when 74 => -- #line 262
+when 74 => -- #line 265
 
  YYVal.AST := New_AST ('|', yy.value_stack (yy.tos).AST);
 
 
-when 75 => -- #line 266
+when 75 => -- #line 269
 
  YYVal.AST := Null_AST;
 
 
-when 83 => -- #line 275
+when 83 => -- #line 278
 
  YYVal.C := '<';
 
 
-when 84 => -- #line 279
+when 84 => -- #line 282
 
  YYVal.C := '>';
 
 
-when 87 => -- #line 286
+when 87 => -- #line 289
 
  YYVal.C := '!';
 
 
-when 88 => -- #line 290
+when 88 => -- #line 293
 
  YYVal.C := ' ';
 
 
-when 96 => -- #line 300
+when 96 => -- #line 303
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 97 => -- #line 304
+when 97 => -- #line 307
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 98 => -- #line 308
+when 98 => -- #line 311
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 99 => -- #line 312
+when 99 => -- #line 315
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 100 => -- #line 316
+when 100 => -- #line 319
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 101 => -- #line 320
+when 101 => -- #line 323
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 102 => -- #line 324
+when 102 => -- #line 327
 
  YYVal := (AST => Null_AST, others => <>);
 
 
-when 112 => -- #line 336
+when 112 => -- #line 339
 
  YYVal.AST := New_AST ('&', yy.value_stack (yy.tos).AST);
 
 
-when 113 => -- #line 340
+when 113 => -- #line 343
 
  YYVal.AST := Null_AST;
 
 
-when 121 => -- #line 351
+when 114 => -- #line 349
+
+ YYVal.AST := New_AST ('K', Null_AST);
+
+
+when 115 => -- #line 353
+
+ YYVal.AST := New_Ast ('!', New_AST ('K', Null_AST));
+
+
+when 121 => -- #line 362
 
  YYVal.AST := Null_AST;
 
 
-when 122 => -- #line 355
+when 122 => -- #line 366
 
  YYVal.AST := New_AST ('N', Null_AST);
 
 
-when 123 => -- #line 361
+when 123 => -- #line 372
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 124 => -- #line 366
+when 124 => -- #line 377
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 125 => -- #line 372
+when 125 => -- #line 383
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 126 => -- #line 377
+when 126 => -- #line 388
 
  YYVal := yy.value_stack (yy.tos-1);
 
 
-when 127 => -- #line 383
+when 127 => -- #line 394
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 128 => -- #line 387
+when 128 => -- #line 398
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 129 => -- #line 393
+when 129 => -- #line 404
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 130 => -- #line 397
+when 130 => -- #line 408
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 131 => -- #line 402
+when 131 => -- #line 413
 
  YYVal.C := '=';
 
 
-when 132 => -- #line 406
+when 132 => -- #line 417
 
  YYVal.C := ' ';
 
 
-when 138 => -- #line 420
+when 138 => -- #line 431
 
  YYVal.AST := New_Ast ('@', yy.value_stack (yy.tos).AST);
 
 
-when 139 => -- #line 424
+when 139 => -- #line 435
 
  YYVal.AST := New_Ast ('?', yy.value_stack (yy.tos).AST);
                pragma Style_Checks (On);

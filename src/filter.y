@@ -136,6 +136,9 @@ ValueRelCompRhs : RelativeComparisonOperator OrderedValue
 }
 ;
 KnownOpRhs : IS grouped__KNOWNs
+{
+ $$ := $2;
+}
 ;
 FuzzyStringOpRhs : CONTAINS Value | STARTS optional__WITH Value | ENDS optional__WITH Value
 ;
@@ -341,7 +344,15 @@ AND ExpressionClause
  $$.AST := Null_AST;
 }
 ;
-grouped__KNOWNs : KNOWN | UNKNOWN
+grouped__KNOWNs :
+KNOWN
+{
+ $$.AST := New_AST ('K', Null_AST);
+}
+| UNKNOWN
+{
+ $$.AST := New_Ast ('!', New_AST ('K', Null_AST));
+}
 ;
 zero_or_more__Commas_1 : Comma ValueZip | zero_or_more__Commas_1 Comma ValueZip | 
 ;
