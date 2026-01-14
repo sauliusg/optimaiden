@@ -37,6 +37,9 @@
 %%
 
 Filter : optional__Spaces Expression
+{
+    Put_Line (Image ($2.AST));
+}
 ;
 OrderedConstant : String | Number
 ;
@@ -56,12 +59,21 @@ ValueZipList : ValueZip zero_or_more__Commas_1
 ;
 Expression : ExpressionClause optional__OR
 {
- $$.AST := New_AST ('|', $1.AST, Right ($2.AST));
+ if Is_Null ($2.AST) then
+     $$.AST := $1.AST;
+ else
+     -- $$.AST := $2.AST;
+     $$.AST := New_AST ('|', $1.AST, Left ($2.AST));
+ end if;
 }
 ;
 ExpressionClause : ExpressionPhrase optional__AND
 {
- $$.AST := New_AST ('&', $1.AST, Right ($2.AST));
+ if Is_Null ($2.AST) then
+    $$.AST := $1.AST;
+ else
+    $$.AST := New_AST ('&', $1.AST, Left ($2.AST));
+ end if;
 }
 ;
 ExpressionPhrase : optional__NOT grouped__Comparisons
@@ -223,7 +235,15 @@ UnicodeHighChar : UNICODE_CHARACTER
 ;
 
 -----------------------------
-optional__OR : OR Expression | 
+optional__OR :
+OR Expression
+{
+ $$.AST := New_AST ('|', $2.AST);
+}
+|
+{
+ $$.AST := Null_AST;
+}
 ;
 grouped__ValueZips : ValueZip | ONLY ValueZipList | ALL ValueZipList | ANY ValueZipList
 ;
@@ -261,9 +281,14 @@ grouped__nones : grouped__Values_1 | ALL ValueList | ANY ValueList | ONLY ValueL
 ;
 zero_or_more__Colons : Colon ValueListEntry | zero_or_more__Colons Colon ValueListEntry | 
 ;
-optional__AND : | AND ExpressionClause
+optional__AND :
+AND ExpressionClause
 {
- $$.AST := New_AST ('&', Null_AST, $2.AST);
+ $$.AST := New_AST ('&', $2.AST);
+}
+|
+{
+ $$.AST := Null_AST;
 }
 ;
 grouped__KNOWNs : KNOWN | UNKNOWN
