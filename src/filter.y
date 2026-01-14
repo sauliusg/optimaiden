@@ -104,7 +104,7 @@ ConstantFirstComparison
 ;
 ConstantFirstComparison : OrderedConstant ValueOpRhs
 {
- $$.AST := New_AST (Operator ($2.AST), $1.AST, Right ($2.AST));
+ $$.AST := New_AST (Operator ($2.AST), $1.AST, Left ($2.AST));
 }
 | UnorderedConstant ValueEqRhs
 {
@@ -116,7 +116,7 @@ PropertyFirstComparison : Property optional__ValueOpRhs
  if Is_Null ($2.AST) then
      $$.AST := $1.AST;
  else
-     $$.AST := New_AST (Operator ($2.AST), $1.AST, Right ($2.AST));
+     $$.AST := New_AST (Operator ($2.AST), $1.AST, Left ($2.AST));
  end if;
 }
 ;
@@ -127,12 +127,12 @@ ValueOpRhs : grouped__ValueEqRhs
 ;
 ValueEqRhs : EqualityOperator Value
 {
- $$.AST := new_AST (Operator ($1.AST), Null_AST, $2.AST);
+ $$.AST := new_AST (Operator ($1.AST), $2.AST);
 }
 ;
 ValueRelCompRhs : RelativeComparisonOperator OrderedValue
 {
- $$.AST := new_AST (Operator ($1.AST), Left ($1.AST), $2.AST);
+ $$.AST := new_AST (Operator ($1.AST), $2.AST);
 }
 ;
 KnownOpRhs : IS grouped__KNOWNs
@@ -388,7 +388,15 @@ ValueEqRhs
  $$ := $1;
 }
 ;
-grouped__EqualityOperators : EqualityOperator | RelativeComparisonOperator
+grouped__EqualityOperators :
+EqualityOperator
+{
+ $$ := $1;
+}
+| RelativeComparisonOperator
+{
+ $$ := $1;
+}
 ;
 optional__equals : '='
 {
