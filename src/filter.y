@@ -41,7 +41,15 @@ Filter : optional__Spaces Expression
     Put_Line (Image ($2.AST));
 }
 ;
-OrderedConstant : String | Number
+OrderedConstant :
+String
+{
+ $$ := $1;
+}
+| Number
+{
+ $$ := $1;
+}
 ;
 UnorderedConstant : grouped__TRUEs
 ;
