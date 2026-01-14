@@ -11,6 +11,11 @@ package body Filter_AST is
       
    pragma Inline ("+");
    
+   function Kind (A : AST_Type) return AST_Kind is
+   begin
+      return A.Kind;
+   end;
+   
    function Null_AST return AST_Type is
    begin
      return (Ada.Finalization.Controlled with AST => null);

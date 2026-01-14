@@ -12,7 +12,12 @@ package Filter_AST is
    
    type Operator_Type is new Character;
    
+   type AST_Kind is (NUMBER, TEXT, VARIABLE, OPERATOR);
+   
    type AST_Type is private;
+   
+   -- Return the AST kind:
+   function Kind (A : AST_Type) return AST_Kind;
    
    -- Return empty AST, to be used as a placeholder:
    function Null_AST return AST_Type;
@@ -53,8 +58,6 @@ package Filter_AST is
    function Image (T : AST_Type) return String;
    
 private
-   
-   type AST_Kind is (NUMBER, TEXT, VARIABLE, OPERATOR);
    
    type AST_Node_Type (Kind : AST_Kind) is record
       Count : Integer := 1;

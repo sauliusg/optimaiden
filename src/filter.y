@@ -62,7 +62,6 @@ Expression : ExpressionClause optional__OR
  if Is_Null ($2.AST) then
      $$.AST := $1.AST;
  else
-     -- $$.AST := $2.AST;
      $$.AST := New_AST ('|', $1.AST, Left ($2.AST));
  end if;
 }
@@ -85,7 +84,15 @@ ExpressionPhrase : optional__NOT grouped__Comparisons
  end if;
 }
 ;
-Comparison : ConstantFirstComparison | PropertyFirstComparison
+Comparison :
+ConstantFirstComparison
+{
+ $$ := $1;
+}
+| PropertyFirstComparison
+{
+ $$ := $1;
+}
 ;
 ConstantFirstComparison : OrderedConstant ValueOpRhs
 {
@@ -98,10 +105,17 @@ ConstantFirstComparison : OrderedConstant ValueOpRhs
 ;
 PropertyFirstComparison : Property optional__ValueOpRhs
 {
- $$.AST := New_AST (Operator ($2.AST), $1.AST, Right ($2.AST));
+ if Is_Null ($2.AST) then
+     $$.AST := $1.AST;
+ else
+     $$.AST := New_AST (Operator ($2.AST), $1.AST, Right ($2.AST));
+ end if;
 }
 ;
 ValueOpRhs : grouped__ValueEqRhs
+{
+ $$ := $1;
+}
 ;
 ValueEqRhs : EqualityOperator Value
 {
@@ -273,7 +287,35 @@ grouped__Values : Value | ValueEqRhs | ValueRelCompRhs | FuzzyStringOpRhs
 ;
 zero_or_more__Commas : Comma ValueListEntry | zero_or_more__Commas Comma ValueListEntry | 
 ;
-optional__ValueOpRhs : ValueOpRhs | KnownOpRhs | FuzzyStringOpRhs | SetOpRhs | SetZipOpRhs | LengthOpRhs | 
+optional__ValueOpRhs :
+ValueOpRhs
+{
+ $$ := $1;
+}
+| KnownOpRhs
+{
+ $$ := $1;
+}
+| FuzzyStringOpRhs
+{
+ $$ := $1;
+}
+| SetOpRhs
+{
+ $$ := $1;
+}
+| SetZipOpRhs
+{
+ $$ := $1;
+}
+| LengthOpRhs
+{
+ $$ := $1;
+}
+| -- empty:
+{
+ $$.AST := Null_AST;
+}
 ;
 grouped__TRUEs : TRUE | FALSE
 ;
