@@ -451,7 +451,7 @@ when 101 => -- #line 312
 
 when 102 => -- #line 316
 
- YYVal.AST := Null_AST;
+ YYVal := (AST => Null_AST, others => <>);
 
 
 when 112 => -- #line 328

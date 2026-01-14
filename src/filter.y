@@ -314,7 +314,7 @@ ValueOpRhs
 }
 | -- empty:
 {
- $$.AST := Null_AST;
+ $$ := (AST => Null_AST, others => <>);
 }
 ;
 grouped__TRUEs : TRUE | FALSE
