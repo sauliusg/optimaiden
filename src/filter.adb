@@ -388,23 +388,35 @@ when 122 => -- #line 305
 
  YYVal.AST := New_AST ('N', Null_AST);
 
-when 126 => -- #line 312
+when 123 => -- #line 311
+
+ YYVal := yy.value_stack (yy.tos);
+
+when 124 => -- #line 316
+
+ YYVal := yy.value_stack (yy.tos);
+
+when 125 => -- #line 322
+
+ YYVal := yy.value_stack (yy.tos);
+
+when 126 => -- #line 327
 
  YYVal := yy.value_stack (yy.tos-1);
 
-when 131 => -- #line 321
+when 131 => -- #line 336
 
  YYVal.C := '=';
 
-when 132 => -- #line 325
+when 132 => -- #line 340
 
  YYVal.C := ' ';
 
-when 138 => -- #line 339
+when 138 => -- #line 354
 
  YYVal.AST := New_Ast ('@', yy.value_stack (yy.tos).AST);
 
-when 139 => -- #line 343
+when 139 => -- #line 358
 
  YYVal.AST := New_Ast ('?', yy.value_stack (yy.tos).AST);
                pragma Style_Checks (On);

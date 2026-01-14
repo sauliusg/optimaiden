@@ -306,9 +306,24 @@ optional__NOT :
  $$.AST := New_AST ('N', Null_AST);
 }
 ;
-grouped__OrderedConstants : OrderedConstant | Property
+grouped__OrderedConstants :
+OrderedConstant
+{
+ $$ := $1;
+}
+|
+Property
+{
+ $$ := $1;
+}
 ;
-grouped__Comparisons : Comparison | OpeningBrace Expression ClosingBrace
+grouped__Comparisons :
+Comparison
+{
+ $$ := $1;
+}
+|
+OpeningBrace Expression ClosingBrace
 {
  $$ := $2;
 }
