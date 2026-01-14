@@ -320,12 +320,12 @@ when 15 => -- #line 101
 
 when 16 => -- #line 106
 
- YYVal.AST := New_AST ('O', yy.value_stack (yy.tos-1).AST, yy.value_stack (yy.tos).AST);
+ YYVal.AST := New_AST (Operator (yy.value_stack (yy.tos).AST), yy.value_stack (yy.tos-1).AST, Right (yy.value_stack (yy.tos).AST));
 
 
 when 17 => -- #line 110
 
- YYVal.AST := New_AST ('U', yy.value_stack (yy.tos-1).AST, yy.value_stack (yy.tos).AST);
+ YYVal.AST := New_AST (Operator (yy.value_stack (yy.tos).AST), yy.value_stack (yy.tos-1).AST, Left (yy.value_stack (yy.tos).AST));
 
 
 when 18 => -- #line 115
@@ -504,22 +504,32 @@ when 126 => -- #line 377
  YYVal := yy.value_stack (yy.tos-1);
 
 
-when 131 => -- #line 386
+when 127 => -- #line 383
+
+ YYVal := yy.value_stack (yy.tos);
+
+
+when 128 => -- #line 387
+
+ YYVal := yy.value_stack (yy.tos);
+
+
+when 131 => -- #line 394
 
  YYVal.C := '=';
 
 
-when 132 => -- #line 390
+when 132 => -- #line 398
 
  YYVal.C := ' ';
 
 
-when 138 => -- #line 404
+when 138 => -- #line 412
 
  YYVal.AST := New_Ast ('@', yy.value_stack (yy.tos).AST);
 
 
-when 139 => -- #line 408
+when 139 => -- #line 416
 
  YYVal.AST := New_Ast ('?', yy.value_stack (yy.tos).AST);
                pragma Style_Checks (On);

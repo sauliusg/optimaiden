@@ -104,11 +104,11 @@ ConstantFirstComparison
 ;
 ConstantFirstComparison : OrderedConstant ValueOpRhs
 {
- $$.AST := New_AST ('O', $1.AST, $2.AST);
+ $$.AST := New_AST (Operator ($2.AST), $1.AST, Right ($2.AST));
 }
 | UnorderedConstant ValueEqRhs
 {
- $$.AST := New_AST ('U', $1.AST, $2.AST);
+ $$.AST := New_AST (Operator ($2.AST), $1.AST, Left ($2.AST));
 }
 ;
 PropertyFirstComparison : Property optional__ValueOpRhs
@@ -378,7 +378,15 @@ OpeningBrace Expression ClosingBrace
  $$ := $2;
 }
 ;
-grouped__ValueEqRhs : ValueEqRhs | ValueRelCompRhs
+grouped__ValueEqRhs :
+ValueEqRhs
+{
+ $$ := $1;
+}
+| ValueRelCompRhs
+{
+ $$ := $1;
+}
 ;
 grouped__EqualityOperators : EqualityOperator | RelativeComparisonOperator
 ;
