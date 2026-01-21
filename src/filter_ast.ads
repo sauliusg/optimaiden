@@ -12,7 +12,7 @@ package Filter_AST is
    
    type Operator_Type is new Character;
    
-   type AST_Kind is (NUMBER, TEXT, VARIABLE, OPERATOR);
+   type AST_Kind is (NUMBER, TEXT, TRUE_OR_FALSE, VARIABLE, OPERATOR);
    
    type AST_Type is private;
    
@@ -48,6 +48,9 @@ package Filter_AST is
    --  Construct AST leaf representing a numeric constant:
    function New_AST (X : Float) return AST_Type;
 
+   --  Construct AST leaf True and False values:
+   function New_AST (B : Boolean) return AST_Type;
+
    --  Construct AST node for operator with one operand:
    function New_AST (Op : Operator_Type; Arg : AST_Type) return AST_Type;
    
@@ -66,6 +69,8 @@ private
             Value : Float;
          when TEXT =>
             Text_Value : Unbounded_String;
+         when TRUE_OR_FALSE =>
+            Bool_Value : Boolean;
          when VARIABLE =>
             Identifier : Unbounded_String;
          when OPERATOR =>

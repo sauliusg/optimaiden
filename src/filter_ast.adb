@@ -90,7 +90,20 @@ package body Filter_AST is
                 )
              );
    end;
-  
+   
+   function New_AST (B : Boolean) return AST_Type is
+   begin
+      return
+        (Ada.Finalization.Controlled with
+         AST => new AST_Node_Type'
+           (
+            Kind => TRUE_OR_FALSE,
+            Bool_Value => B,
+            others => <>
+           )
+        );
+   end;
+
    function New_AST (Op : Operator_Type; Arg : AST_Type) return AST_Type is
    begin
       return
@@ -132,6 +145,8 @@ package body Filter_AST is
                when NUMBER   => T.AST.Value'Image,
                when VARIABLE => To_String (T.AST.Identifier),
                when TEXT     => """" & To_String (T.AST.Text_Value) & """",
+               when TRUE_OR_FALSE =>
+                                T.AST.Bool_Value'Image,
                when OPERATOR => T.AST.Op'Image & ": " &
                                 Image (T.AST.Left) & ", " & 
                                 Image (T.AST.Right)

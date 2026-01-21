@@ -52,8 +52,14 @@ String
 }
 ;
 UnorderedConstant : grouped__TRUEs
+{
+ $$ := $1;
+}
 ;
 Value : grouped__UnorderedConstants
+{
+ $$ := $1;
+}
 ;
 OrderedValue : grouped__OrderedConstants
 ;
@@ -326,7 +332,15 @@ ValueOpRhs
  $$ := (AST => Null_AST, others => <>);
 }
 ;
-grouped__TRUEs : TRUE | FALSE
+grouped__TRUEs :
+TRUE
+{
+ $$.AST := New_AST (True);
+}
+| FALSE
+{
+ $$.AST := New_AST (False);
+}
 ;
 grouped__nones : grouped__Values_1 | ALL ValueList | ANY ValueList | ONLY ValueList
 ;
@@ -356,7 +370,15 @@ KNOWN
 ;
 zero_or_more__Commas_1 : Comma ValueZip | zero_or_more__Commas_1 Comma ValueZip | 
 ;
-grouped__UnorderedConstants : UnorderedConstant | OrderedValue
+grouped__UnorderedConstants :
+UnorderedConstant
+{
+ $$ := $1;
+}
+| OrderedValue
+{
+ $$ := $1;
+}
 ;
 optional__NOT :
 {
