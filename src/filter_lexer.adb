@@ -416,7 +416,7 @@ package body filter_lexer is
             
               declare
                   BS : constant Character := '\';
-                  C  : Character := filter_lexer_dfa.yytext(1);
+                  C  : constant Character := filter_lexer_dfa.yytext(1);
               begin
                  yylval.C := C;
                  case C is
