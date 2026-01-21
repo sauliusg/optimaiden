@@ -66,6 +66,9 @@ OrderedValue : grouped__OrderedConstants
 ValueListEntry : grouped__Values
 ;
 ValueList : ValueListEntry zero_or_more__Commas
+{
+ $$.AST := New_AST (',', $1.AST, $2.AST);
+}
 ;
 ValueZip : ValueListEntry Colon ValueListEntry zero_or_more__Colons
 ;
@@ -300,7 +303,18 @@ optional__exclamation_mark : '!'
 ;
 grouped__Values : Value | ValueEqRhs | ValueRelCompRhs | FuzzyStringOpRhs
 ;
-zero_or_more__Commas : Comma ValueListEntry | zero_or_more__Commas Comma ValueListEntry | 
+zero_or_more__Commas : Comma ValueListEntry
+{
+ $$ := $2;
+}
+| zero_or_more__Commas Comma ValueListEntry
+{
+ $$.AST := New_AST (',', $1.AST, $3.AST);
+}
+|
+{
+ $$.AST := Null_AST;
+}
 ;
 optional__ValueOpRhs :
 ValueOpRhs
@@ -342,7 +356,23 @@ TRUE
  $$.AST := New_AST (False);
 }
 ;
-grouped__nones : grouped__Values_1 | ALL ValueList | ANY ValueList | ONLY ValueList
+grouped__nones :
+grouped__Values_1
+{
+ $$ := $1;
+}
+| ALL ValueList
+{
+ $$.AST := New_AST ('A', $2.AST);
+}
+| ANY ValueList
+{
+ $$.AST := New_AST ('Y', $2.AST);
+}
+| ONLY ValueList
+{
+ $$.AST := New_AST ('O', $2.AST);
+}
 ;
 zero_or_more__Colons_1 : Colon Property | zero_or_more__Colons_1 Colon Property | 
 ;
