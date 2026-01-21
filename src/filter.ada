@@ -414,57 +414,57 @@ when 75 => -- #line 269
  YYVal.AST := Null_AST;
 
 
-when 83 => -- #line 278
+when 80 => -- #line 276
 
  YYVal.C := '<';
 
 
-when 84 => -- #line 282
+when 81 => -- #line 280
 
  YYVal.C := '>';
 
 
-when 87 => -- #line 289
+when 84 => -- #line 287
 
  YYVal.C := '!';
 
 
-when 88 => -- #line 293
+when 85 => -- #line 291
 
  YYVal.C := ' ';
 
 
-when 96 => -- #line 303
+when 93 => -- #line 301
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 97 => -- #line 307
+when 94 => -- #line 305
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 98 => -- #line 311
+when 95 => -- #line 309
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 99 => -- #line 315
+when 96 => -- #line 313
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 100 => -- #line 319
+when 97 => -- #line 317
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 101 => -- #line 323
+when 98 => -- #line 321
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 102 => -- #line 327
+when 99 => -- #line 325
 
  YYVal := (AST => Null_AST, others => <>);
 

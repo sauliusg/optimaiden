@@ -272,8 +272,6 @@ OR Expression
 ;
 grouped__ValueZips : ValueZip | ONLY ValueZipList | ALL ValueZipList | ANY ValueZipList
 ;
-zero_or_more__Colons_1 : Colon Property | zero_or_more__Colons_1 Colon Property | 
-;
 less_or_more : '<'
 {
  $$.C := '<';
@@ -331,6 +329,8 @@ ValueOpRhs
 grouped__TRUEs : TRUE | FALSE
 ;
 grouped__nones : grouped__Values_1 | ALL ValueList | ANY ValueList | ONLY ValueList
+;
+zero_or_more__Colons_1 : Colon Property | zero_or_more__Colons_1 Colon Property | 
 ;
 zero_or_more__Colons : Colon ValueListEntry | zero_or_more__Colons Colon ValueListEntry | 
 ;
