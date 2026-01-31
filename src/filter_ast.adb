@@ -133,7 +133,9 @@ package body Filter_AST is
         );
    end;
    
-   function Image (T : AST_Type) return String is
+   function Image (T : AST_Type; Indent : Integer) return String is
+      Shift  : constant Integer := 4;
+      Spaces : String (1 .. Indent) := (others => ' ');
    begin
       if T.AST = null then
          return "NULL";
@@ -147,20 +149,27 @@ package body Filter_AST is
                when TEXT     => """" & To_String (T.AST.Text_Value) & """",
                when TRUE_OR_FALSE =>
                                 T.AST.Bool_Value'Image,
-               when OPERATOR => T.AST.Op'Image & ": " &
-                                Image (T.AST.Left) & ", " & 
-                                Image (T.AST.Right)
+               when OPERATOR => T.AST.Op'Image & ": " & ASCII.LF &
+                                Image (T.AST.Left, Indent + Shift) & ASCII.LF & 
+                                Image (T.AST.Right, Indent + Shift)
            );
       begin
          case T.AST.Kind is
             when OPERATOR => 
-               return "(" & T.AST.Kind'Image & " " & Node_Value & ")";
+               return
+                 Spaces & "(" & T.AST.Kind'Image & " " & Node_Value & 
+                 ASCII.LF & Spaces & ")";
             when others =>
-               return T.AST.Kind'Image & ": " & Node_Value;
+               return Spaces & T.AST.Kind'Image & ": " & Node_Value;
          end case;
       end;
    end;
-   
+            
+   function Image (T : AST_Type) return String is
+   begin
+      return Image (T, 0);
+   end;
+
    procedure Adjust (T : in out AST_Type) is
    begin
       pragma Debug (Put_Line ("Adjust called"));
