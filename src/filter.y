@@ -64,6 +64,9 @@ Value : grouped__UnorderedConstants
 OrderedValue : grouped__OrderedConstants
 ;
 ValueListEntry : grouped__Values
+{
+ $$ := $1;
+}
 ;
 ValueList : ValueListEntry zero_or_more__Commas
 {
@@ -154,8 +157,14 @@ FuzzyStringOpRhs : CONTAINS Value | STARTS optional__WITH Value | ENDS optional_
 SetOpRhs : HAS grouped__nones
 ;
 SetZipOpRhs : PropertyZipAddon HAS grouped__ValueZips
+{
+ $$ := New_AST ('H', $1.AST, $3.AST);
+}
 ;
 PropertyZipAddon : Colon Property zero_or_more__Colons_1
+{
+ $$ := New_AST (':', $2.AST, $3.AST);
+}
 ;
 LengthOpRhs : LENGTH optional__Operator Value
 ;
@@ -301,7 +310,23 @@ optional__exclamation_mark : '!'
  $$ := (Kind => YY_CHR, C => ' ');
 }
 ;
-grouped__Values : Value | ValueEqRhs | ValueRelCompRhs | FuzzyStringOpRhs
+grouped__Values :
+Value
+{
+ $$ := $1;
+}
+| ValueEqRhs
+{
+ $$ := $1;
+}
+| ValueRelCompRhs
+{
+ $$ := $1;
+}
+| FuzzyStringOpRhs
+{
+ $$ := $1;
+}
 ;
 zero_or_more__Commas : Comma ValueListEntry
 {
@@ -374,9 +399,32 @@ grouped__Values_1
  $$ := New_AST ('O', $2.AST);
 }
 ;
-zero_or_more__Colons_1 : Colon Property | zero_or_more__Colons_1 Colon Property | 
+zero_or_more__Colons_1 :
+Colon Property
+{
+ $$ := New_AST (':', $2.AST);    
+}
+| zero_or_more__Colons_1 Colon Property
+{
+ $$ := New_AST (':', $1.AST, Left ($2.AST));
+}
+| 
+{
+ $$ := Null_AST;
+}
 ;
-zero_or_more__Colons : Colon ValueListEntry | zero_or_more__Colons Colon ValueListEntry | 
+zero_or_more__Colons : Colon ValueListEntry
+{
+ $$ := New_AST (':', $2.AST);
+}
+| zero_or_more__Colons Colon ValueListEntry
+{
+ $$ := New_AST (':', $1.AST, Left ($2.AST));
+}
+|
+{
+ $$ := Null_AST;
+}
 ;
 optional__AND :
 AND ExpressionClause
