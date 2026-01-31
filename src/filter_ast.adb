@@ -13,7 +13,7 @@ package body Filter_AST is
    
    function Kind (A : AST_Type) return AST_Kind is
    begin
-      return A.Kind;
+      return A.AST.Kind;
    end;
    
    function Null_AST return AST_Type is
