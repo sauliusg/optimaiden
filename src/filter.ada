@@ -5,10 +5,69 @@ procedure yyparse;
 end Filter;
 
 with Filter_Goto, Filter_Tokens, Filter_Shift_Reduce, Filter_AST;
+with Ada.Strings.Unbounded;
+with YYStype_Definition;
+
 use Filter_Goto, Filter_Tokens, Filter_Shift_Reduce, Filter_AST;
+use Ada.Strings.Unbounded;
+use YYStype_Definition;
+
 package body Filter is
 
     Parsed_Expression : Filter_AST.AST_Type;
+
+    function Null_AST return YYStype_Definition.YYSType is
+    begin
+        return (Kind => YY_AST, AST => Null_AST);
+    end;
+
+    function New_AST_Identifier (Name : String)
+        return YYSType_Definition.YYSType is
+    begin
+        return (Kind => YY_AST, AST => New_AST_Identifier (Name));
+    end;
+  
+    function New_AST_Identifier (Name : Unbounded_String)
+        return YYSType_Definition.YYSType is
+    begin
+        return (Kind => YY_AST, AST => New_AST_Identifier (Name));
+    end;
+
+    function New_AST (Value : String)
+        return YYSType_Definition.YYSType is
+    begin
+        return (Kind => YY_AST, AST => New_Ast (Value));
+    end;
+  
+    function New_AST (Value : Unbounded_String)
+        return YYSType_Definition.YYSType is
+    begin
+        return (Kind => YY_AST, AST => New_Ast (Value));
+    end;
+  
+    function New_AST (X : Float)
+        return YYSType_Definition.YYSType is
+    begin
+        return (Kind => YY_AST, AST => New_Ast (X));
+    end;
+
+    function New_AST (B : Boolean)
+        return YYSType_Definition.YYSType is
+    begin
+        return (Kind => YY_AST, AST => New_Ast (B));
+    end;
+
+    function New_AST (Op : Operator_Type; Arg : AST_Type)
+        return YYStype_Definition.YYSType is
+    begin
+        return (Kind => YY_AST, AST => New_AST (Op, Arg));
+    end;
+
+    function New_AST (Op : Operator_Type; Arg1, Arg2 : AST_Type)
+        return YYStype_Definition.YYSType is
+    begin
+        return (Kind => YY_AST, AST => New_AST (Op, Arg1, Arg2));
+    end;
 
 
    procedure YYParse is
@@ -293,33 +352,33 @@ when 5 => -- #line 60
 
 when 8 => -- #line 69
 
- YYVal.AST := New_AST (',', yy.value_stack (yy.tos-1).AST, yy.value_stack (yy.tos).AST);
+ YYVal := New_AST (',', yy.value_stack (yy.tos-1).AST, yy.value_stack (yy.tos).AST);
 
 
 when 11 => -- #line 78
 
  if Is_Null (yy.value_stack (yy.tos).AST) then
-     YYVal.AST := yy.value_stack (yy.tos-1).AST;
+     YYVal := yy.value_stack (yy.tos-1);
  else
-     YYVal.AST := New_AST ('|', yy.value_stack (yy.tos-1).AST, Left (yy.value_stack (yy.tos).AST));
+     YYVal := New_AST ('|', yy.value_stack (yy.tos-1).AST, Left (yy.value_stack (yy.tos).AST));
  end if;
 
 
 when 12 => -- #line 87
 
  if Is_Null (yy.value_stack (yy.tos).AST) then
-    YYVal.AST := yy.value_stack (yy.tos-1).AST;
+    YYVal := yy.value_stack (yy.tos-1);
  else
-    YYVal.AST := New_AST ('&', yy.value_stack (yy.tos-1).AST, Left (yy.value_stack (yy.tos).AST));
+    YYVal := New_AST ('&', yy.value_stack (yy.tos-1).AST, Left (yy.value_stack (yy.tos).AST));
  end if;
 
 
 when 13 => -- #line 96
 
  if Is_Null (yy.value_stack (yy.tos-1).AST) then
-     YYVal.AST := yy.value_stack (yy.tos).AST;
+     YYVal := yy.value_stack (yy.tos);
  else
-     YYVal.AST := new_AST (Operator (yy.value_stack (yy.tos-1).AST), yy.value_stack (yy.tos).AST);
+     YYVal := new_AST (Operator (yy.value_stack (yy.tos-1).AST), yy.value_stack (yy.tos).AST);
  end if;
 
 
@@ -335,20 +394,20 @@ when 15 => -- #line 110
 
 when 16 => -- #line 115
 
- YYVal.AST := New_AST (Operator (yy.value_stack (yy.tos).AST), yy.value_stack (yy.tos-1).AST, Left (yy.value_stack (yy.tos).AST));
+ YYVal := New_AST (Operator (yy.value_stack (yy.tos).AST), yy.value_stack (yy.tos-1).AST, Left (yy.value_stack (yy.tos).AST));
 
 
 when 17 => -- #line 119
 
- YYVal.AST := New_AST (Operator (yy.value_stack (yy.tos).AST), yy.value_stack (yy.tos-1).AST, Left (yy.value_stack (yy.tos).AST));
+ YYVal := New_AST (Operator (yy.value_stack (yy.tos).AST), yy.value_stack (yy.tos-1).AST, Left (yy.value_stack (yy.tos).AST));
 
 
 when 18 => -- #line 124
 
  if Is_Null (yy.value_stack (yy.tos).AST) then
-     YYVal.AST := yy.value_stack (yy.tos-1).AST;
+     YYVal := yy.value_stack (yy.tos-1);
  else
-     YYVal.AST := New_AST (Operator (yy.value_stack (yy.tos).AST), yy.value_stack (yy.tos-1).AST, Left (yy.value_stack (yy.tos).AST));
+     YYVal := New_AST (Operator (yy.value_stack (yy.tos).AST), yy.value_stack (yy.tos-1).AST, Left (yy.value_stack (yy.tos).AST));
  end if;
 
 
@@ -359,12 +418,12 @@ when 19 => -- #line 133
 
 when 20 => -- #line 138
 
- YYVal.AST := new_AST (Operator (yy.value_stack (yy.tos-1).AST), yy.value_stack (yy.tos).AST);
+ YYVal := new_AST (Operator (yy.value_stack (yy.tos-1).AST), yy.value_stack (yy.tos).AST);
 
 
 when 21 => -- #line 143
 
- YYVal.AST := new_AST (Operator (yy.value_stack (yy.tos-1).AST), yy.value_stack (yy.tos).AST);
+ YYVal := new_AST (Operator (yy.value_stack (yy.tos-1).AST), yy.value_stack (yy.tos).AST);
 
 
 when 22 => -- #line 148
@@ -379,74 +438,74 @@ when 30 => -- #line 163
 
 when 31 => -- #line 167
 
- YYVal.AST := new_AST ('.', yy.value_stack (yy.tos-2).AST, yy.value_stack (yy.tos).AST);
+ YYVal := new_AST ('.', yy.value_stack (yy.tos-2).AST, yy.value_stack (yy.tos).AST);
 
 
 when 53 => -- #line 214
 
     if yy.value_stack (yy.tos-2).C = ' ' then
-        YYVal.AST := New_Ast ('=', Null_AST);
+        YYVal := New_Ast ('=', Null_AST);
     else
-        YYVal.AST := New_Ast ('!', Null_AST);
+        YYVal := New_Ast ('!', Null_AST);
     end if;
 
 
 when 54 => -- #line 223
 
  if yy.value_stack (yy.tos-1).C = ' ' then
-     YYVal.AST := New_AST (Operator_Type (yy.value_stack (yy.tos-2).C), Null_AST);
+     YYVal := New_AST (Operator_Type (yy.value_stack (yy.tos-2).C), Null_AST);
  else
      if yy.value_stack (yy.tos-2).C = '<' then
-         YYVal.AST := New_AST ('L', Null_AST);
+         YYVal := New_AST ('L', Null_AST);
      else
-         YYVal.AST := New_AST ('G', Null_AST);
+         YYVal := New_AST ('G', Null_AST);
      end if;
  end if;
 
 
 when 57 => -- #line 240
 
- YYVal.AST := New_AST_Identifier (yy.value_stack (yy.tos-1).S);
+ YYVal := New_AST_Identifier (yy.value_stack (yy.tos-1).S);
 
 
 when 58 => -- #line 245
 
- YYVal.AST := New_AST (yy.value_stack (yy.tos-1).S);
+ YYVal := New_AST (yy.value_stack (yy.tos-1).S);
 
 
 when 59 => -- #line 250
 
- YYVal.AST := New_AST (yy.value_stack (yy.tos-1).N);
+ YYVal := New_AST (yy.value_stack (yy.tos-1).N);
 
 
 when 74 => -- #line 274
 
- YYVal.AST := New_AST ('|', yy.value_stack (yy.tos).AST);
+ YYVal := New_AST ('|', yy.value_stack (yy.tos).AST);
 
 
 when 75 => -- #line 278
 
- YYVal.AST := Null_AST;
+ YYVal := Null_AST;
 
 
 when 80 => -- #line 285
 
- YYVal.C := '<';
+ YYVal := (Kind => YY_CHR, C => '<');
 
 
 when 81 => -- #line 289
 
- YYVal.C := '>';
+ YYVal := (Kind => YY_CHR, C => '>');
 
 
 when 84 => -- #line 296
 
- YYVal.C := '!';
+ YYVal := (Kind => YY_CHR, C => '!');
 
 
 when 85 => -- #line 300
 
- YYVal.C := ' ';
+ YYVal := (Kind => YY_CHR, C => ' ');
 
 
 when 90 => -- #line 307
@@ -456,12 +515,12 @@ when 90 => -- #line 307
 
 when 91 => -- #line 311
 
- YYVal.AST := New_AST (',', yy.value_stack (yy.tos-2).AST, yy.value_stack (yy.tos).AST);
+ YYVal := New_AST (',', yy.value_stack (yy.tos-2).AST, yy.value_stack (yy.tos).AST);
 
 
 when 92 => -- #line 315
 
- YYVal.AST := Null_AST;
+ YYVal := Null_AST;
 
 
 when 93 => -- #line 321
@@ -496,17 +555,17 @@ when 98 => -- #line 341
 
 when 99 => -- #line 345
 
- YYVal := (AST => Null_AST, others => <>);
+ YYVal := Null_AST;
 
 
 when 100 => -- #line 351
 
- YYVal.AST := New_AST (True);
+ YYVal := New_AST (True);
 
 
 when 101 => -- #line 355
 
- YYVal.AST := New_AST (False);
+ YYVal := New_AST (False);
 
 
 when 102 => -- #line 361
@@ -516,37 +575,37 @@ when 102 => -- #line 361
 
 when 103 => -- #line 365
 
- YYVal.AST := New_AST ('A', yy.value_stack (yy.tos).AST);
+ YYVal := New_AST ('A', yy.value_stack (yy.tos).AST);
 
 
 when 104 => -- #line 369
 
- YYVal.AST := New_AST ('Y', yy.value_stack (yy.tos).AST);
+ YYVal := New_AST ('Y', yy.value_stack (yy.tos).AST);
 
 
 when 105 => -- #line 373
 
- YYVal.AST := New_AST ('O', yy.value_stack (yy.tos).AST);
+ YYVal := New_AST ('O', yy.value_stack (yy.tos).AST);
 
 
 when 112 => -- #line 383
 
- YYVal.AST := New_AST ('&', yy.value_stack (yy.tos).AST);
+ YYVal := New_AST ('&', yy.value_stack (yy.tos).AST);
 
 
 when 113 => -- #line 387
 
- YYVal.AST := Null_AST;
+ YYVal := Null_AST;
 
 
 when 114 => -- #line 393
 
- YYVal.AST := New_AST ('K', Null_AST);
+ YYVal := New_AST ('K', Null_AST);
 
 
 when 115 => -- #line 397
 
- YYVal.AST := New_Ast ('!', New_AST ('K', Null_AST));
+ YYVal := New_Ast ('!', New_AST ('K', Null_AST));
 
 
 when 119 => -- #line 405
@@ -561,12 +620,12 @@ when 120 => -- #line 409
 
 when 121 => -- #line 414
 
- YYVal.AST := Null_AST;
+ YYVal := Null_AST;
 
 
 when 122 => -- #line 418
 
- YYVal.AST := New_AST ('N', Null_AST);
+ YYVal := New_AST ('N', Null_AST);
 
 
 when 123 => -- #line 424
@@ -621,12 +680,12 @@ when 132 => -- #line 469
 
 when 138 => -- #line 483
 
- YYVal.AST := New_Ast ('@', yy.value_stack (yy.tos).AST);
+ YYVal := New_Ast ('@', yy.value_stack (yy.tos).AST);
 
 
 when 139 => -- #line 487
 
- YYVal.AST := New_Ast ('?', yy.value_stack (yy.tos).AST);
+ YYVal := New_Ast ('?', yy.value_stack (yy.tos).AST);
                pragma Style_Checks (On);
 
                when others => null;
@@ -652,4 +711,5 @@ when 139 => -- #line 487
       end loop;
 
    end YYParse;
+
 end Filter;

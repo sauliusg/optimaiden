@@ -67,7 +67,7 @@ ValueListEntry : grouped__Values
 ;
 ValueList : ValueListEntry zero_or_more__Commas
 {
- $$.AST := New_AST (',', $1.AST, $2.AST);
+ $$ := New_AST (',', $1.AST, $2.AST);
 }
 ;
 ValueZip : ValueListEntry Colon ValueListEntry zero_or_more__Colons
@@ -77,27 +77,27 @@ ValueZipList : ValueZip zero_or_more__Commas_1
 Expression : ExpressionClause optional__OR
 {
  if Is_Null ($2.AST) then
-     $$.AST := $1.AST;
+     $$ := $1;
  else
-     $$.AST := New_AST ('|', $1.AST, Left ($2.AST));
+     $$ := New_AST ('|', $1.AST, Left ($2.AST));
  end if;
 }
 ;
 ExpressionClause : ExpressionPhrase optional__AND
 {
  if Is_Null ($2.AST) then
-    $$.AST := $1.AST;
+    $$ := $1;
  else
-    $$.AST := New_AST ('&', $1.AST, Left ($2.AST));
+    $$ := New_AST ('&', $1.AST, Left ($2.AST));
  end if;
 }
 ;
 ExpressionPhrase : optional__NOT grouped__Comparisons
 {
  if Is_Null ($1.AST) then
-     $$.AST := $2.AST;
+     $$ := $2;
  else
-     $$.AST := new_AST (Operator ($1.AST), $2.AST);
+     $$ := new_AST (Operator ($1.AST), $2.AST);
  end if;
 }
 ;
@@ -113,19 +113,19 @@ ConstantFirstComparison
 ;
 ConstantFirstComparison : OrderedConstant ValueOpRhs
 {
- $$.AST := New_AST (Operator ($2.AST), $1.AST, Left ($2.AST));
+ $$ := New_AST (Operator ($2.AST), $1.AST, Left ($2.AST));
 }
 | UnorderedConstant ValueEqRhs
 {
- $$.AST := New_AST (Operator ($2.AST), $1.AST, Left ($2.AST));
+ $$ := New_AST (Operator ($2.AST), $1.AST, Left ($2.AST));
 }
 ;
 PropertyFirstComparison : Property optional__ValueOpRhs
 {
  if Is_Null ($2.AST) then
-     $$.AST := $1.AST;
+     $$ := $1;
  else
-     $$.AST := New_AST (Operator ($2.AST), $1.AST, Left ($2.AST));
+     $$ := New_AST (Operator ($2.AST), $1.AST, Left ($2.AST));
  end if;
 }
 ;
@@ -136,12 +136,12 @@ ValueOpRhs : grouped__ValueEqRhs
 ;
 ValueEqRhs : EqualityOperator Value
 {
- $$.AST := new_AST (Operator ($1.AST), $2.AST);
+ $$ := new_AST (Operator ($1.AST), $2.AST);
 }
 ;
 ValueRelCompRhs : RelativeComparisonOperator OrderedValue
 {
- $$.AST := new_AST (Operator ($1.AST), $2.AST);
+ $$ := new_AST (Operator ($1.AST), $2.AST);
 }
 ;
 KnownOpRhs : IS grouped__KNOWNs
@@ -165,7 +165,7 @@ Property : Identifier
 }
 | Property Dot Identifier
 {
- $$.AST := new_AST ('.', $1.AST, $3.AST);
+ $$ := new_AST ('.', $1.AST, $3.AST);
 }
 ;
 OpeningBrace : '(' optional__Spaces
@@ -213,21 +213,21 @@ Operator : grouped__EqualityOperators
 EqualityOperator : optional__exclamation_mark '=' optional__Spaces
 {
     if $1.C = ' ' then
-        $$.AST := New_Ast ('=', Null_AST);
+        $$ := New_Ast ('=', Null_AST);
     else
-        $$.AST := New_Ast ('!', Null_AST);
+        $$ := New_Ast ('!', Null_AST);
     end if;
 }
 ;
 RelativeComparisonOperator : less_or_more optional__equals optional__Spaces
 {
  if $2.C = ' ' then
-     $$.AST := New_AST (Operator_Type ($1.C), Null_AST);
+     $$ := New_AST (Operator_Type ($1.C), Null_AST);
  else
      if $1.C = '<' then
-         $$.AST := New_AST ('L', Null_AST);
+         $$ := New_AST ('L', Null_AST);
      else
-         $$.AST := New_AST ('G', Null_AST);
+         $$ := New_AST ('G', Null_AST);
      end if;
  end if;
 }
@@ -238,17 +238,17 @@ FALSE : FALSE_TOKEN optional__Spaces
 ;
 Identifier : IDENTIFIER_TOKEN optional__Spaces
 {
- $$.AST := New_AST_Identifier ($1.S);
+ $$ := New_AST_Identifier ($1.S);
 }
 ;
 String : STRING_TOKEN optional__Spaces
 {
- $$.AST := New_AST ($1.S);
+ $$ := New_AST ($1.S);
 }
 ;
 Number : NUMBER_TOKEN optional__Spaces
 {
- $$.AST := New_AST ($1.N);
+ $$ := New_AST ($1.N);
 }
 ;
 tab : HT_TOKEN
@@ -272,33 +272,33 @@ UnicodeHighChar : UNICODE_CHARACTER
 optional__OR :
 OR Expression
 {
- $$.AST := New_AST ('|', $2.AST);
+ $$ := New_AST ('|', $2.AST);
 }
 |
 {
- $$.AST := Null_AST;
+ $$ := Null_AST;
 }
 ;
 grouped__ValueZips : ValueZip | ONLY ValueZipList | ALL ValueZipList | ANY ValueZipList
 ;
 less_or_more : '<'
 {
- $$.C := '<';
+ $$ := (Kind => YY_CHR, C => '<');
 }
 | '>'
 {
- $$.C := '>';
+ $$ := (Kind => YY_CHR, C => '>');
 }
 ;
 optional__Operator : Operator | 
 ;
 optional__exclamation_mark : '!'
 {
- $$.C := '!';
+ $$ := (Kind => YY_CHR, C => '!');
 }
 |
 {
- $$.C := ' ';
+ $$ := (Kind => YY_CHR, C => ' ');
 }
 ;
 grouped__Values : Value | ValueEqRhs | ValueRelCompRhs | FuzzyStringOpRhs
@@ -309,11 +309,11 @@ zero_or_more__Commas : Comma ValueListEntry
 }
 | zero_or_more__Commas Comma ValueListEntry
 {
- $$.AST := New_AST (',', $1.AST, $3.AST);
+ $$ := New_AST (',', $1.AST, $3.AST);
 }
 |
 {
- $$.AST := Null_AST;
+ $$ := Null_AST;
 }
 ;
 optional__ValueOpRhs :
@@ -343,17 +343,17 @@ ValueOpRhs
 }
 | -- empty:
 {
- $$ := (AST => Null_AST, others => <>);
+ $$ := Null_AST;
 }
 ;
 grouped__TRUEs :
 TRUE
 {
- $$.AST := New_AST (True);
+ $$ := New_AST (True);
 }
 | FALSE
 {
- $$.AST := New_AST (False);
+ $$ := New_AST (False);
 }
 ;
 grouped__nones :
@@ -363,15 +363,15 @@ grouped__Values_1
 }
 | ALL ValueList
 {
- $$.AST := New_AST ('A', $2.AST);
+ $$ := New_AST ('A', $2.AST);
 }
 | ANY ValueList
 {
- $$.AST := New_AST ('Y', $2.AST);
+ $$ := New_AST ('Y', $2.AST);
 }
 | ONLY ValueList
 {
- $$.AST := New_AST ('O', $2.AST);
+ $$ := New_AST ('O', $2.AST);
 }
 ;
 zero_or_more__Colons_1 : Colon Property | zero_or_more__Colons_1 Colon Property | 
@@ -381,21 +381,21 @@ zero_or_more__Colons : Colon ValueListEntry | zero_or_more__Colons Colon ValueLi
 optional__AND :
 AND ExpressionClause
 {
- $$.AST := New_AST ('&', $2.AST);
+ $$ := New_AST ('&', $2.AST);
 }
 |
 {
- $$.AST := Null_AST;
+ $$ := Null_AST;
 }
 ;
 grouped__KNOWNs :
 KNOWN
 {
- $$.AST := New_AST ('K', Null_AST);
+ $$ := New_AST ('K', Null_AST);
 }
 | UNKNOWN
 {
- $$.AST := New_Ast ('!', New_AST ('K', Null_AST));
+ $$ := New_Ast ('!', New_AST ('K', Null_AST));
 }
 ;
 zero_or_more__Commas_1 : Comma ValueZip | zero_or_more__Commas_1 Comma ValueZip | 
@@ -412,11 +412,11 @@ UnorderedConstant
 ;
 optional__NOT :
 {
- $$.AST := Null_AST;
+ $$ := Null_AST;
 }
 | NOT
 {
- $$.AST := New_AST ('N', Null_AST);
+ $$ := New_AST ('N', Null_AST);
 }
 ;
 grouped__OrderedConstants :
@@ -481,11 +481,11 @@ optional__Spaces : Spaces |
 grouped__Values_1 : Value
 | EqualityOperator Value
 {
- $$.AST := New_Ast ('@', $2.AST);
+ $$ := New_Ast ('@', $2.AST);
 }
 | RelativeComparisonOperator OrderedValue
 {
- $$.AST := New_Ast ('?', $2.AST);
+ $$ := New_Ast ('?', $2.AST);
 }
 | FuzzyStringOpRhs
 ;
@@ -497,10 +497,70 @@ procedure yyparse;
 end Filter;
 
 with Filter_Goto, Filter_Tokens, Filter_Shift_Reduce, Filter_AST;
+with Ada.Strings.Unbounded;
+with YYStype_Definition;
+
 use Filter_Goto, Filter_Tokens, Filter_Shift_Reduce, Filter_AST;
+use Ada.Strings.Unbounded;
+use YYStype_Definition;
+
 package body Filter is
 
     Parsed_Expression : Filter_AST.AST_Type;
 
+    function Null_AST return YYStype_Definition.YYSType is
+    begin
+        return (Kind => YY_AST, AST => Null_AST);
+    end;
+
+    function New_AST_Identifier (Name : String)
+        return YYSType_Definition.YYSType is
+    begin
+        return (Kind => YY_AST, AST => New_AST_Identifier (Name));
+    end;
+  
+    function New_AST_Identifier (Name : Unbounded_String)
+        return YYSType_Definition.YYSType is
+    begin
+        return (Kind => YY_AST, AST => New_AST_Identifier (Name));
+    end;
+
+    function New_AST (Value : String)
+        return YYSType_Definition.YYSType is
+    begin
+        return (Kind => YY_AST, AST => New_Ast (Value));
+    end;
+  
+    function New_AST (Value : Unbounded_String)
+        return YYSType_Definition.YYSType is
+    begin
+        return (Kind => YY_AST, AST => New_Ast (Value));
+    end;
+  
+    function New_AST (X : Float)
+        return YYSType_Definition.YYSType is
+    begin
+        return (Kind => YY_AST, AST => New_Ast (X));
+    end;
+
+    function New_AST (B : Boolean)
+        return YYSType_Definition.YYSType is
+    begin
+        return (Kind => YY_AST, AST => New_Ast (B));
+    end;
+
+    function New_AST (Op : Operator_Type; Arg : AST_Type)
+        return YYStype_Definition.YYSType is
+    begin
+        return (Kind => YY_AST, AST => New_AST (Op, Arg));
+    end;
+
+    function New_AST (Op : Operator_Type; Arg1, Arg2 : AST_Type)
+        return YYStype_Definition.YYSType is
+    begin
+        return (Kind => YY_AST, AST => New_AST (Op, Arg1, Arg2));
+    end;
+
 ##
+
 end Filter;

@@ -295,130 +295,147 @@ package body filter_lexer is
 
          when 1 =>
 --# line 14 "filter_lexer.l"
-             yylval.C := '&'; return AND_TOKEN; 
+             yylval := (Kind => YY_CHR, C => '&'); return AND_TOKEN; 
 
          when 2 =>
 --# line 15 "filter_lexer.l"
-             yylval.C := '!'; return NOT_TOKEN; 
+             yylval := (Kind => YY_CHR, C => '!'); return NOT_TOKEN; 
 
          when 3 =>
 --# line 16 "filter_lexer.l"
-             yylval.C := '|'; return OR_TOKEN; 
+             yylval := (Kind => YY_CHR, C => '|'); return OR_TOKEN; 
 
          when 4 =>
 --# line 17 "filter_lexer.l"
-             yylval.C := 'I'; return IS_TOKEN; 
+             yylval := (Kind => YY_CHR, C => 'I'); return IS_TOKEN; 
 
          when 5 =>
 --# line 18 "filter_lexer.l"
-             yylval.C := 'U'; return KNOWN_TOKEN; 
+             yylval := (Kind => YY_CHR, C => 'U'); return KNOWN_TOKEN; 
 
          when 6 =>
 --# line 19 "filter_lexer.l"
-             yylval.C := '?'; return UNKNOWN_TOKEN; 
+             yylval := (Kind => YY_CHR, C => '?'); return UNKNOWN_TOKEN; 
 
          when 7 =>
 --# line 20 "filter_lexer.l"
-             yylval.C := 'C'; return CONTAINS_TOKEN; 
+             yylval := (Kind => YY_CHR, C => 'C'); return CONTAINS_TOKEN; 
 
          when 8 =>
 --# line 21 "filter_lexer.l"
-             yylval.C := 'S'; return STARTS_TOKEN; 
+             yylval := (Kind => YY_CHR, C => 'S'); return STARTS_TOKEN; 
 
          when 9 =>
 --# line 22 "filter_lexer.l"
-             yylval.C := 'E'; return ENDS_TOKEN; 
+             yylval := (Kind => YY_CHR, C => 'E'); return ENDS_TOKEN; 
 
          when 10 =>
 --# line 23 "filter_lexer.l"
-             yylval.C := 'W'; return WITH_TOKEN; 
+             yylval := (Kind => YY_CHR, C => 'W'); return WITH_TOKEN; 
 
          when 11 =>
 --# line 24 "filter_lexer.l"
-             yylval.C := 'L'; return LENGTH_TOKEN; 
+             yylval := (Kind => YY_CHR, C => 'L'); return LENGTH_TOKEN; 
 
          when 12 =>
 --# line 25 "filter_lexer.l"
-             yylval.C := 'H'; return HAS_TOKEN; 
+             yylval := (Kind => YY_CHR, C => 'H'); return HAS_TOKEN; 
 
          when 13 =>
 --# line 26 "filter_lexer.l"
-             yylval.C := 'A'; return ALL_TOKEN; 
+             yylval := (Kind => YY_CHR, C => 'A'); return ALL_TOKEN; 
 
          when 14 =>
 --# line 27 "filter_lexer.l"
-             yylval.C := 'O'; return ONLY_TOKEN; 
+             yylval := (Kind => YY_CHR, C => 'O'); return ONLY_TOKEN; 
 
          when 15 =>
 --# line 28 "filter_lexer.l"
-             yylval.C := 'N'; return ANY_TOKEN; 
+             yylval := (Kind => YY_CHR, C => 'N'); return ANY_TOKEN; 
 
          when 16 =>
 --# line 30 "filter_lexer.l"
-             yylval.C := 'T'; return TRUE_TOKEN; 
+             yylval := (Kind => YY_CHR, C => 'T'); return TRUE_TOKEN; 
 
          when 17 =>
 --# line 31 "filter_lexer.l"
-             yylval.C := 'F'; return FALSE_TOKEN; 
+             yylval := (Kind => YY_CHR, C => 'F'); return FALSE_TOKEN; 
 
          when 18 =>
 --# line 33 "filter_lexer.l"
             
-               yylval.S := To_Unbounded_String (filter_lexer_dfa.yytext);
+               yylval :=
+                   (
+                    Kind => YY_STR,
+                    S => To_Unbounded_String (filter_lexer_dfa.yytext)
+                   );
                return KEYWORD_TOKEN;
              
 
          when 19 =>
---# line 37 "filter_lexer.l"
+--# line 41 "filter_lexer.l"
             
-               yylval.S := To_Unbounded_String (filter_lexer_dfa.yytext);
-               return IDENTIFIER_TOKEN;
+               yylval :=
+                   (
+                    Kind => YY_STR,
+                    S => To_Unbounded_String (filter_lexer_dfa.yytext)
+                   );
+                return IDENTIFIER_TOKEN;
              
 
          when 20 =>
---# line 41 "filter_lexer.l"
+--# line 49 "filter_lexer.l"
             
-               yylval.N := Float'Value (filter_lexer_dfa.yytext);
+               yylval :=
+                   (
+                    Kind => YY_NUM,
+                    N => Float'Value (filter_lexer_dfa.yytext)
+                   );
                return NUMBER_TOKEN;
              
 
          when 21 =>
---# line 45 "filter_lexer.l"
+--# line 57 "filter_lexer.l"
             
-               yylval.S := To_Unbounded_String (yytext (yytext'First+1 .. yytext'Last-1));
+               yylval :=
+                   (
+                    Kind => YY_STR,
+                     S => To_Unbounded_String (yytext (yytext'First + 1 ..
+                                                       yytext'Last  - 1))
+                   );
                return STRING_TOKEN;
              
 
          when 22 =>
---# line 50 "filter_lexer.l"
+--# line 67 "filter_lexer.l"
              return LF_TOKEN; 
 
          when 23 =>
---# line 51 "filter_lexer.l"
+--# line 68 "filter_lexer.l"
              return CR_TOKEN; 
 
          when 24 =>
---# line 52 "filter_lexer.l"
+--# line 69 "filter_lexer.l"
              return HT_TOKEN; 
 
          when 25 =>
---# line 53 "filter_lexer.l"
+--# line 70 "filter_lexer.l"
              return VT_TOKEN; 
 
          when 26 =>
---# line 54 "filter_lexer.l"
+--# line 71 "filter_lexer.l"
              return FF_TOKEN; 
 
 -- The remaining single character tokens are processed in Ada so that
 -- we get compiler error if some character is not covered:
          when 27 =>
---# line 59 "filter_lexer.l"
+--# line 76 "filter_lexer.l"
             
               declare
                   BS : constant Character := '\';
-                  C  : constant Character := filter_lexer_dfa.yytext(1);
+                  C  : Character := filter_lexer_dfa.yytext(1);
               begin
-                 yylval.C := C;
+                 yylval := (Kind => YY_CHR, C => C);
                  case C is
                      when ' ' => return Token'(' ');
                      when '(' => return Token'('(');
@@ -456,7 +473,7 @@ package body filter_lexer is
 
 
          when 28 =>
---# line 101 "filter_lexer.l"
+--# line 118 "filter_lexer.l"
             ECHO;
          when YY_END_OF_BUFFER + INITIAL + 1 =>
             return End_Of_Input;
@@ -510,7 +527,7 @@ package body filter_lexer is
       end loop; --  end of loop waiting for end of file
    end YYLex;
 
---# line 101 "filter_lexer.l"
+--# line 118 "filter_lexer.l"
 
 end filter_lexer;
 

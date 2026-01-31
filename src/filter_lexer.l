@@ -11,39 +11,56 @@ STRING         \"(([^\"\n]|\\\")*)*\"
 
 %% 
 
-"AND"        { yylval.C := '&'; return AND_TOKEN; }
-"NOT"        { yylval.C := '!'; return NOT_TOKEN; }
-"OR"         { yylval.C := '|'; return OR_TOKEN; }
-"IS"         { yylval.C := 'I'; return IS_TOKEN; }
-"KNOWN"      { yylval.C := 'U'; return KNOWN_TOKEN; }
-"UNKNOWN"    { yylval.C := '?'; return UNKNOWN_TOKEN; }
-"CONTAINS"   { yylval.C := 'C'; return CONTAINS_TOKEN; }
-"STARTS"     { yylval.C := 'S'; return STARTS_TOKEN; }
-"ENDS"       { yylval.C := 'E'; return ENDS_TOKEN; }
-"WITH"       { yylval.C := 'W'; return WITH_TOKEN; }
-"LENGTH"     { yylval.C := 'L'; return LENGTH_TOKEN; }
-"HAS"        { yylval.C := 'H'; return HAS_TOKEN; }
-"ALL"        { yylval.C := 'A'; return ALL_TOKEN; }
-"ONLY"       { yylval.C := 'O'; return ONLY_TOKEN; }
-"ANY"        { yylval.C := 'N'; return ANY_TOKEN; }
+"AND"        { yylval := (Kind => YY_CHR, C => '&'); return AND_TOKEN; }
+"NOT"        { yylval := (Kind => YY_CHR, C => '!'); return NOT_TOKEN; }
+"OR"         { yylval := (Kind => YY_CHR, C => '|'); return OR_TOKEN; }
+"IS"         { yylval := (Kind => YY_CHR, C => 'I'); return IS_TOKEN; }
+"KNOWN"      { yylval := (Kind => YY_CHR, C => 'U'); return KNOWN_TOKEN; }
+"UNKNOWN"    { yylval := (Kind => YY_CHR, C => '?'); return UNKNOWN_TOKEN; }
+"CONTAINS"   { yylval := (Kind => YY_CHR, C => 'C'); return CONTAINS_TOKEN; }
+"STARTS"     { yylval := (Kind => YY_CHR, C => 'S'); return STARTS_TOKEN; }
+"ENDS"       { yylval := (Kind => YY_CHR, C => 'E'); return ENDS_TOKEN; }
+"WITH"       { yylval := (Kind => YY_CHR, C => 'W'); return WITH_TOKEN; }
+"LENGTH"     { yylval := (Kind => YY_CHR, C => 'L'); return LENGTH_TOKEN; }
+"HAS"        { yylval := (Kind => YY_CHR, C => 'H'); return HAS_TOKEN; }
+"ALL"        { yylval := (Kind => YY_CHR, C => 'A'); return ALL_TOKEN; }
+"ONLY"       { yylval := (Kind => YY_CHR, C => 'O'); return ONLY_TOKEN; }
+"ANY"        { yylval := (Kind => YY_CHR, C => 'N'); return ANY_TOKEN; }
 
-"TRUE"       { yylval.C := 'T'; return TRUE_TOKEN; }
-"FALSE"      { yylval.C := 'F'; return FALSE_TOKEN; }
+"TRUE"       { yylval := (Kind => YY_CHR, C => 'T'); return TRUE_TOKEN; }
+"FALSE"      { yylval := (Kind => YY_CHR, C => 'F'); return FALSE_TOKEN; }
             
 [A-Z]+       {
-               yylval.S := To_Unbounded_String (filter_lexer_dfa.yytext);
+               yylval :=
+                   (
+                    Kind => YY_STR,
+                    S => To_Unbounded_String (filter_lexer_dfa.yytext)
+                   );
                return KEYWORD_TOKEN;
              }
 {IDENTIFIER} {
-               yylval.S := To_Unbounded_String (filter_lexer_dfa.yytext);
-               return IDENTIFIER_TOKEN;
+               yylval :=
+                   (
+                    Kind => YY_STR,
+                    S => To_Unbounded_String (filter_lexer_dfa.yytext)
+                   );
+                return IDENTIFIER_TOKEN;
              }
 [-+]?{REAL}  {
-               yylval.N := Float'Value (filter_lexer_dfa.yytext);
+               yylval :=
+                   (
+                    Kind => YY_NUM,
+                    N => Float'Value (filter_lexer_dfa.yytext)
+                   );
                return NUMBER_TOKEN;
              }
 {STRING}     {
-               yylval.S := To_Unbounded_String (yytext (yytext'First+1 .. yytext'Last-1));
+               yylval :=
+                   (
+                    Kind => YY_STR,
+                     S => To_Unbounded_String (yytext (yytext'First + 1 ..
+                                                       yytext'Last  - 1))
+                   );
                return STRING_TOKEN;
              }
 
@@ -61,7 +78,7 @@ STRING         \"(([^\"\n]|\\\")*)*\"
                   BS : constant Character := '\';
                   C  : Character := filter_lexer_dfa.yytext(1);
               begin
-                 yylval.C := C;
+                 yylval := (Kind => YY_CHR, C => C);
                  case C is
                      when ' ' => return Token'(' ');
                      when '(' => return Token'('(');
@@ -102,6 +119,7 @@ STRING         \"(([^\"\n]|\\\")*)*\"
 
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with filter_tokens; use filter_tokens;
+with yystype_definition; use yystype_definition;
 
 package filter_lexer is
   function YYLex return Token;
