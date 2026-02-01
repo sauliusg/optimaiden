@@ -10,9 +10,10 @@ with filter_lexer_IO; use filter_lexer_IO;
 
 
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
-with filter_tokens; use filter_tokens;
-with yystype_definition; use yystype_definition;
+with Filter_Tokens; use Filter_Tokens;
+with YYSType_Definition; use YYSType_Definition;
+with Filter_AST; use Filter_AST;
 
-package filter_lexer is
+package Filter_Lexer is
   function YYLex return Token;
 end;

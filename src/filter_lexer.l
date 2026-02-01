@@ -11,64 +11,48 @@ STRING         \"(([^\"\n]|\\\")*)*\"
 
 %% 
 
-"AND"        { yylval := (Kind => YY_CHR, C => '&'); return AND_TOKEN; }
-"NOT"        { yylval := (Kind => YY_CHR, C => '!'); return NOT_TOKEN; }
-"OR"         { yylval := (Kind => YY_CHR, C => '|'); return OR_TOKEN; }
-"IS"         { yylval := (Kind => YY_CHR, C => 'I'); return IS_TOKEN; }
-"KNOWN"      { yylval := (Kind => YY_CHR, C => 'U'); return KNOWN_TOKEN; }
-"UNKNOWN"    { yylval := (Kind => YY_CHR, C => '?'); return UNKNOWN_TOKEN; }
-"CONTAINS"   { yylval := (Kind => YY_CHR, C => 'C'); return CONTAINS_TOKEN; }
-"STARTS"     { yylval := (Kind => YY_CHR, C => 'S'); return STARTS_TOKEN; }
-"ENDS"       { yylval := (Kind => YY_CHR, C => 'E'); return ENDS_TOKEN; }
-"WITH"       { yylval := (Kind => YY_CHR, C => 'W'); return WITH_TOKEN; }
-"LENGTH"     { yylval := (Kind => YY_CHR, C => 'L'); return LENGTH_TOKEN; }
-"HAS"        { yylval := (Kind => YY_CHR, C => 'H'); return HAS_TOKEN; }
-"ALL"        { yylval := (Kind => YY_CHR, C => 'A'); return ALL_TOKEN; }
-"ONLY"       { yylval := (Kind => YY_CHR, C => 'O'); return ONLY_TOKEN; }
-"ANY"        { yylval := (Kind => YY_CHR, C => 'N'); return ANY_TOKEN; }
+"AND"        { yylval := Null_AST; return AND_TOKEN; }
+"NOT"        { yylval := Null_AST; return NOT_TOKEN; }
+"OR"         { yylval := Null_AST; return OR_TOKEN; }
+"IS"         { yylval := Null_AST; return IS_TOKEN; }
+"KNOWN"      { yylval := Null_AST; return KNOWN_TOKEN; }
+"UNKNOWN"    { yylval := Null_AST; return UNKNOWN_TOKEN; }
+"CONTAINS"   { yylval := Null_AST; return CONTAINS_TOKEN; }
+"STARTS"     { yylval := Null_AST; return STARTS_TOKEN; }
+"ENDS"       { yylval := Null_AST; return ENDS_TOKEN; }
+"WITH"       { yylval := Null_AST; return WITH_TOKEN; }
+"LENGTH"     { yylval := Null_AST; return LENGTH_TOKEN; }
+"HAS"        { yylval := Null_AST; return HAS_TOKEN; }
+"ALL"        { yylval := Null_AST; return ALL_TOKEN; }
+"ONLY"       { yylval := Null_AST; return ONLY_TOKEN; }
+"ANY"        { yylval := Null_AST; return ANY_TOKEN; }
 
-"TRUE"       { yylval := (Kind => YY_CHR, C => 'T'); return TRUE_TOKEN; }
-"FALSE"      { yylval := (Kind => YY_CHR, C => 'F'); return FALSE_TOKEN; }
+"TRUE"       { yylval := Null_AST; return TRUE_TOKEN; }
+"FALSE"      { yylval := Null_AST; return FALSE_TOKEN; }
             
 [A-Z]+       {
-               yylval :=
-                   (
-                    Kind => YY_STR,
-                    S => To_Unbounded_String (filter_lexer_dfa.yytext)
-                   );
+               yylval := New_AST (filter_lexer_dfa.yytext);
                return KEYWORD_TOKEN;
              }
 {IDENTIFIER} {
-               yylval :=
-                   (
-                    Kind => YY_STR,
-                    S => To_Unbounded_String (filter_lexer_dfa.yytext)
-                   );
-                return IDENTIFIER_TOKEN;
+               yylval := New_AST_Identifier (filter_lexer_dfa.yytext);
+               return IDENTIFIER_TOKEN;
              }
 [-+]?{REAL}  {
-               yylval :=
-                   (
-                    Kind => YY_NUM,
-                    N => Float'Value (filter_lexer_dfa.yytext)
-                   );
+               yylval := New_AST (Float'Value (filter_lexer_dfa.yytext));
                return NUMBER_TOKEN;
              }
 {STRING}     {
-               yylval :=
-                   (
-                    Kind => YY_STR,
-                     S => To_Unbounded_String (yytext (yytext'First + 1 ..
-                                                       yytext'Last  - 1))
-                   );
+               yylval := New_AST (yytext (yytext'First + 1 ..
+                                          yytext'Last  - 1));
                return STRING_TOKEN;
              }
 
-\n           { return LF_TOKEN; }
-\r           { return CR_TOKEN; }
-\t           { return HT_TOKEN; }
-\v           { return VT_TOKEN; }
-\f           { return FF_TOKEN; }
+\n           { yylval := Null_AST; return LF_TOKEN; }
+\r           { yylval := Null_AST; return CR_TOKEN; }
+\t           { yylval := Null_AST; return HT_TOKEN; }
+\v           { yylval := Null_AST; return VT_TOKEN; }
+\f           { yylval := Null_AST; return FF_TOKEN; }
 
 -- The remaining single character tokens are processed in Ada so that
 -- we get compiler error if some character is not covered:
@@ -76,10 +60,10 @@ STRING         \"(([^\"\n]|\\\")*)*\"
 .            {
               declare
                   BS : constant Character := '\';
-                  C  : Character := filter_lexer_dfa.yytext(1);
+                  S  : String := filter_lexer_dfa.yytext(1 .. 1);
               begin
-                 yylval := (Kind => YY_CHR, C => C);
-                 case C is
+                 yylval := New_AST (S);
+                 case S (1) is
                      when ' ' => return Token'(' ');
                      when '(' => return Token'('(');
                      when ')' => return Token'(')');
@@ -118,15 +102,16 @@ STRING         \"(([^\"\n]|\\\")*)*\"
 %%
 
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
-with filter_tokens; use filter_tokens;
-with yystype_definition; use yystype_definition;
+with Filter_Tokens; use Filter_Tokens;
+with YYSType_Definition; use YYSType_Definition;
+with Filter_AST; use Filter_AST;
 
-package filter_lexer is
+package Filter_Lexer is
   function YYLex return Token;
 end;
 
-package body filter_lexer is
+package body Filter_Lexer is
 
 ##
 
-end filter_lexer;
+end Filter_Lexer;

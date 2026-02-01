@@ -51,6 +51,10 @@ package Filter_AST is
    --  Construct AST leaf True and False values:
    function New_AST (B : Boolean) return AST_Type;
 
+   --  Construct AST node for operator with no operands, to serve as a
+   --  placeholder for the operator type:
+   function New_AST (Op : Operator_Type) return AST_Type;
+   
    --  Construct AST node for operator with one operand:
    function New_AST (Op : Operator_Type; Arg : AST_Type) return AST_Type;
    
