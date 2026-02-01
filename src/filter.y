@@ -141,12 +141,20 @@ PropertyFirstComparison : Property optional__ValueOpRhs
      if Kind ($2) = OPERATOR and then Is_Null (Right ($2)) then
          $$ := New_AST (Operator ($2), $1, Left ($2));
      else
-         if Operator (Left ($2)) = ':' then
+         if Kind ($2) = OPERATOR and then
+            Kind (Left ($2)) = OPERATOR and then
+            Operator (Left ($2)) = ':' then
              $$ := New_AST (Operator ($2),
                             New_AST (':', $1, Left ($2)),
                             Right ($2));
          else
-             $$ := New_AST (Operator ($2), $1, $2);
+             if Kind ($2) = OPERATOR then
+                 $$ := New_AST (Operator ($2), $1, $2);
+             elsif Kind ($2) = UNARY_OPERATOR then
+                 $$ := New_AST (Operator ($2), $1, Operand ($2));
+             else
+                 $$ := New_AST ('?', $1, $2);
+             end if;
          end if;
      end if;
  end if;
@@ -177,7 +185,7 @@ FuzzyStringOpRhs
 ;
 SetOpRhs : HAS grouped__nones
 {
- $$ := $2;
+ $$ := New_AST (OP_HAS_ALL, $2);
 }
 ;
 SetZipOpRhs : PropertyZipAddon HAS grouped__ValueZips
