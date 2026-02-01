@@ -496,8 +496,8 @@ KNOWN
  $$ := New_Ast ('!', New_AST ('K', Null_AST));
 }
 ;
-zero_or_more__Commas_1 :
-Comma ValueZip
+zero_or_more__Commas_1
+: Comma ValueZip
 {
  $$ := New_AST (',', $2);
 }
@@ -586,14 +586,18 @@ optional__Spaces : Spaces |
 ;
 
 -----------------------------
-grouped__Values_1 : Value
+grouped__Values_1
+: Value
+{
+ $$ := $1;
+}
 | EqualityOperator Value
 {
- $$ := New_Ast ('@', $2);
+ $$ := New_Ast (Operator ($1), $2);
 }
 | RelativeComparisonOperator OrderedValue
 {
- $$ := New_Ast ('?', $2);
+ $$ := New_Ast (Operator ($1), $2);
 }
 | FuzzyStringOpRhs
 {
