@@ -138,7 +138,7 @@ package body Filter_AST is
       Spaces : String (1 .. Indent) := (others => ' ');
    begin
       if T.AST = null then
-         return "NULL";
+         return Spaces & "NULL";
       end if;
       declare
          Node_Value : constant String :=
