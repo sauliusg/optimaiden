@@ -51,7 +51,7 @@ package body Filter_AST is
          when others =>
             raise CONSTRAINT_ERROR with
               "AST node passed to the ""Operator"" function is neither " &
-              "unary nor binary operator";
+              "unary nor binary operator, it is """ & A.AST.Kind'Image & """";
       end case;
    end;
    
