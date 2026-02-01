@@ -167,12 +167,12 @@ FuzzyStringOpRhs
 ;
 SetOpRhs : HAS grouped__nones
 {
- $$ := New_AST ('H', $2);
+ $$ := New_AST (OP_HAS_ALL, $2);
 }
 ;
 SetZipOpRhs : PropertyZipAddon HAS grouped__ValueZips
 {
- $$ := New_AST ('H', $1, $3);
+ $$ := New_AST (OP_HAS_ALL, $1, $3);
 }
 ;
 PropertyZipAddon : Colon Property zero_or_more__Colons_1

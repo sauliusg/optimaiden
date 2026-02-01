@@ -371,11 +371,11 @@ when 22 => -- #line 161
 
 when 26 => -- #line 169
 
- YYVal := New_AST ('H', yy.value_stack (yy.tos));
+ YYVal := New_AST (OP_HAS_ALL, yy.value_stack (yy.tos));
 
 when 27 => -- #line 174
 
- YYVal := New_AST ('H', yy.value_stack (yy.tos-2), yy.value_stack (yy.tos));
+ YYVal := New_AST (OP_HAS_ALL, yy.value_stack (yy.tos-2), yy.value_stack (yy.tos));
 
 when 28 => -- #line 179
 

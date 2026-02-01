@@ -10,7 +10,15 @@ with Ada.Finalization;
 
 package Filter_AST is
    
-   type Operator_Type is new Character;
+   type Operator_Type is ('+', '-', '=', ':', ',', '<', '>', '.', OP_GE,
+                          OP_LE, OP_AND, OP_OR, OP_NOT, OP_HAS_ALL,
+                          OP_HAS_ANY, OP_HAS_ONLY, OP_IS_KNOWN,
+                          OP_IS_UNKNOWN, OP_LENGTH, OP_CONTAINS,
+                          OP_STARTS, OP_ENDS,
+                          'A', 'O', 'S', 'H', 'a', 'o', 's', 'l', 'n',
+                          'L', 'G', '|', '&', '!', 'Y', 'K', 'N', '@',
+                          '?'
+                         );
    
    type AST_Kind is (NUMBER, TEXT, TRUE_OR_FALSE, VARIABLE, OPERATOR,
                      UNARY_OPERATOR);
