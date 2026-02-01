@@ -141,7 +141,13 @@ PropertyFirstComparison : Property optional__ValueOpRhs
      if Kind ($2) = OPERATOR and then Is_Null (Right ($2)) then
          $$ := New_AST (Operator ($2), $1, Left ($2));
      else
-         $$ := New_AST (Operator ($2), $1, $2);
+         if Operator (Left ($2)) = ':' then
+             $$ := New_AST (Operator ($2),
+                            New_AST (':', $1, Left ($2)),
+                            Right ($2));
+         else
+             $$ := New_AST (Operator ($2), $1, $2);
+         end if;
      end if;
  end if;
 }
@@ -171,7 +177,7 @@ FuzzyStringOpRhs
 ;
 SetOpRhs : HAS grouped__nones
 {
- $$ := New_AST (OP_HAS_ALL, $2);
+ $$ := $2;
 }
 ;
 SetZipOpRhs : PropertyZipAddon HAS grouped__ValueZips
@@ -359,8 +365,8 @@ optional__exclamation_mark : '!'
  $$ := Null_AST;
 }
 ;
-grouped__Values :
-Value
+grouped__Values
+: Value
 {
  $$ := $1;
 }
@@ -430,8 +436,8 @@ grouped__TRUEs
  $$ := New_AST (False);
 }
 ;
-grouped__nones :
-grouped__Values_1
+grouped__nones
+: grouped__Values_1
 {
  $$ := $1;
 }
@@ -550,8 +556,8 @@ OpeningBrace Expression ClosingBrace
  $$ := $2;
 }
 ;
-grouped__ValueEqRhs :
-ValueEqRhs
+grouped__ValueEqRhs
+: ValueEqRhs
 {
  $$ := $1;
 }
