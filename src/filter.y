@@ -41,8 +41,8 @@ Filter : optional__Spaces Expression
     Put_Line (Image ($2));
 }
 ;
-OrderedConstant :
-String
+OrderedConstant
+: String
 {
  $$ := $1;
 }
@@ -62,6 +62,9 @@ Value : grouped__UnorderedConstants
 }
 ;
 OrderedValue : grouped__OrderedConstants
+{
+ $$ := $1;
+}
 ;
 ValueListEntry : grouped__Values
 {
@@ -110,8 +113,8 @@ ExpressionPhrase : optional__NOT grouped__Comparisons
  end if;
 }
 ;
-Comparison :
-ConstantFirstComparison
+Comparison
+: ConstantFirstComparison
 {
  $$ := $1;
 }
@@ -120,7 +123,8 @@ ConstantFirstComparison
  $$ := $1;
 }
 ;
-ConstantFirstComparison : OrderedConstant ValueOpRhs
+ConstantFirstComparison
+: OrderedConstant ValueOpRhs
 {
  $$ := New_AST (Operator ($2), $1, Left ($2));
 }
@@ -580,8 +584,6 @@ optional__WITH : WITH |
 ;
 optional__Spaces : Spaces | 
 ;
------------------------------
-
 
 -----------------------------
 grouped__Values_1 : Value
@@ -594,6 +596,9 @@ grouped__Values_1 : Value
  $$ := New_Ast ('?', $2);
 }
 | FuzzyStringOpRhs
+{
+ $$ := $1;
+}
 ;
 -----------------------------
 
