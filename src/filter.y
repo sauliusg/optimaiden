@@ -181,7 +181,7 @@ SetZipOpRhs : PropertyZipAddon HAS grouped__ValueZips
 ;
 PropertyZipAddon : Colon Property zero_or_more__Colons_1
 {
- $$ := New_AST (':', $2, $3); -- <<< HERE
+ $$ := New_AST (':', $2, $3);
 }
 ;
 LengthOpRhs : LENGTH optional__Operator Value
