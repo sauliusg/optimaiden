@@ -164,7 +164,10 @@ package body Filter_AST is
                                 T.AST.Bool_Value'Image,
                when OPERATOR => T.AST.Op'Image & ": " & ASCII.LF &
                                 Image (T.AST.Left, Indent + Shift) & ASCII.LF & 
-                                Image (T.AST.Right, Indent + Shift)
+                                Image (T.AST.Right, Indent + Shift),
+               when UNARY_OPERATOR => 
+                                T.AST.UnOp'Image & ": " & ASCII.LF &
+                                Image (T.AST.Operand, Indent + Shift)
            );
       begin
          case T.AST.Kind is

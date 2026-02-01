@@ -12,7 +12,8 @@ package Filter_AST is
    
    type Operator_Type is new Character;
    
-   type AST_Kind is (NUMBER, TEXT, TRUE_OR_FALSE, VARIABLE, OPERATOR);
+   type AST_Kind is (NUMBER, TEXT, TRUE_OR_FALSE, VARIABLE, OPERATOR,
+                     UNARY_OPERATOR);
    
    type AST_Type is private;
    
@@ -80,6 +81,9 @@ private
          when OPERATOR =>
             Op : Operator_Type;
             Left, Right : AST_Type;
+         when UNARY_OPERATOR =>
+            UnOp    : Operator_Type;
+            Operand : AST_Type;
       end case;
    end record;
    
