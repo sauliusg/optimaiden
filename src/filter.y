@@ -134,7 +134,7 @@ PropertyFirstComparison : Property optional__ValueOpRhs
  if Is_Null ($2) then
      $$ := $1;
  else
-     if Is_Null (Right ($2)) then
+     if Kind ($2) = OPERATOR and then Is_Null (Right ($2)) then
          $$ := New_AST (Operator ($2), $1, Left ($2));
      else
          $$ := New_AST (Operator ($2), $1, $2);

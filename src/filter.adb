@@ -346,7 +346,7 @@ when 18 => -- #line 133
  if Is_Null (yy.value_stack (yy.tos)) then
      YYVal := yy.value_stack (yy.tos-1);
  else
-     if Is_Null (Right (yy.value_stack (yy.tos))) then
+     if Kind (yy.value_stack (yy.tos)) = OPERATOR and then Is_Null (Right (yy.value_stack (yy.tos))) then
          YYVal := New_AST (Operator (yy.value_stack (yy.tos)), yy.value_stack (yy.tos-1), Left (yy.value_stack (yy.tos)));
      else
          YYVal := New_AST (Operator (yy.value_stack (yy.tos)), yy.value_stack (yy.tos-1), yy.value_stack (yy.tos));
