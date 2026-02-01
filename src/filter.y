@@ -524,8 +524,8 @@ zero_or_more__Commas_1
  $$ := Null_AST;
 }
 ;
-grouped__UnorderedConstants :
-UnorderedConstant
+grouped__UnorderedConstants
+: UnorderedConstant
 {
  $$ := $1;
 }
@@ -534,7 +534,8 @@ UnorderedConstant
  $$ := $1;
 }
 ;
-optional__NOT :
+optional__NOT
+: -- empty
 {
  $$ := Null_AST;
 }
@@ -543,8 +544,8 @@ optional__NOT :
  $$ := New_AST ('N', Null_AST);
 }
 ;
-grouped__OrderedConstants :
-OrderedConstant
+grouped__OrderedConstants
+: OrderedConstant
 {
  $$ := $1;
 }
@@ -594,9 +595,25 @@ optional__equals
  $$ := Null_AST;
 }
 ;
-optional__WITH : WITH | 
+optional__WITH
+: WITH
+{
+ $$ := Null_AST;
+}
+| -- empty
+{
+ $$ := Null_AST;
+}
 ;
-optional__Spaces : Spaces | 
+optional__Spaces
+: Spaces
+{
+ $$ := Null_AST;
+}
+| -- empty
+{
+ $$ := Null_AST;
+}
 ;
 
 -----------------------------

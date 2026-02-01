@@ -635,67 +635,83 @@ when 120 => -- #line 533
 
  YYVal := yy.value_stack (yy.tos);
 
-when 121 => -- #line 538
+when 121 => -- #line 539
 
  YYVal := Null_AST;
 
-when 122 => -- #line 542
+when 122 => -- #line 543
 
  YYVal := New_AST ('N', Null_AST);
 
-when 123 => -- #line 548
+when 123 => -- #line 549
 
  YYVal := yy.value_stack (yy.tos);
 
-when 124 => -- #line 552
+when 124 => -- #line 553
 
  YYVal := yy.value_stack (yy.tos);
 
-when 125 => -- #line 558
+when 125 => -- #line 559
 
  YYVal := yy.value_stack (yy.tos);
 
-when 126 => -- #line 563
+when 126 => -- #line 564
 
  YYVal := yy.value_stack (yy.tos-1);
 
-when 127 => -- #line 569
+when 127 => -- #line 570
 
  YYVal := yy.value_stack (yy.tos);
 
-when 128 => -- #line 573
+when 128 => -- #line 574
 
  YYVal := yy.value_stack (yy.tos);
 
-when 129 => -- #line 579
+when 129 => -- #line 580
 
  YYVal := yy.value_stack (yy.tos);
 
-when 130 => -- #line 583
+when 130 => -- #line 584
 
  YYVal := yy.value_stack (yy.tos);
 
-when 131 => -- #line 589
+when 131 => -- #line 590
 
  YYVal := New_AST ('=');
 
-when 132 => -- #line 593
+when 132 => -- #line 594
 
  YYVal := Null_AST;
 
-when 137 => -- #line 605
+when 133 => -- #line 600
+
+ YYVal := Null_AST;
+
+when 134 => -- #line 604
+
+ YYVal := Null_AST;
+
+when 135 => -- #line 610
+
+ YYVal := Null_AST;
+
+when 136 => -- #line 614
+
+ YYVal := Null_AST;
+
+when 137 => -- #line 622
 
  YYVal := yy.value_stack (yy.tos);
 
-when 138 => -- #line 609
+when 138 => -- #line 626
 
  YYVal := New_Ast (Operator (yy.value_stack (yy.tos-1)), yy.value_stack (yy.tos));
 
-when 139 => -- #line 613
+when 139 => -- #line 630
 
  YYVal := New_Ast (Operator (yy.value_stack (yy.tos-1)), yy.value_stack (yy.tos));
 
-when 140 => -- #line 617
+when 140 => -- #line 634
 
  YYVal := yy.value_stack (yy.tos);
                pragma Style_Checks (On);
