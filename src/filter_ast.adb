@@ -36,9 +36,23 @@ package body Filter_AST is
       return A.AST.Right;
    end;
    
+   function Operand (A : AST_Type) return AST_Type is
+   begin
+      return A.AST.Operand;
+   end;
+   
    function Operator (A : AST_Type) return Operator_Type is
    begin
-      return A.AST.Op;
+      case A.AST.Kind is
+         when OPERATOR =>
+            return A.AST.Op;
+         when UNARY_OPERATOR =>
+            return A.AST.UnOp;
+         when others =>
+            raise CONSTRAINT_ERROR with
+              "AST node passed to the ""Operator"" function is neither " &
+              "unary nor binary operator";
+      end case;
    end;
    
    function New_AST_Identifier (Name : String) return AST_Type is
@@ -123,9 +137,9 @@ package body Filter_AST is
         (Ada.Finalization.Controlled with
          AST => new AST_Node_Type'
            (
-            Kind => OPERATOR,
-            Op => Op,
-            Left => Arg,
+            Kind => UNARY_OPERATOR,
+            UnOp => Op,
+            Operand => Arg,
             others => <>
            )
         );

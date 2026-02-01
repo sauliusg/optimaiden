@@ -32,6 +32,9 @@ package Filter_AST is
    
    function Right (A : AST_Type) return AST_Type;
    
+   -- Return the operand of an unary expression:
+   function Operand (A : AST_Type) return AST_Type;
+   
    -- Return the operator of a bionary operator AST node:
    function Operator (A : AST_Type) return Operator_Type;
    
