@@ -74,8 +74,14 @@ ValueList : ValueListEntry zero_or_more__Commas
 }
 ;
 ValueZip : ValueListEntry Colon ValueListEntry zero_or_more__Colons
+{
+ $$ := New_AST (':', $1.AST, New_AST (':', $3.AST, $4.AST));
+}
 ;
 ValueZipList : ValueZip zero_or_more__Commas_1
+{
+ $$ := New_AST (',', $1.AST, $2.AST);
+}
 ;
 Expression : ExpressionClause optional__OR
 {
@@ -128,7 +134,11 @@ PropertyFirstComparison : Property optional__ValueOpRhs
  if Is_Null ($2.AST) then
      $$ := $1;
  else
-     $$ := New_AST (Operator ($2.AST), $1.AST, Left ($2.AST));
+     if Is_Null (Right ($2.AST)) then
+         $$ := New_AST (Operator ($2.AST), $1.AST, Left ($2.AST));
+     else
+         $$ := New_AST (Operator ($2.AST), $1.AST, $2.AST);
+     end if;
  end if;
 }
 ;
@@ -152,9 +162,13 @@ KnownOpRhs : IS grouped__KNOWNs
  $$ := $2;
 }
 ;
-FuzzyStringOpRhs : CONTAINS Value | STARTS optional__WITH Value | ENDS optional__WITH Value
+FuzzyStringOpRhs
+: CONTAINS Value | STARTS optional__WITH Value | ENDS optional__WITH Value
 ;
 SetOpRhs : HAS grouped__nones
+{
+ $$ := New_AST ('H', $2.AST);
+}
 ;
 SetZipOpRhs : PropertyZipAddon HAS grouped__ValueZips
 {
@@ -163,10 +177,13 @@ SetZipOpRhs : PropertyZipAddon HAS grouped__ValueZips
 ;
 PropertyZipAddon : Colon Property zero_or_more__Colons_1
 {
- $$ := New_AST (':', $2.AST, $3.AST);
+ $$ := New_AST (':', $2.AST, $3.AST); -- <<< HERE
 }
 ;
 LengthOpRhs : LENGTH optional__Operator Value
+{
+ $$ := New_AST ('l', $3.AST);
+}
 ;
 Property : Identifier
 {
@@ -218,6 +235,9 @@ ONLY : ONLY_TOKEN optional__Spaces
 ANY : ANY_TOKEN optional__Spaces
 ;
 Operator : grouped__EqualityOperators
+{
+ $$ := $1;
+}
 ;
 EqualityOperator : optional__exclamation_mark '=' optional__Spaces
 {
@@ -283,12 +303,28 @@ OR Expression
 {
  $$ := New_AST ('|', $2.AST);
 }
-|
+| -- empty
 {
  $$ := Null_AST;
 }
 ;
-grouped__ValueZips : ValueZip | ONLY ValueZipList | ALL ValueZipList | ANY ValueZipList
+grouped__ValueZips
+: ValueZip
+{
+ $$ := $1;
+}
+| ONLY ValueZipList
+{
+ $$ := New_AST ('o', $2.AST);
+}
+| ALL ValueZipList
+{
+ $$ := New_AST ('a', $2.AST);
+}
+| ANY ValueZipList
+{
+ $$ := New_AST ('n', $2.AST);
+}
 ;
 less_or_more : '<'
 {
@@ -299,13 +335,21 @@ less_or_more : '<'
  $$ := (Kind => YY_CHR, C => '>');
 }
 ;
-optional__Operator : Operator | 
+optional__Operator :
+Operator
+{
+ $$ := $1;
+}
+| -- empty
+{
+ $$ := Null_AST;
+}
 ;
 optional__exclamation_mark : '!'
 {
  $$ := (Kind => YY_CHR, C => '!');
 }
-|
+| -- empty
 {
  $$ := (Kind => YY_CHR, C => ' ');
 }
@@ -330,19 +374,19 @@ Value
 ;
 zero_or_more__Commas : Comma ValueListEntry
 {
- $$ := $2;
+ $$ := New_AST (',', $2.AST);
 }
 | zero_or_more__Commas Comma ValueListEntry
 {
  $$ := New_AST (',', $1.AST, $3.AST);
 }
-|
+| -- empty
 {
  $$ := Null_AST;
 }
 ;
-optional__ValueOpRhs :
-ValueOpRhs
+optional__ValueOpRhs
+: ValueOpRhs
 {
  $$ := $1;
 }
@@ -371,8 +415,8 @@ ValueOpRhs
  $$ := Null_AST;
 }
 ;
-grouped__TRUEs :
-TRUE
+grouped__TRUEs
+: TRUE
 {
  $$ := New_AST (True);
 }
@@ -399,29 +443,30 @@ grouped__Values_1
  $$ := New_AST ('O', $2.AST);
 }
 ;
-zero_or_more__Colons_1 :
-Colon Property
+zero_or_more__Colons_1
+: Colon Property
 {
  $$ := New_AST (':', $2.AST);    
 }
 | zero_or_more__Colons_1 Colon Property
 {
- $$ := New_AST (':', $1.AST, Left ($2.AST));
+ $$ := New_AST (':', $1.AST, $2.AST);
 }
-| 
+| -- empty
 {
  $$ := Null_AST;
 }
 ;
-zero_or_more__Colons : Colon ValueListEntry
+zero_or_more__Colons
+: Colon ValueListEntry
 {
  $$ := New_AST (':', $2.AST);
 }
 | zero_or_more__Colons Colon ValueListEntry
 {
- $$ := New_AST (':', $1.AST, Left ($2.AST));
+ $$ := New_AST (':', $1.AST, $2.AST);
 }
-|
+| -- empty
 {
  $$ := Null_AST;
 }
@@ -446,7 +491,19 @@ KNOWN
  $$ := New_Ast ('!', New_AST ('K', Null_AST));
 }
 ;
-zero_or_more__Commas_1 : Comma ValueZip | zero_or_more__Commas_1 Comma ValueZip | 
+zero_or_more__Commas_1 :
+Comma ValueZip
+{
+ $$ := New_AST (',', $2.AST);
+}
+| zero_or_more__Commas_1 Comma ValueZip
+{
+ $$ := New_AST (',', $1.AST, $3.AST);
+}
+|
+{
+ $$ := Null_AST;
+}
 ;
 grouped__UnorderedConstants :
 UnorderedConstant
@@ -472,8 +529,7 @@ OrderedConstant
 {
  $$ := $1;
 }
-|
-Property
+| Property
 {
  $$ := $1;
 }
