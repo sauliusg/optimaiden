@@ -171,6 +171,14 @@ PropertyFirstComparison : Property optional__ValueOpRhs
                          else
                              $$ := New_AST (Operator ($2), $1, $2);
                          end if;
+                     when VARIABLE =>
+                         $$ := New_AST (Operator ($2),
+                                        New_AST (':', $1, Left ($2)),
+                                        (if Kind (Right ($2)) = UNARY_OPERATOR
+                                            then Operand (Right ($2))
+                                            else Right ($2)
+                                         )
+                                        );
                      when others =>
                          $$ := New_AST (Operator ($2), $1, $2);
                  end case;
