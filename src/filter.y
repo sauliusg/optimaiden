@@ -91,7 +91,7 @@ Expression : ExpressionClause optional__OR
  if Is_Null ($2) then
      $$ := $1;
  else
-     $$ := New_AST ('|', $1, Left ($2));
+     $$ := New_AST (OP_OR, $1, Operand ($2));
  end if;
 }
 ;
@@ -100,7 +100,7 @@ ExpressionClause : ExpressionPhrase optional__AND
  if Is_Null ($2) then
     $$ := $1;
  else
-    $$ := New_AST ('&', $1, Left ($2));
+    $$ := New_AST (OP_AND, $1, Operand ($2));
  end if;
 }
 ;
@@ -126,11 +126,11 @@ Comparison
 ConstantFirstComparison
 : OrderedConstant ValueOpRhs
 {
- $$ := New_AST (Operator ($2), $1, Left ($2));
+ $$ := New_AST (Operator ($2), $1, Operand ($2));
 }
 | UnorderedConstant ValueEqRhs
 {
- $$ := New_AST (Operator ($2), $1, Left ($2));
+ $$ := New_AST (Operator ($2), $1, Operand ($2));
 }
 ;
 PropertyFirstComparison : Property optional__ValueOpRhs
@@ -323,7 +323,7 @@ UnicodeHighChar : UNICODE_CHARACTER
 optional__OR :
 OR Expression
 {
- $$ := New_AST ('|', $2);
+ $$ := New_AST (OP_OR, $2);
 }
 | -- empty
 {
@@ -497,7 +497,7 @@ zero_or_more__Colons
 optional__AND :
 AND ExpressionClause
 {
- $$ := New_AST ('&', $2);
+ $$ := New_AST (OP_AND, $2);
 }
 |
 {

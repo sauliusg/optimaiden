@@ -1,0 +1,33 @@
+Parsing string: "a = b AND c != d"
+(OPERATOR OP_AND: 
+    (OPERATOR '=': 
+        VARIABLE: a
+        VARIABLE: b
+    )
+    (OPERATOR OP_NE: 
+        VARIABLE: c
+        VARIABLE: d
+    )
+)
+Parsing string: "a = b AND c != 12"
+(OPERATOR OP_AND: 
+    (OPERATOR '=': 
+        VARIABLE: a
+        VARIABLE: b
+    )
+    (OPERATOR OP_NE: 
+        VARIABLE: c
+        NUMBER:  1.20000E+01
+    )
+)
+Parsing string: "abc <= 1.28 OR 555 >= _rod_def"
+(OPERATOR OP_OR: 
+    (OPERATOR OP_LE: 
+        VARIABLE: abc
+        NUMBER:  1.28000E+00
+    )
+    (OPERATOR OP_GE: 
+        NUMBER:  5.55000E+02
+        VARIABLE: _rod_def
+    )
+)
