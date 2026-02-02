@@ -1,0 +1,16 @@
+#---*- Makefile -*-------------------------------------------------------
+#$Author: saulius $
+#$Date: 2025-09-11 09:47:57 +0300 (Thu, 11 Sep 2025) $
+#$Revision: 402 $
+#$URL: svn+ssh://saulius-grazulis.lt/home/saulius/svn-repositories/makefiles/listdiff/Makelocal-listdiff $
+#------------------------------------------------------------------------
+
+# List failed tests
+
+OUTP_DIR ?= tests/outputs
+DIFF_EXT ?= diff
+
+.PHONY: failed listdiff
+
+failed listdiff: ## test
+	@-find ${OUTP_DIR} -type f -name '*.${DIFF_EXT}' -size +0 | sort -u
