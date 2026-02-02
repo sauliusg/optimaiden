@@ -153,28 +153,29 @@ PropertyFirstComparison : Property optional__ValueOpRhs
  if Is_Null ($2) then
      $$ := $1;
  else
-     if Kind ($2) = OPERATOR then
-         if Is_Null (Right ($2)) then
-             $$ := New_AST (Operator ($2), $1, Left ($2));
-         else
-             if Kind (Left ($2)) = OPERATOR and then
-                Operator (Left ($2)) = ':' then
-                $$ := New_AST (Operator ($2),
-                               New_AST (':', $1, Left ($2)),
-                               (if Kind (Right ($2)) = UNARY_OPERATOR
-                                   then Operand (Right ($2))
-                                   else Right ($2)
-                                )
-                               );
+     case Kind ($2) is
+         when OPERATOR =>
+             if Is_Null (Right ($2)) then
+                 $$ := New_AST (Operator ($2), $1, Left ($2));
              else
-                 $$ := New_AST (Operator ($2), $1, $2);
+                 if Kind (Left ($2)) = OPERATOR and then
+                    Operator (Left ($2)) = ':' then
+                    $$ := New_AST (Operator ($2),
+                                   New_AST (':', $1, Left ($2)),
+                                   (if Kind (Right ($2)) = UNARY_OPERATOR
+                                       then Operand (Right ($2))
+                                       else Right ($2)
+                                    )
+                                   );
+                 else
+                     $$ := New_AST (Operator ($2), $1, $2);
+                 end if;
              end if;
-         end if;
-     elsif Kind ($2) = UNARY_OPERATOR then
-         $$ := New_AST (Operator ($2), $1, Operand ($2));
-     else
-         $$ := New_AST ('?', $1, $2);
-     end if;
+         when UNARY_OPERATOR =>
+             $$ := New_AST (Operator ($2), $1, Operand ($2));
+         when others =>
+             $$ := New_AST ('?', $1, $2);
+     end case;
  end if;
 }
 ;
