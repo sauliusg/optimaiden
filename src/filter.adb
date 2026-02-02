@@ -417,7 +417,7 @@ when 28 => -- #line 209
 
 when 29 => -- #line 218
 
- YYVal := New_AST ('l', yy.value_stack (yy.tos));
+ YYVal := New_AST (OP_LENGTH, yy.value_stack (yy.tos));
 
 when 30 => -- #line 223
 

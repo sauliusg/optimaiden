@@ -216,7 +216,7 @@ PropertyZipAddon : Colon Property zero_or_more__Colons_1
 ;
 LengthOpRhs : LENGTH optional__Operator Value
 {
- $$ := New_AST ('l', $3);
+ $$ := New_AST (OP_LENGTH, $3);
 }
 ;
 Property : Identifier
