@@ -185,7 +185,7 @@ package body Filter_AST is
            );
       begin
          case T.AST.Kind is
-            when OPERATOR => 
+            when OPERATOR | UNARY_OPERATOR => 
                return
                  Spaces & "(" & T.AST.Kind'Image & " " & Node_Value & 
                  ASCII.LF & Spaces & ")";
