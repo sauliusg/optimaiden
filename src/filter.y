@@ -179,7 +179,7 @@ PropertyFirstComparison : Property optional__ValueOpRhs
                              $$ := New_AST (Operator ($2),
                                             New_AST (':', $1, Left ($2)),
                                             Right_Operand
-                                            );
+                                           );
                          when others =>
                              $$ := New_AST (Operator ($2), $1, $2);
                      end case;
