@@ -211,7 +211,18 @@ KnownOpRhs : IS grouped__KNOWNs
 }
 ;
 FuzzyStringOpRhs
-: CONTAINS Value | STARTS optional__WITH Value | ENDS optional__WITH Value
+: CONTAINS Value
+{
+ $$ := New_AST (OP_CONTAINS, $2);
+}
+| STARTS optional__WITH Value
+{
+ $$ := New_AST (OP_STARTS_WITH, $3);
+}
+| ENDS optional__WITH Value
+{
+ $$ := New_AST (OP_ENDS_WITH, $3);
+}
 ;
 SetOpRhs : HAS grouped__nones
 {

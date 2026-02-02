@@ -14,7 +14,7 @@ package Filter_AST is
                           OP_LE, OP_NE, OP_AND, OP_OR, OP_NOT, OP_HAS_ALL,
                           OP_HAS_ANY, OP_HAS_ONLY, OP_IS_KNOWN,
                           OP_IS_UNKNOWN, OP_LENGTH, OP_CONTAINS,
-                          OP_STARTS, OP_ENDS,
+                          OP_STARTS_WITH, OP_ENDS_WITH,
                           'H', '!', 'Y', 'K', 'N', '?'
                          );
    
