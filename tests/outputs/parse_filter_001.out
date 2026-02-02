@@ -4,17 +4,17 @@ Parsing string: "a = b"
     VARIABLE: b
 )
 Parsing string: "a != b"
-(OPERATOR '!': 
+(OPERATOR OP_NE: 
     VARIABLE: a
     VARIABLE: b
 )
 Parsing string: "abc <= def"
-(OPERATOR 'L': 
+(OPERATOR OP_LE: 
     VARIABLE: abc
     VARIABLE: def
 )
 Parsing string: "_cod_abc >= _rod_def"
-(OPERATOR 'G': 
+(OPERATOR OP_GE: 
     VARIABLE: _cod_abc
     VARIABLE: _rod_def
 )

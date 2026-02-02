@@ -262,7 +262,7 @@ EqualityOperator : optional__exclamation_mark '=' optional__Spaces
     if Is_NULL ($1) then
         $$ := New_Ast ('=', Null_AST);
     else
-        $$ := New_Ast ('!', Null_AST);
+        $$ := New_Ast (OP_NE, Null_AST);
     end if;
 }
 ;
@@ -272,9 +272,13 @@ RelativeComparisonOperator : less_or_more optional__equals optional__Spaces
      $$ := New_AST (Operator ($1), Null_AST);
  else
      if Operator ($1) = '<' then
-         $$ := New_AST ('L', Null_AST);
+         $$ := New_AST (OP_LE, Null_AST);
+     elsif Operator ($1) = '>' then
+         $$ := New_AST (OP_GE, Null_AST);
      else
-         $$ := New_AST ('G', Null_AST);
+         raise SYNTAX_ERROR with
+             "operator """ &  Operator ($1)'Image &
+             """ is not recognised";
      end if;
  end if;
 }
