@@ -253,7 +253,11 @@ PropertyZipAddon : Colon Property zero_or_more__Colons_1
 ;
 LengthOpRhs : LENGTH optional__Operator Value
 {
- $$ := New_AST (OP_LENGTH, $3);
+    if Is_Null ($2) then    
+        $$ := New_AST (OP_LENGTH, New_AST ('=', $3));
+    else
+        $$ := New_AST (OP_LENGTH, New_AST (Operator ($2), $3));
+    end if;
 }
 ;
 Property : Identifier

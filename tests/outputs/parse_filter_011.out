@@ -1,0 +1,78 @@
+Parsing string: "a ENDS "foo" AND x LENGTH = 5"
+(OPERATOR OP_AND: 
+    (OPERATOR OP_ENDS_WITH: 
+        VARIABLE: a
+        TEXT: "foo"
+    )
+    (OPERATOR OP_LENGTH: 
+        VARIABLE: x
+        (UNARY_OPERATOR '=': 
+            NUMBER:  5.00000E+00
+        )
+    )
+)
+Parsing string: "a ENDS "foo" AND x LENGTH > 5"
+(OPERATOR OP_AND: 
+    (OPERATOR OP_ENDS_WITH: 
+        VARIABLE: a
+        TEXT: "foo"
+    )
+    (OPERATOR OP_LENGTH: 
+        VARIABLE: x
+        (UNARY_OPERATOR '>': 
+            NUMBER:  5.00000E+00
+        )
+    )
+)
+Parsing string: "a ENDS "foo" AND x LENGTH < 5"
+(OPERATOR OP_AND: 
+    (OPERATOR OP_ENDS_WITH: 
+        VARIABLE: a
+        TEXT: "foo"
+    )
+    (OPERATOR OP_LENGTH: 
+        VARIABLE: x
+        (UNARY_OPERATOR '<': 
+            NUMBER:  5.00000E+00
+        )
+    )
+)
+Parsing string: "a ENDS "foo" AND x LENGTH != 5"
+(OPERATOR OP_AND: 
+    (OPERATOR OP_ENDS_WITH: 
+        VARIABLE: a
+        TEXT: "foo"
+    )
+    (OPERATOR OP_LENGTH: 
+        VARIABLE: x
+        (UNARY_OPERATOR OP_NE: 
+            NUMBER:  5.00000E+00
+        )
+    )
+)
+Parsing string: "a ENDS "foo" AND x LENGTH >= 5"
+(OPERATOR OP_AND: 
+    (OPERATOR OP_ENDS_WITH: 
+        VARIABLE: a
+        TEXT: "foo"
+    )
+    (OPERATOR OP_LENGTH: 
+        VARIABLE: x
+        (UNARY_OPERATOR OP_GE: 
+            NUMBER:  5.00000E+00
+        )
+    )
+)
+Parsing string: "a ENDS "foo" AND x LENGTH <= 5"
+(OPERATOR OP_AND: 
+    (OPERATOR OP_ENDS_WITH: 
+        VARIABLE: a
+        TEXT: "foo"
+    )
+    (OPERATOR OP_LENGTH: 
+        VARIABLE: x
+        (UNARY_OPERATOR OP_LE: 
+            NUMBER:  5.00000E+00
+        )
+    )
+)
