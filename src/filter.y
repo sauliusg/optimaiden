@@ -83,7 +83,11 @@ ValueZip : ValueListEntry Colon ValueListEntry zero_or_more__Colons
 ;
 ValueZipList : ValueZip zero_or_more__Commas_1
 {
- $$ := New_AST (',', $1, $2);
+    if Is_Null ($2) then
+        $$ := $1;
+    else
+        $$ := New_AST (',', $1, $2);
+    end if;
 }
 ;
 Expression : ExpressionClause optional__OR
