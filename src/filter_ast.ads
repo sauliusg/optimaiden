@@ -16,8 +16,7 @@ package Filter_AST is
                           OP_IS_UNKNOWN, OP_LENGTH, OP_CONTAINS,
                           OP_STARTS, OP_ENDS,
                           'A', 'O', 'S', 'H', 'a', 'o', 's', 'l', 'n',
-                          'L', 'G', '|', '&', '!', 'Y', 'K', 'N',
-                          '?'
+                          '|', '&', '!', 'Y', 'K', 'N', '?'
                          );
    
    type AST_Kind is (NUMBER, TEXT, TRUE_OR_FALSE, VARIABLE, OPERATOR,
