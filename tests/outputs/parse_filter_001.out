@@ -1,0 +1,20 @@
+Parsing string: "a = b"
+(OPERATOR '=': 
+    VARIABLE: a
+    VARIABLE: b
+)
+Parsing string: "a != b"
+(OPERATOR '!': 
+    VARIABLE: a
+    VARIABLE: b
+)
+Parsing string: "abc <= def"
+(OPERATOR 'L': 
+    VARIABLE: abc
+    VARIABLE: def
+)
+Parsing string: "_cod_abc >= _rod_def"
+(OPERATOR 'G': 
+    VARIABLE: _cod_abc
+    VARIABLE: _rod_def
+)
