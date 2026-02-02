@@ -148,9 +148,13 @@ PropertyFirstComparison : Property optional__ValueOpRhs
          if Kind ($2) = OPERATOR and then
             Kind (Left ($2)) = OPERATOR and then
             Operator (Left ($2)) = ':' then
-             $$ := New_AST (Operator ($2),
-                            New_AST (':', $1, Left ($2)),
-                            Right ($2));
+            $$ := New_AST (Operator ($2),
+                           New_AST (':', $1, Left ($2)),
+                           (if Kind (Right ($2)) = UNARY_OPERATOR
+                               then Operand (Right ($2))
+                               else Right ($2)
+                           )
+                          );
          else
              if Kind ($2) = OPERATOR then
                  $$ := New_AST (Operator ($2), $1, $2);
@@ -194,7 +198,11 @@ SetOpRhs : HAS grouped__nones
 ;
 SetZipOpRhs : PropertyZipAddon HAS grouped__ValueZips
 {
- $$ := New_AST (OP_HAS_ALL, $1, $3);
+    if Operator ($3) = ':' then
+        $$ := New_AST (OP_HAS_ALL, $1, $3);
+    else
+        $$ := New_AST (Operator ($3), $1, $3);
+    end if;
 }
 ;
 PropertyZipAddon : Colon Property zero_or_more__Colons_1
@@ -328,8 +336,8 @@ UnicodeHighChar : UNICODE_CHARACTER
 ;
 
 -----------------------------
-optional__OR :
-OR Expression
+optional__OR
+: OR Expression
 {
  $$ := New_AST (OP_OR, $2);
 }
@@ -345,15 +353,15 @@ grouped__ValueZips
 }
 | ONLY ValueZipList
 {
- $$ := New_AST ('o', $2);
+ $$ := New_AST (OP_HAS_ONLY, $2);
 }
 | ALL ValueZipList
 {
- $$ := New_AST ('a', $2);
+ $$ := New_AST (OP_HAS_ALL, $2);
 }
 | ANY ValueZipList
 {
- $$ := New_AST ('n', $2);
+ $$ := New_AST (OP_HAS_ANY, $2);
 }
 ;
 less_or_more
