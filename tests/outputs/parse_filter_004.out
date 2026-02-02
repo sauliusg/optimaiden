@@ -1,0 +1,41 @@
+Parsing string: "(a = b AND c != d OR str != "foo bar") OR (a != b OR (c != 12 AND string < "bar baz" AND q <= 1))"
+(OPERATOR OP_OR: 
+    (OPERATOR OP_OR: 
+        (OPERATOR OP_AND: 
+            (OPERATOR '=': 
+                VARIABLE: a
+                VARIABLE: b
+            )
+            (OPERATOR OP_NE: 
+                VARIABLE: c
+                VARIABLE: d
+            )
+        )
+        (OPERATOR OP_NE: 
+            VARIABLE: str
+            TEXT: "foo bar"
+        )
+    )
+    (OPERATOR OP_OR: 
+        (OPERATOR OP_NE: 
+            VARIABLE: a
+            VARIABLE: b
+        )
+        (OPERATOR OP_AND: 
+            (OPERATOR OP_NE: 
+                VARIABLE: c
+                NUMBER:  1.20000E+01
+            )
+            (OPERATOR OP_AND: 
+                (OPERATOR '<': 
+                    VARIABLE: string
+                    TEXT: "bar baz"
+                )
+                (OPERATOR OP_LE: 
+                    VARIABLE: q
+                    NUMBER:  1.00000E+00
+                )
+            )
+        )
+    )
+)
