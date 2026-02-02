@@ -82,7 +82,11 @@ ValueList : ValueListEntry zero_or_more__Commas
 ;
 ValueZip : ValueListEntry Colon ValueListEntry zero_or_more__Colons
 {
- $$ := New_AST (':', $1, New_AST (':', $3, $4));
+    if Is_Null ($4) then
+        $$ := New_AST (':', $1, $3);
+    else
+        $$ := New_AST (':', $1, New_AST (':', $3, $4));
+    end if;
 }
 ;
 ValueZipList : ValueZip zero_or_more__Commas_1
@@ -530,8 +534,8 @@ zero_or_more__Colons
  $$ := Null_AST;
 }
 ;
-optional__AND :
-AND ExpressionClause
+optional__AND
+: AND ExpressionClause
 {
  $$ := New_AST (OP_AND, $2);
 }
@@ -540,8 +544,8 @@ AND ExpressionClause
  $$ := Null_AST;
 }
 ;
-grouped__KNOWNs :
-KNOWN
+grouped__KNOWNs
+: KNOWN
 {
  $$ := New_AST ('K', Null_AST);
 }
