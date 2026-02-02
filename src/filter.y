@@ -147,6 +147,9 @@ ConstantFirstComparison
 ;
 PropertyFirstComparison : Property optional__ValueOpRhs
 {
+ -- Put ("1 >>> " & Image ($1)); Put_Line ("<<<< 1");
+ -- Put ("2 >>> " & Image ($2)); Put_Line ("<<<< 2");
+    
  if Is_Null ($2) then
      $$ := $1;
  else
@@ -386,8 +389,8 @@ less_or_more
  $$ := New_AST ('>');
 }
 ;
-optional__Operator :
-Operator
+optional__Operator
+: Operator
 {
  $$ := $1;
 }
