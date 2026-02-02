@@ -73,7 +73,11 @@ ValueListEntry : grouped__Values
 ;
 ValueList : ValueListEntry zero_or_more__Commas
 {
- $$ := New_AST (',', $1, $2);
+    if Is_Null ($2) then
+        $$ := $1;
+    else
+        $$ := New_AST (',', $1, $2);
+    end if;
 }
 ;
 ValueZip : ValueListEntry Colon ValueListEntry zero_or_more__Colons
@@ -193,7 +197,11 @@ FuzzyStringOpRhs
 ;
 SetOpRhs : HAS grouped__nones
 {
- $$ := New_AST (OP_HAS_ALL, $2);
+    if Kind ($2) = UNARY_OPERATOR then
+        $$ := $2;
+    else
+        $$ := New_AST (OP_HAS_ALL, $2);
+    end if;
 }
 ;
 SetZipOpRhs : PropertyZipAddon HAS grouped__ValueZips
@@ -413,11 +421,15 @@ grouped__Values
 ;
 zero_or_more__Commas : Comma ValueListEntry
 {
- $$ := New_AST (',', $2);
+ $$ := $2;
 }
 | zero_or_more__Commas Comma ValueListEntry
 {
- $$ := New_AST (',', $1, $3);
+    if Is_Null ($1) then
+        $$ := $3;
+    else
+        $$ := New_AST (',', $1, $3);
+    end if;
 }
 | -- empty
 {
@@ -471,15 +483,15 @@ grouped__nones
 }
 | ALL ValueList
 {
- $$ := New_AST ('A', $2);
+ $$ := New_AST (OP_HAS_ALL, $2);
 }
 | ANY ValueList
 {
- $$ := New_AST ('Y', $2);
+ $$ := New_AST (OP_HAS_ANY, $2);
 }
 | ONLY ValueList
 {
- $$ := New_AST ('O', $2);
+ $$ := New_AST (OP_HAS_ONLY, $2);
 }
 ;
 zero_or_more__Colons_1
@@ -541,11 +553,15 @@ KNOWN
 zero_or_more__Commas_1
 : Comma ValueZip
 {
- $$ := New_AST (',', $2);
+ $$ := $2;
 }
 | zero_or_more__Commas_1 Comma ValueZip
 {
- $$ := New_AST (',', $1, $3);
+    if Is_Null ($1) then
+        $$ := $3;
+    else
+        $$ := New_AST (',', $1, $3);
+    end if;
 }
 |
 {
