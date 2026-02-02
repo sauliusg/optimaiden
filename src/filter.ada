@@ -395,7 +395,7 @@ when 18 => -- #line 149
                  YYVal := New_AST (Operator (yy.value_stack (yy.tos)), yy.value_stack (yy.tos-1), Left (yy.value_stack (yy.tos)));
              else
                  declare
-                     Right_Operand : AST_Type :=
+                     Right_Operand : constant AST_Type :=
                          (if Kind (Right (yy.value_stack (yy.tos))) = UNARY_OPERATOR
                              then Operand (Right (yy.value_stack (yy.tos)))
                              else Right (yy.value_stack (yy.tos))

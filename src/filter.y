@@ -159,7 +159,7 @@ PropertyFirstComparison : Property optional__ValueOpRhs
                  $$ := New_AST (Operator ($2), $1, Left ($2));
              else
                  declare
-                     Right_Operand : AST_Type :=
+                     Right_Operand : constant AST_Type :=
                          (if Kind (Right ($2)) = UNARY_OPERATOR
                              then Operand (Right ($2))
                              else Right ($2)
