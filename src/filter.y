@@ -199,7 +199,11 @@ SetZipOpRhs : PropertyZipAddon HAS grouped__ValueZips
 ;
 PropertyZipAddon : Colon Property zero_or_more__Colons_1
 {
- $$ := New_AST (':', $2, $3);
+    if Is_Null ($3) then
+        $$ := $2;
+    else
+        $$ := New_AST (':', $2, $3);
+    end if;
 }
 ;
 LengthOpRhs : LENGTH optional__Operator Value
@@ -473,11 +477,15 @@ grouped__nones
 zero_or_more__Colons_1
 : Colon Property
 {
- $$ := New_AST (':', $2);    
+ $$ := $2;    
 }
 | zero_or_more__Colons_1 Colon Property
 {
- $$ := New_AST (':', $1, $2);
+    if Is_Null ($1) then
+        $$ := $3;
+    else
+        $$ := New_AST (':', $1, $3);
+    end if;
 }
 | -- empty
 {
@@ -487,11 +495,15 @@ zero_or_more__Colons_1
 zero_or_more__Colons
 : Colon ValueListEntry
 {
- $$ := New_AST (':', $2);
+ $$ := $2;
 }
 | zero_or_more__Colons Colon ValueListEntry
 {
- $$ := New_AST (':', $1, $2);
+    if Is_Null ($1) then
+        $$ := $3;
+    else
+        $$ := New_AST (':', $1, $3);
+    end if;
 }
 | -- empty
 {
