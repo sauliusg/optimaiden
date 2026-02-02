@@ -158,30 +158,32 @@ PropertyFirstComparison : Property optional__ValueOpRhs
              if Is_Null (Right ($2)) then
                  $$ := New_AST (Operator ($2), $1, Left ($2));
              else
-                 case Kind (Left ($2)) is
-                     when OPERATOR =>
-                         if Operator (Left ($2)) = ':' then
+                 declare
+                     Right_Operand : AST_Type :=
+                         (if Kind (Right ($2)) = UNARY_OPERATOR
+                             then Operand (Right ($2))
+                             else Right ($2)
+                         );
+                 begin
+                     case Kind (Left ($2)) is
+                         when OPERATOR =>
+                             if Operator (Left ($2)) = ':' then
+                                 $$ := New_AST (Operator ($2),
+                                                New_AST (':', $1, Left ($2)),
+                                                Right_Operand
+                                               );
+                             else
+                                 $$ := New_AST (Operator ($2), $1, $2);
+                             end if;
+                         when VARIABLE =>
                              $$ := New_AST (Operator ($2),
                                             New_AST (':', $1, Left ($2)),
-                                            (if Kind (Right ($2)) = UNARY_OPERATOR
-                                                then Operand (Right ($2))
-                                                else Right ($2)
-                                             )
+                                            Right_Operand
                                             );
-                         else
+                         when others =>
                              $$ := New_AST (Operator ($2), $1, $2);
-                         end if;
-                     when VARIABLE =>
-                         $$ := New_AST (Operator ($2),
-                                        New_AST (':', $1, Left ($2)),
-                                        (if Kind (Right ($2)) = UNARY_OPERATOR
-                                            then Operand (Right ($2))
-                                            else Right ($2)
-                                         )
-                                        );
-                     when others =>
-                         $$ := New_AST (Operator ($2), $1, $2);
-                 end case;
+                     end case;
+                 end;
              end if;
          when UNARY_OPERATOR =>
              $$ := New_AST (Operator ($2), $1, Operand ($2));
