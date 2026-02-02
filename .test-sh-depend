@@ -1,6 +1,7 @@
-# 2026-02-02 20:38:47 EET
+# 2026-02-02 20:46:37 EET
 tests/outputs/parse_filter_001.diff: bin/parse_filter
 tests/outputs/parse_filter_002.diff: bin/parse_filter
 tests/outputs/parse_filter_003.diff: bin/parse_filter
 tests/outputs/parse_filter_004.diff: bin/parse_filter
 tests/outputs/parse_filter_005.diff: bin/parse_filter
+tests/outputs/parse_filter_006.diff: bin/parse_filter

@@ -1,5 +1,5 @@
-Parsing string: "aa:bbbb:ccc:dd HAS ONLY "C":"H":"O":"Y""
-(OPERATOR OP_HAS_ONLY: 
+Parsing string: "aa:bbbb:ccc:dd HAS "C":"H":"O":"Y""
+(OPERATOR OP_HAS_ALL: 
     (OPERATOR ':': 
         VARIABLE: aa
         (OPERATOR ':': 

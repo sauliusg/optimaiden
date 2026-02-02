@@ -1,0 +1,69 @@
+Parsing string: "aa:bbbb:ccc:dd HAS ALL "C":"H":"O":"Y""
+(OPERATOR OP_HAS_ALL: 
+    (OPERATOR ':': 
+        VARIABLE: aa
+        (OPERATOR ':': 
+            VARIABLE: bbbb
+            (OPERATOR ':': 
+                VARIABLE: ccc
+                VARIABLE: dd
+            )
+        )
+    )
+    (OPERATOR ':': 
+        TEXT: "C"
+        (OPERATOR ':': 
+            TEXT: "H"
+            (OPERATOR ':': 
+                TEXT: "O"
+                TEXT: "Y"
+            )
+        )
+    )
+)
+Parsing string: "aa:bbbb:ccc:dd HAS ANY "C":"H":"O":"Y""
+(OPERATOR OP_HAS_ANY: 
+    (OPERATOR ':': 
+        VARIABLE: aa
+        (OPERATOR ':': 
+            VARIABLE: bbbb
+            (OPERATOR ':': 
+                VARIABLE: ccc
+                VARIABLE: dd
+            )
+        )
+    )
+    (OPERATOR ':': 
+        TEXT: "C"
+        (OPERATOR ':': 
+            TEXT: "H"
+            (OPERATOR ':': 
+                TEXT: "O"
+                TEXT: "Y"
+            )
+        )
+    )
+)
+Parsing string: "aa:bbbb:ccc:dd HAS ONLY "C":"H":"O":"Y""
+(OPERATOR OP_HAS_ONLY: 
+    (OPERATOR ':': 
+        VARIABLE: aa
+        (OPERATOR ':': 
+            VARIABLE: bbbb
+            (OPERATOR ':': 
+                VARIABLE: ccc
+                VARIABLE: dd
+            )
+        )
+    )
+    (OPERATOR ':': 
+        TEXT: "C"
+        (OPERATOR ':': 
+            TEXT: "H"
+            (OPERATOR ':': 
+                TEXT: "O"
+                TEXT: "Y"
+            )
+        )
+    )
+)
