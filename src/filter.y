@@ -226,7 +226,9 @@ FuzzyStringOpRhs
 ;
 SetOpRhs : HAS grouped__nones
 {
-    if Kind ($2) = UNARY_OPERATOR then
+    if Kind ($2) = UNARY_OPERATOR and then
+       Operator ($2) in OP_HAS_ALL .. OP_HAS_ONLY
+    then
         $$ := $2;
     else
         $$ := New_AST (OP_HAS_ALL, $2);
