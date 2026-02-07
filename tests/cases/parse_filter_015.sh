@@ -1,0 +1,18 @@
+#!/bin/sh
+
+./bin/parse_filter 'NOT (NOT s.p.q : a.b.c HAS ONLY ENDS WITH ".cif" : ".hkl")'
+./bin/parse_filter 'NOT (NOT s.p.q : a.b.c HAS ALL ".cif" : ".hkl")'
+./bin/parse_filter 'NOT (NOT s.p.q : a.b.c HAS ALL ENDS WITH ".cif" : ".hkl")'
+./bin/parse_filter 'NOT (NOT s.p.q : a.b.c HAS ALL ENDS WITH ".cif" : ENDS ".hkl")'
+./bin/parse_filter 'NOT (NOT s.p.q : a.b.c HAS ALL ENDS WITH ".cif" : ENDS WITH ".hkl")'
+./bin/parse_filter 'NOT (NOT sp HAS ANY ENDS WITH ".cif")'
+./bin/parse_filter 'NOT (NOT spq : abc HAS ALL ENDS WITH ".cif" : ENDS WITH ".hkl")'
+./bin/parse_filter 's.p : a.b HAS ALL ENDS WITH ".cif" : ENDS WITH ".hkl"'
+./bin/parse_filter 's.p : q HAS ALL ENDS WITH ".cif" : ENDS WITH ".hkl"'
+./bin/parse_filter 's.p : q.r HAS ALL ENDS WITH ".cif" : ENDS WITH ".hkl"'
+./bin/parse_filter 's.p : q.r.c HAS ALL ENDS WITH ".cif" : ENDS WITH ".hkl"'
+./bin/parse_filter 's.p HAS ALL ENDS WITH ".cif"'
+./bin/parse_filter 's.p.m : q.r HAS ALL ENDS WITH ".cif" : ENDS WITH ".hkl"'
+./bin/parse_filter 's.p.m : q.r.n HAS ALL ENDS WITH ".cif" : ENDS WITH ".hkl"'
+./bin/parse_filter 's.p.q : a.b.c HAS ALL ENDS WITH ".cif" : ENDS WITH ".hkl"'
+./bin/parse_filter 's.p.s : q.r HAS ALL ENDS WITH ".cif" : ENDS WITH ".hkl"'

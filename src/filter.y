@@ -194,6 +194,13 @@ ConstantFirstComparison
 }
 ;
 
+-- This is the most complicated rule from the point of view of AST
+-- construction. The problem is that "optional__ValueOpRhs" can
+-- start with other property values, that should be linked with
+-- a '.' or ':' operator with left-most "Property" construct
+-- in this rule, and not with the right-hand operators. Hence
+-- the complex AST rearrangement logic (S.G.):
+
 PropertyFirstComparison
 : Property optional__ValueOpRhs
 {
@@ -214,7 +221,8 @@ PropertyFirstComparison
                  begin
                      case Kind (Left ($2)) is
                          when OPERATOR =>
-                             if Operator (Left ($2)) = ':' then
+                             if Operator (Left ($2)) = ':' or else
+                                Operator (Left ($2)) = '.'  then
                                  $$ := New_AST (Operator ($2),
                                                 New_AST (':', $1, Left ($2)),
                                                 Right_Operand
