@@ -125,7 +125,7 @@ ValueZip
 ;
 
 ValueZipList
-: ValueZip zero_or_more__Commas_1
+: ValueZip zero_or_more__Comma_ValueZips
 {
     if Is_Null ($2) then
         $$ := $1;
@@ -682,12 +682,12 @@ grouped__KNOWNs
 }
 ;
 
-zero_or_more__Commas_1
+zero_or_more__Comma_ValueZips
 : Comma ValueZip
 {
  $$ := $2;
 }
-| zero_or_more__Commas_1 Comma ValueZip
+| zero_or_more__Comma_ValueZips Comma ValueZip
 {
     if Is_Null ($1) then
         $$ := $3;
