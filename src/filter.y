@@ -36,7 +36,8 @@
 
 %%
 
-Filter : optional__Spaces Expression
+Filter
+: optional__Spaces Expression
 {
     Put_Line (Image ($2));
 }
@@ -156,8 +157,8 @@ ExpressionClause
 }
 ;
 
-ExpressionPhrase :
-optional__NOT grouped__Comparisons
+ExpressionPhrase
+: optional__NOT grouped__Comparisons
 {
  if Is_Null ($1) then
      $$ := $2;
@@ -189,7 +190,8 @@ ConstantFirstComparison
 }
 ;
 
-PropertyFirstComparison : Property optional__ValueOpRhs
+PropertyFirstComparison
+: Property optional__ValueOpRhs
 {
  if Is_Null ($2) then
      $$ := $1;
@@ -517,7 +519,8 @@ optional__Operator
 }
 ;
 
-optional__exclamation_mark : '!'
+optional__exclamation_mark
+: '!'
 {
  $$ := New_AST ('!', Null_AST);
 }
@@ -527,7 +530,8 @@ optional__exclamation_mark : '!'
 }
 ;
 
-zero_or_more__Comma_ValueListEntries : Comma ValueListEntry
+zero_or_more__Comma_ValueListEntries
+: Comma ValueListEntry
 {
  $$ := $2;
 }
