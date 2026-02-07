@@ -219,7 +219,11 @@ PropertyFirstComparison : Property optional__ValueOpRhs
                  end;
              end if;
          when UNARY_OPERATOR =>
-             $$ := New_AST (Operator ($2), $1, Operand ($2));
+             if Is_Null (Operand ($2)) then
+                 $$ := New_AST (Operator ($2), $1);
+             else
+                 $$ := New_AST (Operator ($2), $1, Operand ($2));
+             end if;
          when others =>
              $$ := New_AST ('?', $1, $2);
      end case;
@@ -658,11 +662,11 @@ optional__AND
 grouped__KNOWNs
 : KNOWN
 {
- $$ := New_AST ('K', Null_AST);
+ $$ := New_AST (OP_IS_KNOWN, Null_AST);
 }
 | UNKNOWN
 {
- $$ := New_Ast ('!', New_AST ('K', Null_AST));
+ $$ := New_Ast (OP_IS_UNKNOWN, Null_AST);
 }
 ;
 
