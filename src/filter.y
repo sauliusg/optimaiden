@@ -228,7 +228,11 @@ PropertyFirstComparison : Property optional__ValueOpRhs
 ;
 
 ValueOpRhs
-: grouped__ValueEqRhs
+: ValueEqRhs
+{
+ $$ := $1;
+}
+| ValueRelCompRhs
 {
  $$ := $1;
 }
@@ -718,17 +722,6 @@ grouped__Comparisons
 | OpeningBrace Expression ClosingBrace
 {
  $$ := $2;
-}
-;
-
-grouped__ValueEqRhs
-: ValueEqRhs
-{
- $$ := $1;
-}
-| ValueRelCompRhs
-{
- $$ := $1;
 }
 ;
 
