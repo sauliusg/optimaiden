@@ -707,7 +707,7 @@ optional__NOT
 }
 | NOT
 {
- $$ := New_AST ('N', Null_AST);
+ $$ := New_AST (OP_NOT, Null_AST);
 }
 ;
 

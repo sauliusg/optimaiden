@@ -837,7 +837,7 @@ when 125 => -- #line 705
 
 when 126 => -- #line 709
 
- YYVal := New_AST ('N', Null_AST);
+ YYVal := New_AST (OP_NOT, Null_AST);
 
 
 when 127 => -- #line 716
