@@ -55,9 +55,13 @@ OrderedConstant
 ;
 
 UnorderedConstant
-: grouped__TRUEs
+: TRUE
 {
- $$ := $1;
+ $$ := New_AST (True);
+}
+| FALSE
+{
+ $$ := New_AST (False);
 }
 ;
 
@@ -577,17 +581,6 @@ optional__ValueOpRhs
 | -- empty:
 {
  $$ := Null_AST;
-}
-;
-
-grouped__TRUEs
-: TRUE
-{
- $$ := New_AST (True);
-}
-| FALSE
-{
- $$ := New_AST (False);
 }
 ;
 
