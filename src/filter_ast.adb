@@ -118,19 +118,6 @@ package body Filter_AST is
         );
    end;
 
-   function New_AST (Op : Operator_Type) return AST_Type is
-   begin
-      return
-        (Ada.Finalization.Controlled with
-         AST => new AST_Node_Type'
-           (
-            Kind => OPERATOR,
-            Op => Op,
-            others => <>
-           )
-        );
-   end;
-   
    function New_AST (Op : Operator_Type; Arg : AST_Type) return AST_Type is
    begin
       return

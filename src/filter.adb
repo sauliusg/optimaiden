@@ -561,11 +561,11 @@ when 84 => -- #line 485
 
 when 85 => -- #line 492
 
- YYVal := New_AST ('<');
+ YYVal := New_AST ('<', Null_AST, Null_AST);
 
 when 86 => -- #line 496
 
- YYVal := New_AST ('>');
+ YYVal := New_AST ('>', Null_AST, Null_AST);
 
 when 87 => -- #line 503
 
@@ -577,7 +577,7 @@ when 88 => -- #line 507
 
 when 89 => -- #line 513
 
- YYVal := New_AST ('!');
+ YYVal := New_AST ('!', Null_AST);
 
 when 90 => -- #line 517
 
@@ -761,7 +761,7 @@ when 130 => -- #line 731
 
 when 131 => -- #line 738
 
- YYVal := New_AST ('=');
+ YYVal := New_AST ('=', Null_AST, Null_AST);
 
 when 132 => -- #line 742
 

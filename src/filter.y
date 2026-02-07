@@ -490,11 +490,11 @@ grouped__ValueZips
 less_or_more
 : '<'
 {
- $$ := New_AST ('<');
+ $$ := New_AST ('<', Null_AST, Null_AST);
 }
 | '>'
 {
- $$ := New_AST ('>');
+ $$ := New_AST ('>', Null_AST, Null_AST);
 }
 ;
 
@@ -511,7 +511,7 @@ optional__Operator
 
 optional__exclamation_mark : '!'
 {
- $$ := New_AST ('!');
+ $$ := New_AST ('!', Null_AST);
 }
 | -- empty
 {
@@ -736,7 +736,7 @@ grouped__Comparisons
 optional__equals
 : '='
 {
- $$ := New_AST ('=');
+ $$ := New_AST ('=', Null_AST, Null_AST);
 }
 | -- empty
 {
