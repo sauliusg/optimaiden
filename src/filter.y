@@ -75,7 +75,19 @@ OrderedValue
 ;
 
 ValueListEntry
-: grouped__Values
+: Value
+{
+ $$ := $1;
+}
+| ValueEqRhs
+{
+ $$ := $1;
+}
+| ValueRelCompRhs
+{
+ $$ := $1;
+}
+| FuzzyStringOpRhs
 {
  $$ := $1;
 }
@@ -492,25 +504,6 @@ optional__exclamation_mark : '!'
 | -- empty
 {
  $$ := Null_AST;
-}
-;
-
-grouped__Values
-: Value
-{
- $$ := $1;
-}
-| ValueEqRhs
-{
- $$ := $1;
-}
-| ValueRelCompRhs
-{
- $$ := $1;
-}
-| FuzzyStringOpRhs
-{
- $$ := $1;
 }
 ;
 
