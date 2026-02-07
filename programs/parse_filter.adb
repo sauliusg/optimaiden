@@ -25,15 +25,20 @@ begin
         Filter_Lexer_DFA.AFlex_Debug := True;
    end if;
    
-   if Argument_Count = 0 then
-      Put_Line ("Parsing default string: """ & Buffer & """");
-      YYParse;
-   else
-      for I in 1 .. Argument_Count loop
-         YYInput_Definition.Start_Parsing (Argument (I));
-         Put_Line ("Parsing string: """ & Buffer & """");
-         YYParse;
-      end loop;
+   declare
+      Parsed_Expression : Filter_AST.AST_Type;
+   begin
+      if Argument_Count = 0 then
+         Put_Line ("Parsing default string: """ & Buffer & """");
+         Parsed_Expression := Filter.Parse (Buffer);
+         Put_Line (Image (Parsed_Expression));
+      else
+         for I in 1 .. Argument_Count loop
+            Put_Line ("Parsing string: """ & Argument (I) & """");
+            Parsed_Expression := Filter.Parse (Argument (I));
+            Put_Line (Image (Parsed_Expression));
+         end loop;
    end if;
+   end;
   
 end Parse_Filter;

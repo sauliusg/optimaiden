@@ -1,16 +1,27 @@
 with Text_IO, Filter_Lexer, YYErrors; use Text_IO, Filter_Lexer, YYErrors;
 
-with Filter_Goto, Filter_Tokens, Filter_Shift_Reduce, Filter_AST;
+with Filter_Goto, Filter_Tokens, Filter_Shift_Reduce;
 with Ada.Strings.Unbounded;
 with YYStype_Definition;
+with YYInput_Definition;
 
-use Filter_Goto, Filter_Tokens, Filter_Shift_Reduce, Filter_AST;
+use Filter_Goto, Filter_Tokens, Filter_Shift_Reduce;
 use Ada.Strings.Unbounded;
 use YYStype_Definition;
+use YYInput_Definition;
 
 package body Filter is
 
     Parsed_Expression : Filter_AST.AST_Type;
+
+    function Parse (S : String) return Filter_AST.AST_Type is
+    begin
+        YYInput_Definition.Start_Parsing (S);
+        YYParse;
+        return Return_AST : AST_Type := Parsed_Expression do
+            Parsed_Expression := Null_AST ;
+        end return;
+    end;
 
    procedure YYParse is
       --  Rename User Defined Packages to Internal Names.
@@ -267,7 +278,7 @@ package body Filter is
 
 when 1 => -- #line 41
 
-    Put_Line (Image (yy.value_stack (yy.tos)));
+ Parsed_Expression := yy.value_stack (yy.tos);
 
 when 2 => -- #line 48
 
