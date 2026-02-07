@@ -118,7 +118,7 @@ ValueList
 ;
 
 ValueZip
-: ValueListEntry Colon ValueListEntry zero_or_more__Colons
+: ValueListEntry Colon ValueListEntry zero_or_more__Colon_ValueListEntries
 {
     if Is_Null ($4) then
         $$ := New_AST (':', $1, $3);
@@ -317,7 +317,7 @@ SetZipOpRhs
 ;
 
 PropertyZipAddon
-: Colon Property zero_or_more__Colons_1
+: Colon Property zero_or_more__Colon_Properties
 {
     if Is_Null ($3) then
         $$ := $2;
@@ -615,12 +615,12 @@ grouped__SetValues
 }
 ;
 
-zero_or_more__Colons_1
+zero_or_more__Colon_Properties
 : Colon Property
 {
  $$ := $2;    
 }
-| zero_or_more__Colons_1 Colon Property
+| zero_or_more__Colon_Properties Colon Property
 {
     if Is_Null ($1) then
         $$ := $3;
@@ -634,12 +634,12 @@ zero_or_more__Colons_1
 }
 ;
 
-zero_or_more__Colons
+zero_or_more__Colon_ValueListEntries
 : Colon ValueListEntry
 {
  $$ := $2;
 }
-| zero_or_more__Colons Colon ValueListEntry
+| zero_or_more__Colon_ValueListEntries Colon ValueListEntry
 {
     if Is_Null ($1) then
         $$ := $3;
