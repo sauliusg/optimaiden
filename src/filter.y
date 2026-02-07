@@ -61,14 +61,22 @@ UnorderedConstant
 ;
 
 Value
-: grouped__UnorderedConstants
+: UnorderedConstant
+{
+ $$ := $1;
+}
+| OrderedValue
 {
  $$ := $1;
 }
 ;
 
 OrderedValue
-: grouped__OrderedConstants
+: OrderedConstant
+{
+ $$ := $1;
+}
+| Property
 {
  $$ := $1;
 }
@@ -689,17 +697,6 @@ zero_or_more__Commas_1
 }
 ;
 
-grouped__UnorderedConstants
-: UnorderedConstant
-{
- $$ := $1;
-}
-| OrderedValue
-{
- $$ := $1;
-}
-;
-
 optional__NOT
 : -- empty
 {
@@ -708,17 +705,6 @@ optional__NOT
 | NOT
 {
  $$ := New_AST (OP_NOT, Null_AST);
-}
-;
-
-grouped__OrderedConstants
-: OrderedConstant
-{
- $$ := $1;
-}
-| Property
-{
- $$ := $1;
 }
 ;
 
