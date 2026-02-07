@@ -372,7 +372,11 @@ ONLY : ONLY_TOKEN optional__Spaces;
 ANY : ANY_TOKEN optional__Spaces;
 
 Operator
-: grouped__EqualityOperators
+: EqualityOperator
+{
+ $$ := $1;
+}
+| RelativeComparisonOperator
 {
  $$ := $1;
 }
@@ -722,17 +726,6 @@ grouped__Comparisons
 | OpeningBrace Expression ClosingBrace
 {
  $$ := $2;
-}
-;
-
-grouped__EqualityOperators
-: EqualityOperator
-{
- $$ := $1;
-}
-| RelativeComparisonOperator
-{
- $$ := $1;
 }
 ;
 
