@@ -41,6 +41,7 @@ Filter : optional__Spaces Expression
     Put_Line (Image ($2));
 }
 ;
+
 OrderedConstant
 : String
 {
@@ -51,27 +52,37 @@ OrderedConstant
  $$ := $1;
 }
 ;
-UnorderedConstant : grouped__TRUEs
+
+UnorderedConstant
+: grouped__TRUEs
 {
  $$ := $1;
 }
 ;
-Value : grouped__UnorderedConstants
+
+Value
+: grouped__UnorderedConstants
 {
  $$ := $1;
 }
 ;
-OrderedValue : grouped__OrderedConstants
+
+OrderedValue
+: grouped__OrderedConstants
 {
  $$ := $1;
 }
 ;
-ValueListEntry : grouped__Values
+
+ValueListEntry
+: grouped__Values
 {
  $$ := $1;
 }
 ;
-ValueList : ValueListEntry zero_or_more__Commas
+
+ValueList
+: ValueListEntry zero_or_more__Commas
 {
     if Is_Null ($2) then
         $$ := $1;
@@ -80,7 +91,9 @@ ValueList : ValueListEntry zero_or_more__Commas
     end if;
 }
 ;
-ValueZip : ValueListEntry Colon ValueListEntry zero_or_more__Colons
+
+ValueZip
+: ValueListEntry Colon ValueListEntry zero_or_more__Colons
 {
     if Is_Null ($4) then
         $$ := New_AST (':', $1, $3);
@@ -89,7 +102,9 @@ ValueZip : ValueListEntry Colon ValueListEntry zero_or_more__Colons
     end if;
 }
 ;
-ValueZipList : ValueZip zero_or_more__Commas_1
+
+ValueZipList
+: ValueZip zero_or_more__Commas_1
 {
     if Is_Null ($2) then
         $$ := $1;
@@ -98,7 +113,9 @@ ValueZipList : ValueZip zero_or_more__Commas_1
     end if;
 }
 ;
-Expression : ExpressionClause optional__OR
+
+Expression
+: ExpressionClause optional__OR
 {
  if Is_Null ($2) then
      $$ := $1;
@@ -107,7 +124,9 @@ Expression : ExpressionClause optional__OR
  end if;
 }
 ;
-ExpressionClause : ExpressionPhrase optional__AND
+
+ExpressionClause
+: ExpressionPhrase optional__AND
 {
  if Is_Null ($2) then
     $$ := $1;
@@ -116,7 +135,9 @@ ExpressionClause : ExpressionPhrase optional__AND
  end if;
 }
 ;
-ExpressionPhrase : optional__NOT grouped__Comparisons
+
+ExpressionPhrase :
+optional__NOT grouped__Comparisons
 {
  if Is_Null ($1) then
      $$ := $2;
@@ -125,6 +146,7 @@ ExpressionPhrase : optional__NOT grouped__Comparisons
  end if;
 }
 ;
+
 Comparison
 : ConstantFirstComparison
 {
@@ -135,6 +157,7 @@ Comparison
  $$ := $1;
 }
 ;
+
 ConstantFirstComparison
 : OrderedConstant ValueOpRhs
 {
@@ -145,6 +168,7 @@ ConstantFirstComparison
  $$ := New_AST (Operator ($2), $1, Operand ($2));
 }
 ;
+
 PropertyFirstComparison : Property optional__ValueOpRhs
 {
  if Is_Null ($2) then
@@ -190,26 +214,35 @@ PropertyFirstComparison : Property optional__ValueOpRhs
  end if;
 }
 ;
-ValueOpRhs : grouped__ValueEqRhs
+
+ValueOpRhs
+: grouped__ValueEqRhs
 {
  $$ := $1;
 }
 ;
-ValueEqRhs : EqualityOperator Value
+
+ValueEqRhs
+: EqualityOperator Value
 {
  $$ := new_AST (Operator ($1), $2);
 }
 ;
-ValueRelCompRhs : RelativeComparisonOperator OrderedValue
+
+ValueRelCompRhs
+: RelativeComparisonOperator OrderedValue
 {
  $$ := new_AST (Operator ($1), $2);
 }
 ;
-KnownOpRhs : IS grouped__KNOWNs
+
+KnownOpRhs
+: IS grouped__KNOWNs
 {
  $$ := $2;
 }
 ;
+
 FuzzyStringOpRhs
 : CONTAINS Value
 {
@@ -224,7 +257,9 @@ FuzzyStringOpRhs
  $$ := New_AST (OP_ENDS_WITH, $3);
 }
 ;
-SetOpRhs : HAS grouped__nones
+
+SetOpRhs
+: HAS grouped__nones
 {
     if Kind ($2) = UNARY_OPERATOR and then
        Operator ($2) in OP_HAS_ALL .. OP_HAS_ONLY
@@ -235,7 +270,9 @@ SetOpRhs : HAS grouped__nones
     end if;
 }
 ;
-SetZipOpRhs : PropertyZipAddon HAS grouped__ValueZips
+
+SetZipOpRhs
+: PropertyZipAddon HAS grouped__ValueZips
 {
     if Operator ($3) = ':' then
         $$ := New_AST (OP_HAS_ALL, $1, $3);
@@ -244,7 +281,9 @@ SetZipOpRhs : PropertyZipAddon HAS grouped__ValueZips
     end if;
 }
 ;
-PropertyZipAddon : Colon Property zero_or_more__Colons_1
+
+PropertyZipAddon
+: Colon Property zero_or_more__Colons_1
 {
     if Is_Null ($3) then
         $$ := $2;
@@ -253,7 +292,9 @@ PropertyZipAddon : Colon Property zero_or_more__Colons_1
     end if;
 }
 ;
-LengthOpRhs : LENGTH optional__Operator Value
+
+LengthOpRhs
+: LENGTH optional__Operator Value
 {
     if Is_Null ($2) then    
         $$ := New_AST (OP_LENGTH, New_AST ('=', $3));
@@ -262,7 +303,9 @@ LengthOpRhs : LENGTH optional__Operator Value
     end if;
 }
 ;
-Property : Identifier
+
+Property
+: Identifier
 {
  $$ := $1;
 }
@@ -271,52 +314,56 @@ Property : Identifier
  $$ := new_AST ('.', $1, $3);
 }
 ;
-OpeningBrace : '(' optional__Spaces
-;
-ClosingBrace : ')' optional__Spaces
-;
-Dot : '.' optional__Spaces
-;
-Comma : ',' optional__Spaces
-;
-Colon : ':' optional__Spaces
-;
-AND : AND_TOKEN optional__Spaces
-;
-NOT : NOT_TOKEN optional__Spaces
-;
-OR : OR_TOKEN optional__Spaces
-;
-IS : IS_TOKEN optional__Spaces
-;
-KNOWN : KNOWN_TOKEN optional__Spaces
-;
-UNKNOWN : UNKNOWN_TOKEN optional__Spaces
-;
-CONTAINS : CONTAINS_TOKEN optional__Spaces
-;
-STARTS : STARTS_TOKEN optional__Spaces
-;
-ENDS : ENDS_TOKEN optional__Spaces
-;
-WITH : WITH_TOKEN optional__Spaces
-;
-LENGTH : LENGTH_TOKEN optional__Spaces
-;
-HAS : HAS_TOKEN optional__Spaces
-;
-ALL : ALL_TOKEN optional__Spaces
-;
-ONLY : ONLY_TOKEN optional__Spaces
-;
-ANY : ANY_TOKEN optional__Spaces
-;
-Operator : grouped__EqualityOperators
+
+OpeningBrace : '(' optional__Spaces;
+
+ClosingBrace : ')' optional__Spaces;
+
+Dot : '.' optional__Spaces;
+
+Comma : ',' optional__Spaces;
+
+Colon : ':' optional__Spaces;
+
+AND : AND_TOKEN optional__Spaces;
+
+NOT : NOT_TOKEN optional__Spaces;
+
+OR : OR_TOKEN optional__Spaces;
+
+IS : IS_TOKEN optional__Spaces;
+
+KNOWN : KNOWN_TOKEN optional__Spaces;
+
+UNKNOWN : UNKNOWN_TOKEN optional__Spaces;
+
+CONTAINS : CONTAINS_TOKEN optional__Spaces;
+
+STARTS : STARTS_TOKEN optional__Spaces;
+
+ENDS : ENDS_TOKEN optional__Spaces;
+
+WITH : WITH_TOKEN optional__Spaces;
+
+LENGTH : LENGTH_TOKEN optional__Spaces;
+
+HAS : HAS_TOKEN optional__Spaces;
+
+ALL : ALL_TOKEN optional__Spaces;
+
+ONLY : ONLY_TOKEN optional__Spaces;
+
+ANY : ANY_TOKEN optional__Spaces;
+
+Operator
+: grouped__EqualityOperators
 {
  $$ := $1;
 }
 ;
-EqualityOperator : optional__exclamation_mark '=' optional__Spaces
+
+EqualityOperator
+: optional__exclamation_mark '=' optional__Spaces
 {
     if Is_NULL ($1) then
         $$ := New_Ast ('=', Null_AST);
@@ -325,7 +372,9 @@ EqualityOperator : optional__exclamation_mark '=' optional__Spaces
     end if;
 }
 ;
-RelativeComparisonOperator : less_or_more optional__equals optional__Spaces
+
+RelativeComparisonOperator
+: less_or_more optional__equals optional__Spaces
 {
  if Is_NULL ($2) then
      $$ := New_AST (Operator ($1), Null_AST);
@@ -342,43 +391,48 @@ RelativeComparisonOperator : less_or_more optional__equals optional__Spaces
  end if;
 }
 ;
-TRUE : TRUE_TOKEN optional__Spaces
-;
-FALSE : FALSE_TOKEN optional__Spaces
-;
-Identifier : IDENTIFIER_TOKEN optional__Spaces
+
+TRUE : TRUE_TOKEN optional__Spaces;
+
+FALSE : FALSE_TOKEN optional__Spaces;
+
+Identifier
+: IDENTIFIER_TOKEN optional__Spaces
 {
  $$ := $1;
 }
-;
-String : STRING_TOKEN optional__Spaces
-{
- $$ := $1;
-}
-;
-Number : NUMBER_TOKEN optional__Spaces
-{
- $$ := $1;
-}
-;
-tab : HT_TOKEN
-;
-nl : LF_TOKEN
-;
-cr : CR_TOKEN
-;
-vt : VT_TOKEN
-;
-ff : FF_TOKEN
-;
-Space : ' ' | tab | nl | cr | vt | ff
-;
-Spaces : Space | Spaces Space
-;
-UnicodeHighChar : UNICODE_CHARACTER
 ;
 
------------------------------
+String
+: STRING_TOKEN optional__Spaces
+{
+ $$ := $1;
+}
+;
+
+Number
+: NUMBER_TOKEN optional__Spaces
+{
+ $$ := $1;
+}
+;
+
+tab : HT_TOKEN;
+
+nl : LF_TOKEN;
+
+cr : CR_TOKEN;
+
+vt : VT_TOKEN;
+
+ff : FF_TOKEN;
+
+Space : ' ' | tab | nl | cr | vt | ff;
+
+Spaces : Space | Spaces Space;
+
+UnicodeHighChar : UNICODE_CHARACTER;
+
 optional__OR
 : OR Expression
 {
@@ -389,6 +443,7 @@ optional__OR
  $$ := Null_AST;
 }
 ;
+
 grouped__ValueZips
 : ValueZip
 {
@@ -407,6 +462,7 @@ grouped__ValueZips
  $$ := New_AST (OP_HAS_ANY, $2);
 }
 ;
+
 less_or_more
 : '<'
 {
@@ -417,6 +473,7 @@ less_or_more
  $$ := New_AST ('>');
 }
 ;
+
 optional__Operator
 : Operator
 {
@@ -427,6 +484,7 @@ optional__Operator
  $$ := Null_AST;
 }
 ;
+
 optional__exclamation_mark : '!'
 {
  $$ := New_AST ('!');
@@ -436,6 +494,7 @@ optional__exclamation_mark : '!'
  $$ := Null_AST;
 }
 ;
+
 grouped__Values
 : Value
 {
@@ -454,6 +513,7 @@ grouped__Values
  $$ := $1;
 }
 ;
+
 zero_or_more__Commas : Comma ValueListEntry
 {
  $$ := $2;
@@ -471,6 +531,7 @@ zero_or_more__Commas : Comma ValueListEntry
  $$ := Null_AST;
 }
 ;
+
 optional__ValueOpRhs
 : ValueOpRhs
 {
@@ -501,6 +562,7 @@ optional__ValueOpRhs
  $$ := Null_AST;
 }
 ;
+
 grouped__TRUEs
 : TRUE
 {
@@ -511,6 +573,7 @@ grouped__TRUEs
  $$ := New_AST (False);
 }
 ;
+
 grouped__nones
 : grouped__Values_1
 {
@@ -529,6 +592,7 @@ grouped__nones
  $$ := New_AST (OP_HAS_ONLY, $2);
 }
 ;
+
 zero_or_more__Colons_1
 : Colon Property
 {
@@ -547,6 +611,7 @@ zero_or_more__Colons_1
  $$ := Null_AST;
 }
 ;
+
 zero_or_more__Colons
 : Colon ValueListEntry
 {
@@ -565,16 +630,18 @@ zero_or_more__Colons
  $$ := Null_AST;
 }
 ;
+
 optional__AND
 : AND ExpressionClause
 {
  $$ := New_AST (OP_AND, $2);
 }
-|
+| -- empty
 {
  $$ := Null_AST;
 }
 ;
+
 grouped__KNOWNs
 : KNOWN
 {
@@ -585,6 +652,7 @@ grouped__KNOWNs
  $$ := New_Ast ('!', New_AST ('K', Null_AST));
 }
 ;
+
 zero_or_more__Commas_1
 : Comma ValueZip
 {
@@ -598,11 +666,12 @@ zero_or_more__Commas_1
         $$ := New_AST (',', $1, $3);
     end if;
 }
-|
+| -- empty
 {
  $$ := Null_AST;
 }
 ;
+
 grouped__UnorderedConstants
 : UnorderedConstant
 {
@@ -613,6 +682,7 @@ grouped__UnorderedConstants
  $$ := $1;
 }
 ;
+
 optional__NOT
 : -- empty
 {
@@ -623,6 +693,7 @@ optional__NOT
  $$ := New_AST ('N', Null_AST);
 }
 ;
+
 grouped__OrderedConstants
 : OrderedConstant
 {
@@ -633,17 +704,18 @@ grouped__OrderedConstants
  $$ := $1;
 }
 ;
-grouped__Comparisons :
-Comparison
+
+grouped__Comparisons
+: Comparison
 {
  $$ := $1;
 }
-|
-OpeningBrace Expression ClosingBrace
+| OpeningBrace Expression ClosingBrace
 {
  $$ := $2;
 }
 ;
+
 grouped__ValueEqRhs
 : ValueEqRhs
 {
@@ -654,8 +726,9 @@ grouped__ValueEqRhs
  $$ := $1;
 }
 ;
-grouped__EqualityOperators :
-EqualityOperator
+
+grouped__EqualityOperators
+: EqualityOperator
 {
  $$ := $1;
 }
@@ -664,16 +737,18 @@ EqualityOperator
  $$ := $1;
 }
 ;
+
 optional__equals
 : '='
 {
  $$ := New_AST ('=');
 }
-|
+| -- empty
 {
  $$ := Null_AST;
 }
 ;
+
 optional__WITH
 : WITH
 {
@@ -684,6 +759,7 @@ optional__WITH
  $$ := Null_AST;
 }
 ;
+
 optional__Spaces
 : Spaces
 {
@@ -695,7 +771,6 @@ optional__Spaces
 }
 ;
 
------------------------------
 grouped__Values_1
 : Value
 {
@@ -714,7 +789,6 @@ grouped__Values_1
  $$ := $1;
 }
 ;
------------------------------
 
 %%
 package Filter is
