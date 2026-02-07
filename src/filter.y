@@ -46,7 +46,7 @@ Filter
 OrderedConstant
 : String
 {
- $$ := $1; -- Pass the obtained AST to the upper level
+ $$ := $1; -- Pass the received AST ($1) to the upper level
 }
 | Number
 {
