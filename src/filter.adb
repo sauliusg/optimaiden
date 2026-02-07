@@ -271,7 +271,7 @@ when 1 => -- #line 40
 
 when 2 => -- #line 47
 
- YYVal := yy.value_stack (yy.tos);
+ YYVal := yy.value_stack (yy.tos); -- Pass the obtained AST to the upper level
 
 when 3 => -- #line 51
 

@@ -102,7 +102,7 @@ ValueListEntry
 ;
 
 ValueList
-: ValueListEntry zero_or_more__Commas
+: ValueListEntry zero_or_more__Comma_ValueListEntries
 {
     if Is_Null ($2) then
         $$ := $1;
@@ -527,11 +527,11 @@ optional__exclamation_mark : '!'
 }
 ;
 
-zero_or_more__Commas : Comma ValueListEntry
+zero_or_more__Comma_ValueListEntries : Comma ValueListEntry
 {
  $$ := $2;
 }
-| zero_or_more__Commas Comma ValueListEntry
+| zero_or_more__Comma_ValueListEntries Comma ValueListEntry
 {
     if Is_Null ($1) then
         $$ := $3;
