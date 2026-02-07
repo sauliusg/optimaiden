@@ -271,7 +271,7 @@ FuzzyStringOpRhs
 ;
 
 SetOpRhs
-: HAS grouped__nones
+: HAS grouped__SetValues
 {
     if Kind ($2) = UNARY_OPERATOR and then
        Operator ($2) in OP_HAS_ALL .. OP_HAS_ONLY
@@ -567,8 +567,20 @@ grouped__TRUEs
 }
 ;
 
-grouped__nones
-: grouped__Values_1
+grouped__SetValues
+: Value
+{
+ $$ := $1;
+}
+| EqualityOperator Value
+{
+ $$ := New_Ast (Operator ($1), $2);
+}
+| RelativeComparisonOperator OrderedValue
+{
+ $$ := New_Ast (Operator ($1), $2);
+}
+| FuzzyStringOpRhs
 {
  $$ := $1;
 }
@@ -761,25 +773,6 @@ optional__Spaces
 | -- empty
 {
  $$ := Null_AST;
-}
-;
-
-grouped__Values_1
-: Value
-{
- $$ := $1;
-}
-| EqualityOperator Value
-{
- $$ := New_Ast (Operator ($1), $2);
-}
-| RelativeComparisonOperator OrderedValue
-{
- $$ := New_Ast (Operator ($1), $2);
-}
-| FuzzyStringOpRhs
-{
- $$ := $1;
 }
 ;
 
