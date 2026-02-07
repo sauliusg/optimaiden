@@ -45,7 +45,7 @@ Filter : optional__Spaces Expression
 OrderedConstant
 : String
 {
- $$ := $1;
+ $$ := $1; -- Pass the obtained AST to the upper level
 }
 | Number
 {
