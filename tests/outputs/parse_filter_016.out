@@ -1,0 +1,255 @@
+Parsing string: "s.p : x.y : a.b.c HAS ALL ENDS WITH ".cif" : CONTAINS ".hkl" : STARTS WITH "foo""
+(OPERATOR OP_HAS_ALL: 
+    (OPERATOR ':': 
+        (OPERATOR '.': 
+            VARIABLE: s
+            VARIABLE: p
+        )
+        (OPERATOR ':': 
+            (OPERATOR '.': 
+                VARIABLE: x
+                VARIABLE: y
+            )
+            (OPERATOR '.': 
+                (OPERATOR '.': 
+                    VARIABLE: a
+                    VARIABLE: b
+                )
+                VARIABLE: c
+            )
+        )
+    )
+    (OPERATOR ':': 
+        (UNARY_OPERATOR OP_ENDS_WITH: 
+            TEXT: ".cif"
+        )
+        (OPERATOR ':': 
+            (UNARY_OPERATOR OP_CONTAINS: 
+                TEXT: ".hkl"
+            )
+            (UNARY_OPERATOR OP_STARTS_WITH: 
+                TEXT: "foo"
+            )
+        )
+    )
+)
+Parsing string: "s.p : x.y : f : a.b.c : l HAS ALL ENDS WITH ".cif" : CONTAINS ".hkl" : > 12 : STARTS WITH "foo" : 22"
+(OPERATOR OP_HAS_ALL: 
+    (OPERATOR ':': 
+        (OPERATOR '.': 
+            VARIABLE: s
+            VARIABLE: p
+        )
+        (OPERATOR ':': 
+            (OPERATOR '.': 
+                VARIABLE: x
+                VARIABLE: y
+            )
+            (OPERATOR ':': 
+                (OPERATOR ':': 
+                    VARIABLE: f
+                    (OPERATOR '.': 
+                        (OPERATOR '.': 
+                            VARIABLE: a
+                            VARIABLE: b
+                        )
+                        VARIABLE: c
+                    )
+                )
+                VARIABLE: l
+            )
+        )
+    )
+    (OPERATOR ':': 
+        (UNARY_OPERATOR OP_ENDS_WITH: 
+            TEXT: ".cif"
+        )
+        (OPERATOR ':': 
+            (UNARY_OPERATOR OP_CONTAINS: 
+                TEXT: ".hkl"
+            )
+            (OPERATOR ':': 
+                (OPERATOR ':': 
+                    (UNARY_OPERATOR '>': 
+                        NUMBER:  1.20000E+01
+                    )
+                    (UNARY_OPERATOR OP_STARTS_WITH: 
+                        TEXT: "foo"
+                    )
+                )
+                NUMBER:  2.20000E+01
+            )
+        )
+    )
+)
+Parsing string: "s.p : x.y : f : a.b.c : l.m HAS ALL ENDS WITH ".cif" : CONTAINS ".hkl" : > 12 : STARTS WITH "foo" : 12"
+(OPERATOR OP_HAS_ALL: 
+    (OPERATOR ':': 
+        (OPERATOR '.': 
+            VARIABLE: s
+            VARIABLE: p
+        )
+        (OPERATOR ':': 
+            (OPERATOR '.': 
+                VARIABLE: x
+                VARIABLE: y
+            )
+            (OPERATOR ':': 
+                (OPERATOR ':': 
+                    VARIABLE: f
+                    (OPERATOR '.': 
+                        (OPERATOR '.': 
+                            VARIABLE: a
+                            VARIABLE: b
+                        )
+                        VARIABLE: c
+                    )
+                )
+                (OPERATOR '.': 
+                    VARIABLE: l
+                    VARIABLE: m
+                )
+            )
+        )
+    )
+    (OPERATOR ':': 
+        (UNARY_OPERATOR OP_ENDS_WITH: 
+            TEXT: ".cif"
+        )
+        (OPERATOR ':': 
+            (UNARY_OPERATOR OP_CONTAINS: 
+                TEXT: ".hkl"
+            )
+            (OPERATOR ':': 
+                (OPERATOR ':': 
+                    (UNARY_OPERATOR '>': 
+                        NUMBER:  1.20000E+01
+                    )
+                    (UNARY_OPERATOR OP_STARTS_WITH: 
+                        TEXT: "foo"
+                    )
+                )
+                NUMBER:  1.20000E+01
+            )
+        )
+    )
+)
+Parsing string: "s.p : x.y : f : a.b.c : l.m HAS ALL ENDS WITH ".cif" : CONTAINS ".hkl" : > 12 : STARTS WITH "foo" : w.x"
+(OPERATOR OP_HAS_ALL: 
+    (OPERATOR ':': 
+        (OPERATOR '.': 
+            VARIABLE: s
+            VARIABLE: p
+        )
+        (OPERATOR ':': 
+            (OPERATOR '.': 
+                VARIABLE: x
+                VARIABLE: y
+            )
+            (OPERATOR ':': 
+                (OPERATOR ':': 
+                    VARIABLE: f
+                    (OPERATOR '.': 
+                        (OPERATOR '.': 
+                            VARIABLE: a
+                            VARIABLE: b
+                        )
+                        VARIABLE: c
+                    )
+                )
+                (OPERATOR '.': 
+                    VARIABLE: l
+                    VARIABLE: m
+                )
+            )
+        )
+    )
+    (OPERATOR ':': 
+        (UNARY_OPERATOR OP_ENDS_WITH: 
+            TEXT: ".cif"
+        )
+        (OPERATOR ':': 
+            (UNARY_OPERATOR OP_CONTAINS: 
+                TEXT: ".hkl"
+            )
+            (OPERATOR ':': 
+                (OPERATOR ':': 
+                    (UNARY_OPERATOR '>': 
+                        NUMBER:  1.20000E+01
+                    )
+                    (UNARY_OPERATOR OP_STARTS_WITH: 
+                        TEXT: "foo"
+                    )
+                )
+                (OPERATOR '.': 
+                    VARIABLE: w
+                    VARIABLE: x
+                )
+            )
+        )
+    )
+)
+Parsing string: "s.p : x.y : f : a.b.c HAS ALL ENDS WITH ".cif" : CONTAINS ".hkl" : > 12 : STARTS WITH "foo""
+(OPERATOR OP_HAS_ALL: 
+    (OPERATOR ':': 
+        (OPERATOR '.': 
+            VARIABLE: s
+            VARIABLE: p
+        )
+        (OPERATOR ':': 
+            (OPERATOR '.': 
+                VARIABLE: x
+                VARIABLE: y
+            )
+            (OPERATOR ':': 
+                VARIABLE: f
+                (OPERATOR '.': 
+                    (OPERATOR '.': 
+                        VARIABLE: a
+                        VARIABLE: b
+                    )
+                    VARIABLE: c
+                )
+            )
+        )
+    )
+    (OPERATOR ':': 
+        (UNARY_OPERATOR OP_ENDS_WITH: 
+            TEXT: ".cif"
+        )
+        (OPERATOR ':': 
+            (UNARY_OPERATOR OP_CONTAINS: 
+                TEXT: ".hkl"
+            )
+            (OPERATOR ':': 
+                (UNARY_OPERATOR '>': 
+                    NUMBER:  1.20000E+01
+                )
+                (UNARY_OPERATOR OP_STARTS_WITH: 
+                    TEXT: "foo"
+                )
+            )
+        )
+    )
+)
+Parsing string: "s.p : x.y HAS ALL ENDS WITH ".cif" : ENDS WITH ".hkl""
+(OPERATOR OP_HAS_ALL: 
+    (OPERATOR ':': 
+        (OPERATOR '.': 
+            VARIABLE: s
+            VARIABLE: p
+        )
+        (OPERATOR '.': 
+            VARIABLE: x
+            VARIABLE: y
+        )
+    )
+    (OPERATOR ':': 
+        (UNARY_OPERATOR OP_ENDS_WITH: 
+            TEXT: ".cif"
+        )
+        (UNARY_OPERATOR OP_ENDS_WITH: 
+            TEXT: ".hkl"
+        )
+    )
+)
