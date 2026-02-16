@@ -294,96 +294,96 @@ package body Filter_Lexer is
 
 
          when 1 =>
---# line 14 "filter_lexer.l"
+--# line 13 "filter_lexer.l"
              yylval := Null_AST; return AND_TOKEN; 
 
          when 2 =>
---# line 15 "filter_lexer.l"
+--# line 14 "filter_lexer.l"
              yylval := Null_AST; return NOT_TOKEN; 
 
          when 3 =>
---# line 16 "filter_lexer.l"
+--# line 15 "filter_lexer.l"
              yylval := Null_AST; return OR_TOKEN; 
 
          when 4 =>
---# line 17 "filter_lexer.l"
+--# line 16 "filter_lexer.l"
              yylval := Null_AST; return IS_TOKEN; 
 
          when 5 =>
---# line 18 "filter_lexer.l"
+--# line 17 "filter_lexer.l"
              yylval := Null_AST; return KNOWN_TOKEN; 
 
          when 6 =>
---# line 19 "filter_lexer.l"
+--# line 18 "filter_lexer.l"
              yylval := Null_AST; return UNKNOWN_TOKEN; 
 
          when 7 =>
---# line 20 "filter_lexer.l"
+--# line 19 "filter_lexer.l"
              yylval := Null_AST; return CONTAINS_TOKEN; 
 
          when 8 =>
---# line 21 "filter_lexer.l"
+--# line 20 "filter_lexer.l"
              yylval := Null_AST; return STARTS_TOKEN; 
 
          when 9 =>
---# line 22 "filter_lexer.l"
+--# line 21 "filter_lexer.l"
              yylval := Null_AST; return ENDS_TOKEN; 
 
          when 10 =>
---# line 23 "filter_lexer.l"
+--# line 22 "filter_lexer.l"
              yylval := Null_AST; return WITH_TOKEN; 
 
          when 11 =>
---# line 24 "filter_lexer.l"
+--# line 23 "filter_lexer.l"
              yylval := Null_AST; return LENGTH_TOKEN; 
 
          when 12 =>
---# line 25 "filter_lexer.l"
+--# line 24 "filter_lexer.l"
              yylval := Null_AST; return HAS_TOKEN; 
 
          when 13 =>
---# line 26 "filter_lexer.l"
+--# line 25 "filter_lexer.l"
              yylval := Null_AST; return ALL_TOKEN; 
 
          when 14 =>
---# line 27 "filter_lexer.l"
+--# line 26 "filter_lexer.l"
              yylval := Null_AST; return ONLY_TOKEN; 
 
          when 15 =>
---# line 28 "filter_lexer.l"
+--# line 27 "filter_lexer.l"
              yylval := Null_AST; return ANY_TOKEN; 
 
          when 16 =>
---# line 30 "filter_lexer.l"
+--# line 29 "filter_lexer.l"
              yylval := Null_AST; return TRUE_TOKEN; 
 
          when 17 =>
---# line 31 "filter_lexer.l"
+--# line 30 "filter_lexer.l"
              yylval := Null_AST; return FALSE_TOKEN; 
 
          when 18 =>
---# line 33 "filter_lexer.l"
+--# line 32 "filter_lexer.l"
             
                yylval := New_AST (filter_lexer_dfa.yytext);
                return KEYWORD_TOKEN;
              
 
          when 19 =>
---# line 37 "filter_lexer.l"
+--# line 36 "filter_lexer.l"
             
                yylval := New_AST_Identifier (filter_lexer_dfa.yytext);
                return IDENTIFIER_TOKEN;
              
 
          when 20 =>
---# line 41 "filter_lexer.l"
+--# line 40 "filter_lexer.l"
             
                yylval := New_AST (Float'Value (filter_lexer_dfa.yytext));
                return NUMBER_TOKEN;
              
 
          when 21 =>
---# line 45 "filter_lexer.l"
+--# line 44 "filter_lexer.l"
             
                yylval := New_AST (yytext (yytext'First + 1 ..
                                           yytext'Last  - 1));
@@ -391,29 +391,29 @@ package body Filter_Lexer is
              
 
          when 22 =>
---# line 51 "filter_lexer.l"
+--# line 50 "filter_lexer.l"
              yylval := Null_AST; return LF_TOKEN; 
 
          when 23 =>
---# line 52 "filter_lexer.l"
+--# line 51 "filter_lexer.l"
              yylval := Null_AST; return CR_TOKEN; 
 
          when 24 =>
---# line 53 "filter_lexer.l"
+--# line 52 "filter_lexer.l"
              yylval := Null_AST; return HT_TOKEN; 
 
          when 25 =>
---# line 54 "filter_lexer.l"
+--# line 53 "filter_lexer.l"
              yylval := Null_AST; return VT_TOKEN; 
 
          when 26 =>
---# line 55 "filter_lexer.l"
+--# line 54 "filter_lexer.l"
              yylval := Null_AST; return FF_TOKEN; 
 
 -- The remaining single character tokens are processed in Ada so that
 -- we get compiler error if some character is not covered:
          when 27 =>
---# line 60 "filter_lexer.l"
+--# line 59 "filter_lexer.l"
             
               declare
                   BS : constant Character := '\';
@@ -457,7 +457,7 @@ package body Filter_Lexer is
 
 
          when 28 =>
---# line 102 "filter_lexer.l"
+--# line 101 "filter_lexer.l"
             ECHO;
          when YY_END_OF_BUFFER + INITIAL + 1 =>
             return End_Of_Input;
@@ -511,7 +511,7 @@ package body Filter_Lexer is
       end loop; --  end of loop waiting for end of file
    end YYLex;
 
---# line 102 "filter_lexer.l"
+--# line 101 "filter_lexer.l"
 
 end Filter_Lexer;
 

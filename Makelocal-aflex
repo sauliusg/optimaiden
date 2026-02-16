@@ -8,6 +8,8 @@ GNATCHOP ?= gnatchop
 
 ${BIN_DIR}/optimaiden: ${SRC_DIR}/filter_lexer.adb
 
-${SRC_DIR}/%.adb: ${SRC_DIR}/%.l
+${SRC_DIR}/%.adb: ${SRC_DIR}/%.l ${SRC_DIR}/%_io.adb.header
 	cd $(dir $@); ${AFLEX} $(notdir $<)
 	cd $(dir $@); ${GNATCHOP} -w $*.ada
+	cd $(dir $@); perl -ne 'print unless /^ *procedure YY_INPUT/ .. /^ *end YY_INPUT/' $*_io.adb | cat $*_io.adb.header - | uniq | sponge $*_io.adb
+	cd $(dir $@); perl -00 -pe 's/^ *procedure YY_INPUT \(.*?\);\n//s' $*_io.ads | sponge $*_io.ads
