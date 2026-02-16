@@ -42,7 +42,6 @@ package body YYInput_Definition is
       end if;
       Buffer_Ptr := new String'(S);
       Pos := Buffer_Ptr.all'First;
-      YY_Init := True;
    end;
    
 end;

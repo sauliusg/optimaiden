@@ -3,6 +3,7 @@ with Filter_Goto, Filter_Tokens, Filter_Shift_Reduce;
 with Ada.Strings.Unbounded;
 with YYStype_Definition;
 with YYInput_Definition;
+with Filter_Lexer_DFA;
 
 use Filter_Goto, Filter_Tokens, Filter_Shift_Reduce;
 use Ada.Strings.Unbounded;
@@ -15,6 +16,7 @@ package body Filter is
 
     function Parse (S : String) return Filter_AST.AST_Type is
     begin
+        Filter_Lexer_DFA.YY_Init := True;
         YYInput_Definition.Start_Parsing (S);
         YYParse;
         return Return_AST : AST_Type := Parsed_Expression do
