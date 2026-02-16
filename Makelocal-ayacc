@@ -12,8 +12,6 @@ AYACC_OPTIONS ?=
 
 ${BIN_DIR}/optimaiden: ${SRC_DIR}/filter.adb
 
-${SRC_DIR}/%.adb: ${SRC_DIR}/%.y ${SRC_DIR}/%_tokens.ads.header
+${SRC_DIR}/%.adb: ${SRC_DIR}/%.y
 	cd $(dir $@); ${AYACC} ${AYACC_OPTIONS} -k $(notdir $<)
 	cd $(dir $@); ${GNATCHOP} -w $*.ada
-	cd $(dir $@); cat $*.adb.header $*.adb | uniq | sponge $*.adb
-	cd $(dir $@); cat $*_tokens.ads.header $*_tokens.ads | uniq | sponge $*_tokens.ads

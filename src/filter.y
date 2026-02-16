@@ -1,3 +1,5 @@
+%with YYSType_Definition
+%use YYSType_Definition
 {
    subtype YYSType is YYSType_Definition.YYSType;
 }

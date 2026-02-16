@@ -292,72 +292,72 @@ package body Filter is
             case yy.rule_id is
                pragma Style_Checks (Off);
 
-when 1 => -- #line 41
+when 1 => -- #line 43
 
  Parsed_Expression := yy.value_stack (yy.tos);
 
 
-when 2 => -- #line 48
+when 2 => -- #line 50
 
  YYVal := yy.value_stack (yy.tos); -- Pass the received AST ($1) to the upper level
 
 
-when 3 => -- #line 52
+when 3 => -- #line 54
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 4 => -- #line 59
+when 4 => -- #line 61
 
  YYVal := New_AST (True);
 
 
-when 5 => -- #line 63
+when 5 => -- #line 65
 
  YYVal := New_AST (False);
 
 
-when 6 => -- #line 70
+when 6 => -- #line 72
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 7 => -- #line 74
+when 7 => -- #line 76
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 8 => -- #line 81
+when 8 => -- #line 83
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 9 => -- #line 85
+when 9 => -- #line 87
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 10 => -- #line 92
+when 10 => -- #line 94
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 11 => -- #line 96
+when 11 => -- #line 98
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 12 => -- #line 100
+when 12 => -- #line 102
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 13 => -- #line 104
+when 13 => -- #line 106
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 14 => -- #line 111
+when 14 => -- #line 113
 
     if Is_Null (yy.value_stack (yy.tos)) then
         YYVal := yy.value_stack (yy.tos-1);
@@ -366,7 +366,7 @@ when 14 => -- #line 111
     end if;
 
 
-when 15 => -- #line 122
+when 15 => -- #line 124
 
     if Is_Null (yy.value_stack (yy.tos)) then
         YYVal := New_AST (':', yy.value_stack (yy.tos-3), yy.value_stack (yy.tos-1));
@@ -375,7 +375,7 @@ when 15 => -- #line 122
     end if;
 
 
-when 16 => -- #line 133
+when 16 => -- #line 135
 
     if Is_Null (yy.value_stack (yy.tos)) then
         YYVal := yy.value_stack (yy.tos-1);
@@ -384,7 +384,7 @@ when 16 => -- #line 133
     end if;
 
 
-when 17 => -- #line 144
+when 17 => -- #line 146
 
  if Is_Null (yy.value_stack (yy.tos)) then
      YYVal := yy.value_stack (yy.tos-1);
@@ -393,7 +393,7 @@ when 17 => -- #line 144
  end if;
 
 
-when 18 => -- #line 155
+when 18 => -- #line 157
 
  if Is_Null (yy.value_stack (yy.tos)) then
     YYVal := yy.value_stack (yy.tos-1);
@@ -402,7 +402,7 @@ when 18 => -- #line 155
  end if;
 
 
-when 19 => -- #line 166
+when 19 => -- #line 168
 
  if Is_Null (yy.value_stack (yy.tos-1)) then
      YYVal := yy.value_stack (yy.tos);
@@ -411,27 +411,27 @@ when 19 => -- #line 166
  end if;
 
 
-when 20 => -- #line 177
+when 20 => -- #line 179
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 21 => -- #line 181
+when 21 => -- #line 183
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 22 => -- #line 188
+when 22 => -- #line 190
 
  YYVal := New_AST (Operator (yy.value_stack (yy.tos)), yy.value_stack (yy.tos-1), Operand (yy.value_stack (yy.tos)));
 
 
-when 23 => -- #line 192
+when 23 => -- #line 194
 
  YYVal := New_AST (Operator (yy.value_stack (yy.tos)), yy.value_stack (yy.tos-1), Operand (yy.value_stack (yy.tos)));
 
 
-when 24 => -- #line 206
+when 24 => -- #line 208
 
  if Is_Null (yy.value_stack (yy.tos)) then
      YYVal := yy.value_stack (yy.tos-1);
@@ -481,47 +481,47 @@ when 24 => -- #line 206
  end if;
 
 
-when 25 => -- #line 258
+when 25 => -- #line 260
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 26 => -- #line 262
+when 26 => -- #line 264
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 27 => -- #line 269
+when 27 => -- #line 271
 
  YYVal := new_AST (Operator (yy.value_stack (yy.tos-1)), yy.value_stack (yy.tos));
 
 
-when 28 => -- #line 276
+when 28 => -- #line 278
 
  YYVal := new_AST (Operator (yy.value_stack (yy.tos-1)), yy.value_stack (yy.tos));
 
 
-when 29 => -- #line 283
+when 29 => -- #line 285
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 30 => -- #line 290
+when 30 => -- #line 292
 
  YYVal := New_AST (OP_CONTAINS, yy.value_stack (yy.tos));
 
 
-when 31 => -- #line 294
+when 31 => -- #line 296
 
  YYVal := New_AST (OP_STARTS_WITH, yy.value_stack (yy.tos));
 
 
-when 32 => -- #line 298
+when 32 => -- #line 300
 
  YYVal := New_AST (OP_ENDS_WITH, yy.value_stack (yy.tos));
 
 
-when 33 => -- #line 305
+when 33 => -- #line 307
 
     if Kind (yy.value_stack (yy.tos)) = UNARY_OPERATOR and then
        Operator (yy.value_stack (yy.tos)) in OP_HAS_ALL .. OP_HAS_ONLY
@@ -532,7 +532,7 @@ when 33 => -- #line 305
     end if;
 
 
-when 34 => -- #line 318
+when 34 => -- #line 320
 
     if Operator (yy.value_stack (yy.tos)) = ':' then
         YYVal := New_AST (OP_HAS_ALL, yy.value_stack (yy.tos-2), yy.value_stack (yy.tos));
@@ -541,7 +541,7 @@ when 34 => -- #line 318
     end if;
 
 
-when 35 => -- #line 329
+when 35 => -- #line 331
 
     if Is_Null (yy.value_stack (yy.tos)) then
         YYVal := yy.value_stack (yy.tos-1);
@@ -550,7 +550,7 @@ when 35 => -- #line 329
     end if;
 
 
-when 36 => -- #line 340
+when 36 => -- #line 342
 
     if Is_Null (yy.value_stack (yy.tos-1)) then
         YYVal := New_AST (OP_LENGTH, New_AST ('=', yy.value_stack (yy.tos)));
@@ -559,27 +559,27 @@ when 36 => -- #line 340
     end if;
 
 
-when 37 => -- #line 351
+when 37 => -- #line 353
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 38 => -- #line 355
+when 38 => -- #line 357
 
  YYVal := new_AST ('.', yy.value_stack (yy.tos-2), yy.value_stack (yy.tos));
 
 
-when 59 => -- #line 402
+when 59 => -- #line 404
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 60 => -- #line 406
+when 60 => -- #line 408
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 61 => -- #line 413
+when 61 => -- #line 415
 
     if Is_NULL (yy.value_stack (yy.tos-2)) then
         YYVal := New_Ast ('=', Null_AST);
@@ -588,7 +588,7 @@ when 61 => -- #line 413
     end if;
 
 
-when 62 => -- #line 424
+when 62 => -- #line 426
 
  if Is_NULL (yy.value_stack (yy.tos-1)) then
      YYVal := New_AST (Operator (yy.value_stack (yy.tos-2)), Null_AST);
@@ -605,87 +605,87 @@ when 62 => -- #line 424
  end if;
 
 
-when 65 => -- #line 447
+when 65 => -- #line 449
 
  YYVal := yy.value_stack (yy.tos-1);
 
 
-when 66 => -- #line 454
+when 66 => -- #line 456
 
  YYVal := yy.value_stack (yy.tos-1);
 
 
-when 67 => -- #line 461
+when 67 => -- #line 463
 
  YYVal := yy.value_stack (yy.tos-1);
 
 
-when 82 => -- #line 484
+when 82 => -- #line 486
 
  YYVal := New_AST (OP_OR, yy.value_stack (yy.tos));
 
 
-when 83 => -- #line 488
+when 83 => -- #line 490
 
  YYVal := Null_AST;
 
 
-when 84 => -- #line 495
+when 84 => -- #line 497
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 85 => -- #line 499
+when 85 => -- #line 501
 
  YYVal := New_AST (OP_HAS_ONLY, yy.value_stack (yy.tos));
 
 
-when 86 => -- #line 503
+when 86 => -- #line 505
 
  YYVal := New_AST (OP_HAS_ALL, yy.value_stack (yy.tos));
 
 
-when 87 => -- #line 507
+when 87 => -- #line 509
 
  YYVal := New_AST (OP_HAS_ANY, yy.value_stack (yy.tos));
 
 
-when 88 => -- #line 514
+when 88 => -- #line 516
 
  YYVal := New_AST ('<', Null_AST, Null_AST);
 
 
-when 89 => -- #line 518
+when 89 => -- #line 520
 
  YYVal := New_AST ('>', Null_AST, Null_AST);
 
 
-when 90 => -- #line 525
+when 90 => -- #line 527
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 91 => -- #line 529
+when 91 => -- #line 531
 
  YYVal := Null_AST;
 
 
-when 92 => -- #line 536
+when 92 => -- #line 538
 
  YYVal := New_AST ('!', Null_AST);
 
 
-when 93 => -- #line 540
+when 93 => -- #line 542
 
  YYVal := Null_AST;
 
 
-when 94 => -- #line 547
+when 94 => -- #line 549
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 95 => -- #line 551
+when 95 => -- #line 553
 
     if Is_Null (yy.value_stack (yy.tos-2)) then
         YYVal := yy.value_stack (yy.tos);
@@ -694,87 +694,87 @@ when 95 => -- #line 551
     end if;
 
 
-when 96 => -- #line 559
+when 96 => -- #line 561
 
  YYVal := Null_AST;
 
 
-when 97 => -- #line 566
+when 97 => -- #line 568
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 98 => -- #line 570
+when 98 => -- #line 572
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 99 => -- #line 574
+when 99 => -- #line 576
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 100 => -- #line 578
+when 100 => -- #line 580
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 101 => -- #line 582
+when 101 => -- #line 584
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 102 => -- #line 586
+when 102 => -- #line 588
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 103 => -- #line 590
+when 103 => -- #line 592
 
  YYVal := Null_AST;
 
 
-when 104 => -- #line 597
+when 104 => -- #line 599
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 105 => -- #line 601
+when 105 => -- #line 603
 
  YYVal := New_Ast (Operator (yy.value_stack (yy.tos-1)), yy.value_stack (yy.tos));
 
 
-when 106 => -- #line 605
+when 106 => -- #line 607
 
  YYVal := New_Ast (Operator (yy.value_stack (yy.tos-1)), yy.value_stack (yy.tos));
 
 
-when 107 => -- #line 609
+when 107 => -- #line 611
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 108 => -- #line 613
+when 108 => -- #line 615
 
  YYVal := New_AST (OP_HAS_ALL, yy.value_stack (yy.tos));
 
 
-when 109 => -- #line 617
+when 109 => -- #line 619
 
  YYVal := New_AST (OP_HAS_ANY, yy.value_stack (yy.tos));
 
 
-when 110 => -- #line 621
+when 110 => -- #line 623
 
  YYVal := New_AST (OP_HAS_ONLY, yy.value_stack (yy.tos));
 
 
-when 111 => -- #line 628
+when 111 => -- #line 630
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 112 => -- #line 632
+when 112 => -- #line 634
 
     if Is_Null (yy.value_stack (yy.tos-2)) then
         YYVal := yy.value_stack (yy.tos);
@@ -783,17 +783,17 @@ when 112 => -- #line 632
     end if;
 
 
-when 113 => -- #line 640
+when 113 => -- #line 642
 
  YYVal := Null_AST;
 
 
-when 114 => -- #line 647
+when 114 => -- #line 649
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 115 => -- #line 651
+when 115 => -- #line 653
 
     if Is_Null (yy.value_stack (yy.tos-2)) then
         YYVal := yy.value_stack (yy.tos);
@@ -802,37 +802,37 @@ when 115 => -- #line 651
     end if;
 
 
-when 116 => -- #line 659
+when 116 => -- #line 661
 
  YYVal := Null_AST;
 
 
-when 117 => -- #line 666
+when 117 => -- #line 668
 
  YYVal := New_AST (OP_AND, yy.value_stack (yy.tos));
 
 
-when 118 => -- #line 670
+when 118 => -- #line 672
 
  YYVal := Null_AST;
 
 
-when 119 => -- #line 677
+when 119 => -- #line 679
 
  YYVal := New_AST (OP_IS_KNOWN, Null_AST);
 
 
-when 120 => -- #line 681
+when 120 => -- #line 683
 
  YYVal := New_Ast (OP_IS_UNKNOWN, Null_AST);
 
 
-when 121 => -- #line 688
+when 121 => -- #line 690
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 122 => -- #line 692
+when 122 => -- #line 694
 
     if Is_Null (yy.value_stack (yy.tos-2)) then
         YYVal := yy.value_stack (yy.tos);
@@ -841,57 +841,57 @@ when 122 => -- #line 692
     end if;
 
 
-when 123 => -- #line 700
+when 123 => -- #line 702
 
  YYVal := Null_AST;
 
 
-when 124 => -- #line 707
+when 124 => -- #line 709
 
  YYVal := Null_AST;
 
 
-when 125 => -- #line 711
+when 125 => -- #line 713
 
  YYVal := New_AST (OP_NOT, Null_AST);
 
 
-when 126 => -- #line 718
+when 126 => -- #line 720
 
  YYVal := yy.value_stack (yy.tos);
 
 
-when 127 => -- #line 722
+when 127 => -- #line 724
 
  YYVal := yy.value_stack (yy.tos-1);
 
 
-when 128 => -- #line 729
+when 128 => -- #line 731
 
  YYVal := New_AST ('=', Null_AST, Null_AST);
 
 
-when 129 => -- #line 733
+when 129 => -- #line 735
 
  YYVal := Null_AST;
 
 
-when 130 => -- #line 740
+when 130 => -- #line 742
 
  YYVal := Null_AST;
 
 
-when 131 => -- #line 744
+when 131 => -- #line 746
 
  YYVal := Null_AST;
 
 
-when 132 => -- #line 751
+when 132 => -- #line 753
 
  YYVal := Null_AST;
 
 
-when 133 => -- #line 755
+when 133 => -- #line 757
 
  YYVal := Null_AST;
                pragma Style_Checks (On);

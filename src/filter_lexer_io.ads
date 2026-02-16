@@ -21,6 +21,9 @@ package filter_lexer_IO is
    --  true when we've seen an EOF for the current input file
    yy_eof_has_been_seen  : Boolean;
 
+   procedure YY_INPUT (buf      : out unbounded_character_array;
+                       result   : out Integer;
+                       max_size : in Integer);
    function yy_get_next_buffer return eob_action_type;
    procedure yyUnput (c : Character; yy_bp : in out Integer);
    procedure Unput (c : Character);

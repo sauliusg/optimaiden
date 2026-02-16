@@ -1,5 +1,7 @@
-with YYSType_Definition; use YYSType_Definition;
+with  Yystype_Definition;
+use   Yystype_Definition;
 package Filter_Tokens is
+
 
    subtype YYSType is YYSType_Definition.YYSType;
 
