@@ -758,6 +758,9 @@ optional__Spaces
 ;
 
 %%
+with Text_IO, Filter_Lexer, YYErrors;
+use Text_IO, Filter_Lexer, YYErrors;
+
 with Filter_AST; use Filter_AST;
 
 package Filter is

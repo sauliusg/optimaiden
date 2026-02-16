@@ -1,4 +1,3 @@
-with Text_IO, Filter_Lexer, YYErrors; use Text_IO, Filter_Lexer, YYErrors;
 
 with Filter_Goto, Filter_Tokens, Filter_Shift_Reduce;
 with Ada.Strings.Unbounded;
