@@ -7,7 +7,7 @@ package body Filter_AST is
      (AST_Node_Type, AST_Node_Access);
    
    function "+" (S : String) return Unbounded_String is
-      (To_Unbounded_String (S));
+     (To_Unbounded_String (S));
       
    pragma Inline ("+");
    
@@ -18,7 +18,7 @@ package body Filter_AST is
    
    function Null_AST return AST_Type is
    begin
-     return (Ada.Finalization.Controlled with AST => null);
+      return (Ada.Finalization.Controlled with AST => null);
    end;
    
    function Is_Null (A : AST_Type) return Boolean is
@@ -65,7 +65,7 @@ package body Filter_AST is
       return 
         (
          Ada.Finalization.Controlled with
-           AST => new AST_Node_Type'
+         AST => new AST_Node_Type'
            (
             Kind => VARIABLE,
             Identifier => Name,
@@ -84,7 +84,7 @@ package body Filter_AST is
       return 
         (
          Ada.Finalization.Controlled with
-           AST => new AST_Node_Type'
+         AST => new AST_Node_Type'
            (
             Kind => TEXT,
             Text_Value => Value,
@@ -96,7 +96,7 @@ package body Filter_AST is
    function New_AST (X : Float) return AST_Type is
    begin
       return (Ada.Finalization.Controlled with 
-                AST => new AST_Node_Type'
+              AST => new AST_Node_Type'
                 (
                  Kind => NUMBER,
                  Value => X,
@@ -182,10 +182,7 @@ package body Filter_AST is
       end;
    end;
             
-   function Image (T : AST_Type) return String is
-   begin
-      return Image (T, 0);
-   end;
+   function Image (T : AST_Type) return String is (Image (T, 0));
 
    procedure Adjust (T : in out AST_Type) is
    begin
