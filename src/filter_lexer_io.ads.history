@@ -1,0 +1,1 @@
+  988  perl -00 -pe 's/^ *procedure YY_INPUT \(.*?\);\n//s' filter_lexer_io.ads | sponge filter_lexer_io.ads

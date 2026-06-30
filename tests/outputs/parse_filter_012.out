@@ -1,0 +1,42 @@
+Parsing string: "property HAS = 5"
+(OPERATOR OP_HAS_ALL: 
+    VARIABLE: property
+    (UNARY_OPERATOR '=': 
+        NUMBER:  5.00000E+00
+    )
+)
+Parsing string: "property HAS != 5"
+(OPERATOR OP_HAS_ALL: 
+    VARIABLE: property
+    (UNARY_OPERATOR OP_NE: 
+        NUMBER:  5.00000E+00
+    )
+)
+Parsing string: "property HAS > 5"
+(OPERATOR OP_HAS_ALL: 
+    VARIABLE: property
+    (UNARY_OPERATOR '>': 
+        NUMBER:  5.00000E+00
+    )
+)
+Parsing string: "property HAS < 5"
+(OPERATOR OP_HAS_ALL: 
+    VARIABLE: property
+    (UNARY_OPERATOR '<': 
+        NUMBER:  5.00000E+00
+    )
+)
+Parsing string: "property HAS >= 5"
+(OPERATOR OP_HAS_ALL: 
+    VARIABLE: property
+    (UNARY_OPERATOR OP_GE: 
+        NUMBER:  5.00000E+00
+    )
+)
+Parsing string: "property HAS <= 5"
+(OPERATOR OP_HAS_ALL: 
+    VARIABLE: property
+    (UNARY_OPERATOR OP_LE: 
+        NUMBER:  5.00000E+00
+    )
+)

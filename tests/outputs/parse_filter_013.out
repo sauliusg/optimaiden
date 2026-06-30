@@ -1,0 +1,8 @@
+Parsing string: "pp IS KNOWN"
+(UNARY_OPERATOR OP_IS_KNOWN: 
+    VARIABLE: pp
+)
+Parsing string: "pp IS UNKNOWN"
+(UNARY_OPERATOR OP_IS_UNKNOWN: 
+    VARIABLE: pp
+)

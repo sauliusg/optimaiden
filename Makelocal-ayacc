@@ -1,0 +1,17 @@
+#--*- Makefile -*--
+
+BIN_DIR ?= bin
+SRC_DIR ?= src
+
+AYACC    ?= ayacc
+GNATCHOP ?= gnatchop
+
+# For debugging, use the '-d' option:
+## AYACC_OPTIONS ?= -d 
+AYACC_OPTIONS ?=
+
+${BIN_DIR}/optimaiden: ${SRC_DIR}/filter.adb
+
+${SRC_DIR}/%.adb: ${SRC_DIR}/%.y
+	cd $(dir $@); ${AYACC} ${AYACC_OPTIONS} -k $(notdir $<)
+	cd $(dir $@); ${GNATCHOP} -w $*.ada

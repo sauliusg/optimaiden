@@ -1,0 +1,373 @@
+Parsing string: "NOT (NOT s.p.q : a.b.c HAS ONLY ENDS WITH ".cif" : ".hkl")"
+(UNARY_OPERATOR OP_NOT: 
+    (UNARY_OPERATOR OP_NOT: 
+        (OPERATOR OP_HAS_ONLY: 
+            (OPERATOR ':': 
+                (OPERATOR '.': 
+                    (OPERATOR '.': 
+                        VARIABLE: s
+                        VARIABLE: p
+                    )
+                    VARIABLE: q
+                )
+                (OPERATOR '.': 
+                    (OPERATOR '.': 
+                        VARIABLE: a
+                        VARIABLE: b
+                    )
+                    VARIABLE: c
+                )
+            )
+            (OPERATOR ':': 
+                (UNARY_OPERATOR OP_ENDS_WITH: 
+                    TEXT: ".cif"
+                )
+                TEXT: ".hkl"
+            )
+        )
+    )
+)
+Parsing string: "NOT (NOT s.p.q : a.b.c HAS ALL ".cif" : ".hkl")"
+(UNARY_OPERATOR OP_NOT: 
+    (UNARY_OPERATOR OP_NOT: 
+        (OPERATOR OP_HAS_ALL: 
+            (OPERATOR ':': 
+                (OPERATOR '.': 
+                    (OPERATOR '.': 
+                        VARIABLE: s
+                        VARIABLE: p
+                    )
+                    VARIABLE: q
+                )
+                (OPERATOR '.': 
+                    (OPERATOR '.': 
+                        VARIABLE: a
+                        VARIABLE: b
+                    )
+                    VARIABLE: c
+                )
+            )
+            (OPERATOR ':': 
+                TEXT: ".cif"
+                TEXT: ".hkl"
+            )
+        )
+    )
+)
+Parsing string: "NOT (NOT s.p.q : a.b.c HAS ALL ENDS WITH ".cif" : ".hkl")"
+(UNARY_OPERATOR OP_NOT: 
+    (UNARY_OPERATOR OP_NOT: 
+        (OPERATOR OP_HAS_ALL: 
+            (OPERATOR ':': 
+                (OPERATOR '.': 
+                    (OPERATOR '.': 
+                        VARIABLE: s
+                        VARIABLE: p
+                    )
+                    VARIABLE: q
+                )
+                (OPERATOR '.': 
+                    (OPERATOR '.': 
+                        VARIABLE: a
+                        VARIABLE: b
+                    )
+                    VARIABLE: c
+                )
+            )
+            (OPERATOR ':': 
+                (UNARY_OPERATOR OP_ENDS_WITH: 
+                    TEXT: ".cif"
+                )
+                TEXT: ".hkl"
+            )
+        )
+    )
+)
+Parsing string: "NOT (NOT s.p.q : a.b.c HAS ALL ENDS WITH ".cif" : ENDS ".hkl")"
+(UNARY_OPERATOR OP_NOT: 
+    (UNARY_OPERATOR OP_NOT: 
+        (OPERATOR OP_HAS_ALL: 
+            (OPERATOR ':': 
+                (OPERATOR '.': 
+                    (OPERATOR '.': 
+                        VARIABLE: s
+                        VARIABLE: p
+                    )
+                    VARIABLE: q
+                )
+                (OPERATOR '.': 
+                    (OPERATOR '.': 
+                        VARIABLE: a
+                        VARIABLE: b
+                    )
+                    VARIABLE: c
+                )
+            )
+            (OPERATOR ':': 
+                (UNARY_OPERATOR OP_ENDS_WITH: 
+                    TEXT: ".cif"
+                )
+                (UNARY_OPERATOR OP_ENDS_WITH: 
+                    TEXT: ".hkl"
+                )
+            )
+        )
+    )
+)
+Parsing string: "NOT (NOT s.p.q : a.b.c HAS ALL ENDS WITH ".cif" : ENDS WITH ".hkl")"
+(UNARY_OPERATOR OP_NOT: 
+    (UNARY_OPERATOR OP_NOT: 
+        (OPERATOR OP_HAS_ALL: 
+            (OPERATOR ':': 
+                (OPERATOR '.': 
+                    (OPERATOR '.': 
+                        VARIABLE: s
+                        VARIABLE: p
+                    )
+                    VARIABLE: q
+                )
+                (OPERATOR '.': 
+                    (OPERATOR '.': 
+                        VARIABLE: a
+                        VARIABLE: b
+                    )
+                    VARIABLE: c
+                )
+            )
+            (OPERATOR ':': 
+                (UNARY_OPERATOR OP_ENDS_WITH: 
+                    TEXT: ".cif"
+                )
+                (UNARY_OPERATOR OP_ENDS_WITH: 
+                    TEXT: ".hkl"
+                )
+            )
+        )
+    )
+)
+Parsing string: "NOT (NOT sp HAS ANY ENDS WITH ".cif")"
+(UNARY_OPERATOR OP_NOT: 
+    (UNARY_OPERATOR OP_NOT: 
+        (OPERATOR OP_HAS_ANY: 
+            VARIABLE: sp
+            (UNARY_OPERATOR OP_ENDS_WITH: 
+                TEXT: ".cif"
+            )
+        )
+    )
+)
+Parsing string: "NOT (NOT spq : abc HAS ALL ENDS WITH ".cif" : ENDS WITH ".hkl")"
+(UNARY_OPERATOR OP_NOT: 
+    (UNARY_OPERATOR OP_NOT: 
+        (OPERATOR OP_HAS_ALL: 
+            (OPERATOR ':': 
+                VARIABLE: spq
+                VARIABLE: abc
+            )
+            (OPERATOR ':': 
+                (UNARY_OPERATOR OP_ENDS_WITH: 
+                    TEXT: ".cif"
+                )
+                (UNARY_OPERATOR OP_ENDS_WITH: 
+                    TEXT: ".hkl"
+                )
+            )
+        )
+    )
+)
+Parsing string: "s.p : a.b HAS ALL ENDS WITH ".cif" : ENDS WITH ".hkl""
+(OPERATOR OP_HAS_ALL: 
+    (OPERATOR ':': 
+        (OPERATOR '.': 
+            VARIABLE: s
+            VARIABLE: p
+        )
+        (OPERATOR '.': 
+            VARIABLE: a
+            VARIABLE: b
+        )
+    )
+    (OPERATOR ':': 
+        (UNARY_OPERATOR OP_ENDS_WITH: 
+            TEXT: ".cif"
+        )
+        (UNARY_OPERATOR OP_ENDS_WITH: 
+            TEXT: ".hkl"
+        )
+    )
+)
+Parsing string: "s.p : q HAS ALL ENDS WITH ".cif" : ENDS WITH ".hkl""
+(OPERATOR OP_HAS_ALL: 
+    (OPERATOR ':': 
+        (OPERATOR '.': 
+            VARIABLE: s
+            VARIABLE: p
+        )
+        VARIABLE: q
+    )
+    (OPERATOR ':': 
+        (UNARY_OPERATOR OP_ENDS_WITH: 
+            TEXT: ".cif"
+        )
+        (UNARY_OPERATOR OP_ENDS_WITH: 
+            TEXT: ".hkl"
+        )
+    )
+)
+Parsing string: "s.p : q.r HAS ALL ENDS WITH ".cif" : ENDS WITH ".hkl""
+(OPERATOR OP_HAS_ALL: 
+    (OPERATOR ':': 
+        (OPERATOR '.': 
+            VARIABLE: s
+            VARIABLE: p
+        )
+        (OPERATOR '.': 
+            VARIABLE: q
+            VARIABLE: r
+        )
+    )
+    (OPERATOR ':': 
+        (UNARY_OPERATOR OP_ENDS_WITH: 
+            TEXT: ".cif"
+        )
+        (UNARY_OPERATOR OP_ENDS_WITH: 
+            TEXT: ".hkl"
+        )
+    )
+)
+Parsing string: "s.p : q.r.c HAS ALL ENDS WITH ".cif" : ENDS WITH ".hkl""
+(OPERATOR OP_HAS_ALL: 
+    (OPERATOR ':': 
+        (OPERATOR '.': 
+            VARIABLE: s
+            VARIABLE: p
+        )
+        (OPERATOR '.': 
+            (OPERATOR '.': 
+                VARIABLE: q
+                VARIABLE: r
+            )
+            VARIABLE: c
+        )
+    )
+    (OPERATOR ':': 
+        (UNARY_OPERATOR OP_ENDS_WITH: 
+            TEXT: ".cif"
+        )
+        (UNARY_OPERATOR OP_ENDS_WITH: 
+            TEXT: ".hkl"
+        )
+    )
+)
+Parsing string: "s.p HAS ALL ENDS WITH ".cif""
+(OPERATOR OP_HAS_ALL: 
+    (OPERATOR '.': 
+        VARIABLE: s
+        VARIABLE: p
+    )
+    (UNARY_OPERATOR OP_ENDS_WITH: 
+        TEXT: ".cif"
+    )
+)
+Parsing string: "s.p.m : q.r HAS ALL ENDS WITH ".cif" : ENDS WITH ".hkl""
+(OPERATOR OP_HAS_ALL: 
+    (OPERATOR ':': 
+        (OPERATOR '.': 
+            (OPERATOR '.': 
+                VARIABLE: s
+                VARIABLE: p
+            )
+            VARIABLE: m
+        )
+        (OPERATOR '.': 
+            VARIABLE: q
+            VARIABLE: r
+        )
+    )
+    (OPERATOR ':': 
+        (UNARY_OPERATOR OP_ENDS_WITH: 
+            TEXT: ".cif"
+        )
+        (UNARY_OPERATOR OP_ENDS_WITH: 
+            TEXT: ".hkl"
+        )
+    )
+)
+Parsing string: "s.p.m : q.r.n HAS ALL ENDS WITH ".cif" : ENDS WITH ".hkl""
+(OPERATOR OP_HAS_ALL: 
+    (OPERATOR ':': 
+        (OPERATOR '.': 
+            (OPERATOR '.': 
+                VARIABLE: s
+                VARIABLE: p
+            )
+            VARIABLE: m
+        )
+        (OPERATOR '.': 
+            (OPERATOR '.': 
+                VARIABLE: q
+                VARIABLE: r
+            )
+            VARIABLE: n
+        )
+    )
+    (OPERATOR ':': 
+        (UNARY_OPERATOR OP_ENDS_WITH: 
+            TEXT: ".cif"
+        )
+        (UNARY_OPERATOR OP_ENDS_WITH: 
+            TEXT: ".hkl"
+        )
+    )
+)
+Parsing string: "s.p.q : a.b.c HAS ALL ENDS WITH ".cif" : ENDS WITH ".hkl""
+(OPERATOR OP_HAS_ALL: 
+    (OPERATOR ':': 
+        (OPERATOR '.': 
+            (OPERATOR '.': 
+                VARIABLE: s
+                VARIABLE: p
+            )
+            VARIABLE: q
+        )
+        (OPERATOR '.': 
+            (OPERATOR '.': 
+                VARIABLE: a
+                VARIABLE: b
+            )
+            VARIABLE: c
+        )
+    )
+    (OPERATOR ':': 
+        (UNARY_OPERATOR OP_ENDS_WITH: 
+            TEXT: ".cif"
+        )
+        (UNARY_OPERATOR OP_ENDS_WITH: 
+            TEXT: ".hkl"
+        )
+    )
+)
+Parsing string: "s.p.s : q.r HAS ALL ENDS WITH ".cif" : ENDS WITH ".hkl""
+(OPERATOR OP_HAS_ALL: 
+    (OPERATOR ':': 
+        (OPERATOR '.': 
+            (OPERATOR '.': 
+                VARIABLE: s
+                VARIABLE: p
+            )
+            VARIABLE: s
+        )
+        (OPERATOR '.': 
+            VARIABLE: q
+            VARIABLE: r
+        )
+    )
+    (OPERATOR ':': 
+        (UNARY_OPERATOR OP_ENDS_WITH: 
+            TEXT: ".cif"
+        )
+        (UNARY_OPERATOR OP_ENDS_WITH: 
+            TEXT: ".hkl"
+        )
+    )
+)

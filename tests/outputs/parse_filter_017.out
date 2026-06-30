@@ -1,0 +1,28 @@
+Parsing string: "a < 1 AND x >= 2"
+(OPERATOR OP_AND: 
+    (OPERATOR '<': 
+        VARIABLE: a
+        NUMBER:  1.00000E+00
+    )
+    (OPERATOR OP_GE: 
+        VARIABLE: x
+        NUMBER:  2.00000E+00
+    )
+)
+Parsing string: "foo < bar OR a = 1 AND c != 0"
+(OPERATOR OP_OR: 
+    (OPERATOR '<': 
+        VARIABLE: foo
+        VARIABLE: bar
+    )
+    (OPERATOR OP_AND: 
+        (OPERATOR '=': 
+            VARIABLE: a
+            NUMBER:  1.00000E+00
+        )
+        (OPERATOR OP_NE: 
+            VARIABLE: c
+            NUMBER:  0.00000E+00
+        )
+    )
+)

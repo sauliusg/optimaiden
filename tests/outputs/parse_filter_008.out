@@ -1,0 +1,20 @@
+Parsing string: "aa HAS "C""
+(OPERATOR OP_HAS_ALL: 
+    VARIABLE: aa
+    TEXT: "C"
+)
+Parsing string: "aa HAS ALL "C""
+(OPERATOR OP_HAS_ALL: 
+    VARIABLE: aa
+    TEXT: "C"
+)
+Parsing string: "aa HAS ANY "C""
+(OPERATOR OP_HAS_ANY: 
+    VARIABLE: aa
+    TEXT: "C"
+)
+Parsing string: "aa HAS ONLY "C""
+(OPERATOR OP_HAS_ONLY: 
+    VARIABLE: aa
+    TEXT: "C"
+)

@@ -1,0 +1,44 @@
+Parsing string: "a:b HAS "A":"B""
+(OPERATOR OP_HAS_ALL: 
+    (OPERATOR ':': 
+        VARIABLE: a
+        VARIABLE: b
+    )
+    (OPERATOR ':': 
+        TEXT: "A"
+        TEXT: "B"
+    )
+)
+Parsing string: "a:b HAS ALL "A":"B""
+(OPERATOR OP_HAS_ALL: 
+    (OPERATOR ':': 
+        VARIABLE: a
+        VARIABLE: b
+    )
+    (OPERATOR ':': 
+        TEXT: "A"
+        TEXT: "B"
+    )
+)
+Parsing string: "a:b HAS ANY "A":"B""
+(OPERATOR OP_HAS_ANY: 
+    (OPERATOR ':': 
+        VARIABLE: a
+        VARIABLE: b
+    )
+    (OPERATOR ':': 
+        TEXT: "A"
+        TEXT: "B"
+    )
+)
+Parsing string: "a:b HAS ONLY "A":"B""
+(OPERATOR OP_HAS_ONLY: 
+    (OPERATOR ':': 
+        VARIABLE: a
+        VARIABLE: b
+    )
+    (OPERATOR ':': 
+        TEXT: "A"
+        TEXT: "B"
+    )
+)

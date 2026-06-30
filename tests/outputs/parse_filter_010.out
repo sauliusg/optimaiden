@@ -1,0 +1,25 @@
+Parsing string: "a CONTAINS "foo""
+(OPERATOR OP_CONTAINS: 
+    VARIABLE: a
+    TEXT: "foo"
+)
+Parsing string: "a STARTS "foo""
+(OPERATOR OP_STARTS_WITH: 
+    VARIABLE: a
+    TEXT: "foo"
+)
+Parsing string: "a STARTS WITH "foo""
+(OPERATOR OP_STARTS_WITH: 
+    VARIABLE: a
+    TEXT: "foo"
+)
+Parsing string: "a ENDS "foo""
+(OPERATOR OP_ENDS_WITH: 
+    VARIABLE: a
+    TEXT: "foo"
+)
+Parsing string: "a ENDS WITH "foo""
+(OPERATOR OP_ENDS_WITH: 
+    VARIABLE: a
+    TEXT: "foo"
+)

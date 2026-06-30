@@ -1,0 +1,23 @@
+Parsing string: "aa:bbbb:ccc:dd HAS "C":"H":"O":"Y""
+(OPERATOR OP_HAS_ALL: 
+    (OPERATOR ':': 
+        VARIABLE: aa
+        (OPERATOR ':': 
+            VARIABLE: bbbb
+            (OPERATOR ':': 
+                VARIABLE: ccc
+                VARIABLE: dd
+            )
+        )
+    )
+    (OPERATOR ':': 
+        TEXT: "C"
+        (OPERATOR ':': 
+            TEXT: "H"
+            (OPERATOR ':': 
+                TEXT: "O"
+                TEXT: "Y"
+            )
+        )
+    )
+)
