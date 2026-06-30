@@ -4,6 +4,7 @@
 /config/
 .svn
 *~
+.test*depend
 externals/cif-streaming-parser/r137/trunk/obj/*
 externals/cif-streaming-parser/r137/trunk/*.cgpr
 externals/cif-streaming-parser/r137/trunk/.test*depend
